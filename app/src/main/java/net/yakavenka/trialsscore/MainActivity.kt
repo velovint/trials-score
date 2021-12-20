@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         lapScore = findViewById(R.id.lap_score);
-        initScoreButtons(R.id.main_window)
+        initScoreButtons(R.id.lap_score_container)
     }
 
     private fun initScoreButtons(parentId: Int) {
