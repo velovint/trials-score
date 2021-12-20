@@ -35,12 +35,18 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateLapScore() {
+        var cleans = 0
         val sum = sectionScores
+            .asSequence()
             .map { it.checkedRadioButtonId }
             .filter { it != -1 }
             .map { findViewById<RadioButton>(it) }
-            .map { it.tooltipText.toString().toInt() }
+            .map {
+                val score = it.tooltipText.toString().toInt()
+                if (score == 0) cleans++
+                score
+            }
             .sum()
-        lapScore.text = sum.toString();
+        lapScore.text = getString(R.string.lap_score, cleans, sum)
     }
 }

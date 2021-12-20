@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">TrialsScore</string>
+    <string name="lap_score">Lap score: %d / %d</string>
 </resources>
