@@ -15,6 +15,17 @@ class EventScoreAdapter(
     private val context: Context,
     private val totalScoreView: TextView
 ) : RecyclerView.Adapter<EventScoreAdapter.ViewHolder>() {
+        init {
+            updateTotal()
+        }
+
+    private fun updateTotal() {
+        totalScoreView.text = context.resources.getString(
+            R.string.lap_score,
+            eventScore.getCleans(),
+            eventScore.getTotalPoints()
+        )
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val adapterLayout = LayoutInflater.from(parent.context)
@@ -31,17 +42,13 @@ class EventScoreAdapter(
         holder.scoreFive.setOnClickListener { updateScore(position, 5) }
     }
 
-    private fun updateScore(section: Int, points: Int) {
-        eventScore.sectionScores[section] = points
-        totalScoreView.text = context.resources.getString(
-            R.string.lap_score,
-            eventScore.getCleans(),
-            eventScore.getTotalPoints()
-        )
-    }
-
     override fun getItemCount(): Int {
         return eventScore.sectionScores.size
+    }
+
+    private fun updateScore(section: Int, points: Int) {
+        eventScore.sectionScores[section] = points
+        updateTotal()
     }
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {

@@ -1,12 +1,13 @@
 package net.yakavenka.trialsscore
 
-import androidx.test.espresso.Espresso.onData
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.assertion.ViewAssertions.matches
+import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import net.yakavenka.trialsscore.adapter.EventScoreAdapter
 import org.hamcrest.core.StringContains
 import org.junit.Rule
 import org.junit.Test
@@ -18,23 +19,25 @@ class SectionScoreActivityTest {
     val activity = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun sections_score_page() {
-        // when navigating to sections score
-        // then page contains 10 laps
-//        onView(withId(R.id.lap_score_container))
-//            .check()
+    fun sections_score_landing_page() {
         onView(withText("1")).check(matches(isDisplayed()))
         onView(withText("10")).check(matches(isDisplayed()))
+        onView(withId(R.id.lap_score))
+            .check(matches(withText(StringContains.containsString("score: 0 / 0"))))
     }
+
 
     @Test
     fun total_is_updated_on_click() {
-        onData(withText("4"))
-            .onChildView(withId(R.id.section_score_5))
-            .perform(click())
+        // this click currently lands on 3. need to find how to poke more accurate
+        onView(withId(R.id.lap_score_container))
 //            .perform(RecyclerViewActions.scrollToPosition<EventScoreAdapter.ViewHolder>(0))
+            .perform(RecyclerViewActions.actionOnItemAtPosition<EventScoreAdapter.ViewHolder>(
+                0,
+                click()
+            ))
 
         onView(withId(R.id.lap_score))
-            .check(matches(withText(StringContains.containsString("5"))))
+            .check(matches(withText(StringContains.containsString("score: 0 / 3"))))
     }
 }
