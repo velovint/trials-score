@@ -7,17 +7,23 @@ import android.widget.RadioButton
 import android.widget.RadioGroup
 import android.widget.TextView
 import androidx.core.view.children
+import androidx.recyclerview.widget.RecyclerView
+import net.yakavenka.trialsscore.adapter.EventScoreAdapter
 
 
 class MainActivity : AppCompatActivity() {
     private val sectionScores: MutableCollection<RadioGroup> = mutableListOf()
-    lateinit var lapScore: TextView;
+    lateinit var lapScore: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        lapScore = findViewById(R.id.lap_score);
-        initScoreButtons(R.id.lap_score_container)
+        val recyclerView: RecyclerView = findViewById(R.id.lap_score_container)
+        recyclerView.adapter = EventScoreAdapter()
+
+//        lapScore = findViewById(R.id.lap_score);
+//        initScoreButtons(R.id.lap_score_container)
     }
 
     private fun initScoreButtons(parentId: Int) {
