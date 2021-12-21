@@ -24,7 +24,7 @@ class EventScoreTest {
 
     @Test
     fun getTotalOnEmptyScores() {
-        assertThat(sut.getTotal(), equalTo(0))
+        assertThat(sut.getTotalPoints(), equalTo(0))
     }
 
     @Test
@@ -32,7 +32,7 @@ class EventScoreTest {
         sut.sectionScores[0] = 1
         sut.sectionScores[3] = 2
 
-        assertThat(sut.getTotal(), equalTo(3))
+        assertThat(sut.getTotalPoints(), equalTo(3))
 
     }
 }

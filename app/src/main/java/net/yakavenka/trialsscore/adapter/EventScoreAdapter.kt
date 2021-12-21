@@ -1,5 +1,6 @@
 package net.yakavenka.trialsscore.adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,8 +10,11 @@ import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.model.EventScore
 
-class EventScoreAdapter(private val eventScore: EventScore, private val totalScoreView: TextView):
-    RecyclerView.Adapter<EventScoreAdapter.ViewHolder>() {
+class EventScoreAdapter(
+    private val eventScore: EventScore,
+    private val context: Context,
+    private val totalScoreView: TextView
+) : RecyclerView.Adapter<EventScoreAdapter.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val adapterLayout = LayoutInflater.from(parent.context)
@@ -20,19 +24,27 @@ class EventScoreAdapter(private val eventScore: EventScore, private val totalSco
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.lapNumber.text = (position + 1).toString()
+        holder.scoreZero.setOnClickListener { updateScore(position, 0) }
+        holder.scoreOne.setOnClickListener { updateScore(position, 1) }
+        holder.scoreTwo.setOnClickListener { updateScore(position, 2) }
+        holder.scoreThree.setOnClickListener { updateScore(position, 3) }
         holder.scoreFive.setOnClickListener { updateScore(position, 5) }
     }
 
     private fun updateScore(section: Int, points: Int) {
-        eventScore.sectionScores.set(section, points)
-        totalScoreView.text = eventScore.getTotal().toString()
+        eventScore.sectionScores[section] = points
+        totalScoreView.text = context.resources.getString(
+            R.string.lap_score,
+            eventScore.getCleans(),
+            eventScore.getTotalPoints()
+        )
     }
 
     override fun getItemCount(): Int {
         return eventScore.sectionScores.size
     }
 
-    class ViewHolder(view: View): RecyclerView.ViewHolder(view) {
+    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val lapNumber: TextView = view.findViewById(R.id.lap_number)
         val scoreZero: RadioButton = view.findViewById(R.id.section_score_0)
         val scoreOne: RadioButton = view.findViewById(R.id.section_score_1)
