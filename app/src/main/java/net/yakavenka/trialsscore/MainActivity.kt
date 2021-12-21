@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.core.view.children
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.adapter.EventScoreAdapter
+import net.yakavenka.trialsscore.model.EventScore
 
 
 class MainActivity : AppCompatActivity() {
@@ -20,7 +21,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val recyclerView: RecyclerView = findViewById(R.id.lap_score_container)
-        recyclerView.adapter = EventScoreAdapter()
+        recyclerView.adapter = EventScoreAdapter(EventScore("Champ"), findViewById(R.id.lap_score))
 
 //        lapScore = findViewById(R.id.lap_score);
 //        initScoreButtons(R.id.lap_score_container)

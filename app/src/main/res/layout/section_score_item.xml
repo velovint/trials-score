@@ -17,22 +17,27 @@
         android:orientation="horizontal">
 
         <RadioButton
+            android:id="@+id/section_score_0"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tooltipText="0"/>
         <RadioButton
+            android:id="@+id/section_score_1"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tooltipText="1"/>
         <RadioButton
+            android:id="@+id/section_score_2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tooltipText="2"/>
         <RadioButton
+            android:id="@+id/section_score_3"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tooltipText="3"/>
         <RadioButton
+            android:id="@+id/section_score_5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:tooltipText="5"/>
