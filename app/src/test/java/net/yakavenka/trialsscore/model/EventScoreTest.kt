@@ -33,6 +33,17 @@ class EventScoreTest {
         sut.sectionScores[3] = 2
 
         assertThat(sut.getTotalPoints(), equalTo(3))
+    }
 
+    @Test
+    fun getCleansOnEmptyScores() {
+        assertThat(sut.getCleans(), equalTo(0))
+    }
+
+    @Test
+    fun getCleansOnSingleCleanSection() {
+        sut.sectionScores[0] = 0
+
+        assertThat(sut.getCleans(), equalTo(1))
     }
 }

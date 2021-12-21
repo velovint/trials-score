@@ -2,13 +2,13 @@ package net.yakavenka.trialsscore.model
 
 data class EventScore(
     val riderName: String,
-    val sectionScores: MutableList<Int> = MutableList(14, { 0 } )
+    val sectionScores: MutableList<Int> = MutableList(14, { -1 } )
 ) {
     fun getTotalPoints(): Int {
-        return sectionScores.sum()
+        return sectionScores.filter { it > 0 }.sum()
     }
 
     fun getCleans(): Int {
-        return 0
+        return sectionScores.filter { it == 0 }.count()
     }
 }
