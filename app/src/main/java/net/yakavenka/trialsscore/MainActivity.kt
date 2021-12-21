@@ -30,13 +30,13 @@ class MainActivity : AppCompatActivity() {
             }
             .filterIsInstance<RadioButton>()
             .forEach {
-                it.setOnClickListener { updateLapScore() }
+                it.setOnClickListener { updateLapPoints() }
             }
     }
 
-    private fun updateLapScore() {
+    private fun updateLapPoints() {
         var cleans = 0
-        val sum = sectionScores
+        val points = sectionScores
             .asSequence()
             .map { it.checkedRadioButtonId }
             .filter { it != -1 }
@@ -47,6 +47,6 @@ class MainActivity : AppCompatActivity() {
                 score
             }
             .sum()
-        lapScore.text = getString(R.string.lap_score, cleans, sum)
+        lapScore.text = getString(R.string.lap_score, cleans, points)
     }
 }
