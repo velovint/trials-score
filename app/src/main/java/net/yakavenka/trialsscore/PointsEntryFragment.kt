@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.adapter.EventScoreAdapter
+import net.yakavenka.trialsscore.databinding.FragmentPointsEntryBinding
 import net.yakavenka.trialsscore.model.EventScore
 
 // TODO: Rename parameter arguments, choose names that match
@@ -23,6 +24,10 @@ class PointsEntryFragment : Fragment() {
     // TODO: Rename and change types of parameters
     private var param1: String? = null
     private var param2: String? = null
+    private var _binding: FragmentPointsEntryBinding? = null
+    // This property is only valid between onCreateView and
+    // onDestroyView.
+    private val binding get() = _binding!!
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,20 +38,27 @@ class PointsEntryFragment : Fragment() {
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_points_entry, container, false)
+        _binding = FragmentPointsEntryBinding.inflate(inflater, container, false)
+        val view = binding.root
+        return view
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val recyclerView: RecyclerView = view.findViewById(R.id.lap_score_container)
-        recyclerView.adapter = EventScoreAdapter(
+
+        binding.lapScoreContainer.adapter = EventScoreAdapter(
             EventScore("Champ"),
             requireContext(),
-            view.findViewById(R.id.lap_score))
+            binding.lapScore)
     }
 
     companion object {
