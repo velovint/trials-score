@@ -18,11 +18,5 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val recyclerView: RecyclerView = findViewById(R.id.lap_score_container)
-        recyclerView.adapter = EventScoreAdapter(
-            EventScore("Champ"),
-            this,
-            findViewById(R.id.lap_score))
-
     }
 }

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/pointsEntryFragment">
+
+    <fragment
+        android:id="@+id/eventScoreFragment"
+        android:name="net.yakavenka.trialsscore.EventScoreFragment"
+        android:label="fragment_event_score"
+        tools:layout="@layout/fragment_event_score" >
+        <action
+            android:id="@+id/action_eventScoreFragment_to_pointsEntryFragment"
+            app:destination="@id/pointsEntryFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/pointsEntryFragment"
+        android:name="net.yakavenka.trialsscore.PointsEntryFragment"
+        android:label="fragment_points_entry"
+        tools:layout="@layout/fragment_points_entry" />
+</navigation>
