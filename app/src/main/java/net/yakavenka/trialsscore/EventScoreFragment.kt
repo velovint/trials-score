@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 
 class EventScoreFragment : Fragment() {
 
+//    private lateinit var binding: EventScoreFragmentBinding
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
