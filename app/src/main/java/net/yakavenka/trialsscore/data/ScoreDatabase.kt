@@ -21,6 +21,7 @@ abstract class ScoreDatabase : RoomDatabase() {
                         ScoreDatabase::class.java,
                         "score_database"
                     )
+                        .createFromAsset("database/score_database.db")
                         .fallbackToDestructiveMigration()
                         .build()
                 INSTANCE = instance
