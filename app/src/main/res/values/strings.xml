@@ -1,9 +1,11 @@
 <resources>
     <string name="app_name">TrialsScore</string>
-    <string name="lap_score">Lap score: %d / %d</string>
+    <string name="lap_score">%d / %d</string>
+    <string name="lap_score_label">Lap score:</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="rider_label">Rider</string>
     <string name="scores_label">Scores</string>
     <string name="add_new_rider">Add new rider</string>
+    <string name="clear_button">Clear</string>
 </resources>

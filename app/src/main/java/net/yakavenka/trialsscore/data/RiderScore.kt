@@ -8,4 +8,12 @@ import androidx.room.PrimaryKey
 data class RiderScore(
     @PrimaryKey val id: Int,
     @ColumnInfo(name = "rider_name") val riderName: String
-)
+) {
+    fun getCleans(): Int {
+        return 0
+    }
+
+    fun getPoints(): Int {
+        return 0
+    }
+}

@@ -15,4 +15,15 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Champ" />
 
+    <TextView
+        android:id="@+id/rider_score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/margin_between_elements"
+        android:fontFamily="sans-serif"
+        android:text="@string/lap_score"
+        app:layout_constraintStart_toEndOf="@id/rider_name"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="0 / 0" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -5,12 +5,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.databinding.RiderScoreItemBinding
 
 
 class RiderScoreAdapter(
-    private val onClick: (EventScore) -> Unit
+    private val onClick: (RiderScore) -> Unit
 ) : ListAdapter<RiderScore, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -18,13 +19,16 @@ class RiderScoreAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        val currentItem = getItem(position)
+        holder.itemView.setOnClickListener { onClick(currentItem)}
+        holder.bind(currentItem)
     }
 
     class ViewHolder(private val binding: RiderScoreItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(riderScore: RiderScore) {
+        fun bind(scoreCard: RiderScore) {
             binding.apply {
-                riderName.text = riderScore.riderName
+                riderName.text = scoreCard.riderName
+                riderScore.text = root.resources.getString(R.string.lap_score, scoreCard.getCleans(), scoreCard.getPoints())
             }
         }
     }

@@ -6,24 +6,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.databinding.FragmentEventScoreBinding
-import net.yakavenka.trialsscore.databinding.SectionScoreItemBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
+import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
 
 class EventScoreFragment : Fragment() {
 
     private var _binding: FragmentEventScoreBinding? = null
     private val binding get() = _binding!!
 
-    private val scoreDao: RiderScoreDao by lazy {
-        (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+    private val eventScores: EventScoreViewModel by activityViewModels {
+        EventScoreViewModel.Factory(
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao())
     }
 
     override fun onCreateView(
@@ -38,11 +34,13 @@ class EventScoreFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = RiderScoreAdapter({})
+        val adapter = RiderScoreAdapter {
+            Log.d("EventScoreFragment", "Clicked on " + it.riderName)
+        }
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this.context)
 
-        scoreDao.getAll().asLiveData().observe(viewLifecycleOwner) { scores ->
+        eventScores.allScores.observe(viewLifecycleOwner) { scores ->
 //            Log.d("EventScoreFragment", "Got scores " + scores)
             scores.let { adapter.submitList(scores) }
         }

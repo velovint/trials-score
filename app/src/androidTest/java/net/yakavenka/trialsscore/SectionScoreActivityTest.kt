@@ -23,7 +23,7 @@ class SectionScoreActivityTest {
         onView(withText("1")).check(matches(isDisplayed()))
         onView(withText("10")).check(matches(isDisplayed()))
         onView(withId(R.id.lap_score))
-            .check(matches(withText(StringContains.containsString("score: 0 / 0"))))
+            .check(matches(withText(StringContains.containsString("0 / 0"))))
     }
 
 
