@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import net.yakavenka.trialsscore.databinding.FragmentEventScoreBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
@@ -36,6 +37,8 @@ class EventScoreFragment : Fragment() {
 
         val adapter = RiderScoreAdapter {
             Log.d("EventScoreFragment", "Clicked on " + it.riderName)
+            val action = EventScoreFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(it.riderId)
+            findNavController().navigate(action)
         }
         binding.recyclerView.adapter = adapter
         binding.recyclerView.layoutManager = LinearLayoutManager(this.context)

@@ -18,5 +18,9 @@
         android:id="@+id/pointsEntryFragment"
         android:name="net.yakavenka.trialsscore.PointsEntryFragment"
         android:label="fragment_points_entry"
-        tools:layout="@layout/fragment_points_entry" />
+        tools:layout="@layout/fragment_points_entry" >
+        <argument
+            android:name="riderId"
+            app:argType="integer" />
+    </fragment>
 </navigation>
