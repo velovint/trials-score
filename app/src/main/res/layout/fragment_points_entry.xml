@@ -8,6 +8,9 @@
         <variable
             name="scoreCard"
             type="net.yakavenka.trialsscore.model.EventScore" />
+        <variable
+            name="fragment"
+            type="net.yakavenka.trialsscore.PointsEntryFragment" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -33,6 +36,16 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             tools:text="Lap score: 6 / 1" />
+
+        <Button
+            android:id="@+id/clear_points_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Clear"
+            android:onClick="@{() -> fragment.clearResults()}"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            style="?attr/materialButtonOutlinedStyle" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

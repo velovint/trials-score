@@ -1,6 +1,7 @@
 package net.yakavenka.trialsscore
 
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -59,6 +60,11 @@ class PointsEntryFragment : Fragment() {
             EventScore("Champ"),
             requireContext(),
             binding.lapScore)
+        binding.fragment = this
+    }
+
+    fun clearResults() {
+        Log.d("PointsEntryFragment", "Clearing results")
     }
 
     companion object {
