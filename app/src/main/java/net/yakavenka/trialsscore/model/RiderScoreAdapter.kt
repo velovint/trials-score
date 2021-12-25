@@ -6,13 +6,13 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
-import net.yakavenka.trialsscore.data.RiderScore
+import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.databinding.RiderScoreItemBinding
 
 
 class RiderScoreAdapter(
-    private val onClick: (RiderScore) -> Unit
-) : ListAdapter<RiderScore, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
+    private val onClick: (RiderScoreAggregate) -> Unit
+) : ListAdapter<RiderScoreAggregate, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         return ViewHolder(RiderScoreItemBinding.inflate(LayoutInflater.from(parent.context)))
@@ -25,7 +25,7 @@ class RiderScoreAdapter(
     }
 
     class ViewHolder(private val binding: RiderScoreItemBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(scoreCard: RiderScore) {
+        fun bind(scoreCard: RiderScoreAggregate) {
             binding.apply {
                 riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(R.string.lap_score, scoreCard.getCleans(), scoreCard.getPoints())
@@ -34,12 +34,12 @@ class RiderScoreAdapter(
     }
 
     companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RiderScore>() {
-            override fun areItemsTheSame(oldItem: RiderScore, newItem: RiderScore): Boolean {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RiderScoreAggregate>() {
+            override fun areItemsTheSame(oldItem: RiderScoreAggregate, newItem: RiderScoreAggregate): Boolean {
                 return oldItem.riderName == newItem.riderName
             }
 
-            override fun areContentsTheSame(oldItem: RiderScore, newItem: RiderScore): Boolean {
+            override fun areContentsTheSame(oldItem: RiderScoreAggregate, newItem: RiderScoreAggregate): Boolean {
                 return false // TODO Fix
             }
         }
