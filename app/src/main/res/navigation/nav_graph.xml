@@ -8,8 +8,8 @@
     <fragment
         android:id="@+id/eventScoreFragment"
         android:name="net.yakavenka.trialsscore.EventScoreFragment"
-        android:label="fragment_event_score"
-        tools:layout="@layout/fragment_event_score" >
+        android:label="@string/app_name"
+        tools:layout="@layout/fragment_event_score">
         <action
             android:id="@+id/action_eventScoreFragment_to_pointsEntryFragment"
             app:destination="@id/pointsEntryFragment" />

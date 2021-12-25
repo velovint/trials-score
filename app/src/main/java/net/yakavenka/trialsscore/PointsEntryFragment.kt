@@ -60,7 +60,6 @@ class PointsEntryFragment : Fragment() {
             EventScore("Champ"),
             requireContext(),
             binding.lapScore)
-        binding.fragment = this
     }
 
     fun clearResults() {
