@@ -8,6 +8,7 @@ import android.widget.RadioButton
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
+import net.yakavenka.trialsscore.databinding.SectionScoreItemBinding
 import net.yakavenka.trialsscore.model.EventScore
 
 class EventScoreAdapter(
@@ -28,18 +29,20 @@ class EventScoreAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val adapterLayout = LayoutInflater.from(parent.context)
-            .inflate(R.layout.section_score_item, parent, false)
-        return ViewHolder(adapterLayout)
+        val binding =
+            SectionScoreItemBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.lapNumber.text = (position + 1).toString()
-        holder.scoreZero.setOnClickListener { updateScore(position, 0) }
-        holder.scoreOne.setOnClickListener { updateScore(position, 1) }
-        holder.scoreTwo.setOnClickListener { updateScore(position, 2) }
-        holder.scoreThree.setOnClickListener { updateScore(position, 3) }
-        holder.scoreFive.setOnClickListener { updateScore(position, 5) }
+        holder.binding.apply {
+            lapNumber.text = (position + 1).toString()
+            sectionScore0.setOnClickListener { updateScore(position, 0) }
+            sectionScore1.setOnClickListener { updateScore(position, 1) }
+            sectionScore2.setOnClickListener { updateScore(position, 2) }
+            sectionScore3.setOnClickListener { updateScore(position, 3) }
+            sectionScore5.setOnClickListener { updateScore(position, 5) }
+        }
     }
 
     override fun getItemCount(): Int {
@@ -51,12 +54,9 @@ class EventScoreAdapter(
         updateTotal()
     }
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val lapNumber: TextView = view.findViewById(R.id.lap_number)
-        val scoreZero: RadioButton = view.findViewById(R.id.section_score_0)
-        val scoreOne: RadioButton = view.findViewById(R.id.section_score_1)
-        val scoreTwo: RadioButton = view.findViewById(R.id.section_score_2)
-        val scoreThree: RadioButton = view.findViewById(R.id.section_score_3)
-        val scoreFive: RadioButton = view.findViewById(R.id.section_score_5)
+    class ViewHolder(
+        val binding: SectionScoreItemBinding
+    ) : RecyclerView.ViewHolder(binding.root) {
+
     }
 }

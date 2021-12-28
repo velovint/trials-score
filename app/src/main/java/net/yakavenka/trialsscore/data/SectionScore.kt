@@ -7,4 +7,6 @@ data class SectionScore(
     val riderId: Int,
     val sectionNumber: Int,
     val points: Int
-)
+) {
+    class SectionScoreList(val sectionScores: List<SectionScore>)
+}

@@ -36,7 +36,7 @@ class EventScoreFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         val adapter = RiderScoreAdapter {
-            Log.d("EventScoreFragment", "Clicked on " + it.riderName)
+            Log.d("EventScoreFragment", "Clicked on " + it)
             val action = EventScoreFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(it.riderId)
             findNavController().navigate(action)
         }
