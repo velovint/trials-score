@@ -46,6 +46,12 @@ class ScoreCardViewModel(
         }
     }
 
+    fun clearScores(riderId: Int) {
+        viewModelScope.launch {
+            riderScoreDao.deleteRiderScores(riderId)
+        }
+    }
+
     class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {

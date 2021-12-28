@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.adapter.EventScoreAdapter
@@ -70,6 +71,12 @@ class PointsEntryFragment : Fragment() {
 
             binding.lapScore.text =
                 getString(R.string.lap_score, scoreCard.getPoints(), scoreCard.getCleans())
+        }
+
+        binding.clearPointsButton.setOnClickListener {
+            scoreCardViewModel.clearScores(navigationArgs.riderId)
+            val action = PointsEntryFragmentDirections.actionPointsEntryFragmentToEventScoreFragment()
+            findNavController().navigate(action)
         }
     }
 

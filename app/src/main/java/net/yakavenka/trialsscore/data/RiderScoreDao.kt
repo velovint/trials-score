@@ -9,8 +9,13 @@ import kotlinx.coroutines.flow.Flow
 interface RiderScoreDao {
     @Query("SELECT * FROM rider_score")
     fun getAll(): Flow<List<RiderScoreAggregate>>
+
     @Query("SELECT * FROM section_score WHERE riderId = :riderId")
     fun sectionScores(riderId: Int): Flow<List<SectionScore>>
+
     @Update
     suspend fun updateSectionScore(sectionScore: SectionScore)
+
+    @Query("DELETE FROM section_score WHERE riderId = :riderId")
+    suspend fun deleteRiderScores(riderId: Int)
 }

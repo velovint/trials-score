@@ -22,5 +22,10 @@
         <argument
             android:name="riderId"
             app:argType="integer" />
+        <action
+            android:id="@+id/action_pointsEntryFragment_to_eventScoreFragment"
+            app:destination="@id/eventScoreFragment"
+            app:popUpTo="@id/eventScoreFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>
