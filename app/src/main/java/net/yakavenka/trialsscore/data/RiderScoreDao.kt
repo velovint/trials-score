@@ -1,6 +1,7 @@
 package net.yakavenka.trialsscore.data
 
 import androidx.room.Dao
+import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
@@ -18,4 +19,7 @@ interface RiderScoreDao {
 
     @Query("DELETE FROM section_score WHERE riderId = :riderId")
     suspend fun deleteRiderScores(riderId: Int)
+
+    @Insert
+    suspend fun insertAll(sectionScores: List<SectionScore>)
 }

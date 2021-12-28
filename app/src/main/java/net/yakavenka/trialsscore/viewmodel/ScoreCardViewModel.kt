@@ -3,6 +3,7 @@ package net.yakavenka.trialsscore.viewmodel
 import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.onEmpty
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
@@ -24,8 +25,16 @@ class ScoreCardViewModel(
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            riderScoreDao.sectionScores(riderId).collect {
-                _scoreCard.postValue(RiderScoreAggregate(RiderScore(0, "NA"), it))
+            riderScoreDao.sectionScores(riderId).collect { sectionScores ->
+                val riderScore :RiderScoreAggregate
+                if (sectionScores.isEmpty()) {
+                    val emptyScoreCollection: List<SectionScore> = SectionScore.SectionScoreList.createEmptySet(riderId)
+                    riderScoreDao.insertAll(emptyScoreCollection)
+                    riderScore = RiderScoreAggregate(RiderScore(0, "NA"), emptyScoreCollection)
+                } else {
+                    riderScore = RiderScoreAggregate(RiderScore(0, "NA"), sectionScores)
+                }
+                _scoreCard.postValue(riderScore)
             }
         }
     }
