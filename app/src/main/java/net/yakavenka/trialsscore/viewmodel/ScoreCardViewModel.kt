@@ -32,7 +32,9 @@ class ScoreCardViewModel(
 
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")
-        // TODO save in DAO
+        viewModelScope.launch {
+            riderScoreDao.updateSectionScore(updatedRecord)
+        }
         val newScores =
             _scoreCard.value?.sections?.map { original ->
                 if (original.sectionNumber == updatedRecord.sectionNumber)
