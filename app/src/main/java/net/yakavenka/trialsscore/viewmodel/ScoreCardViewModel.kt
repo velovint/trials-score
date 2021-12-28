@@ -30,12 +30,15 @@ class ScoreCardViewModel(
         }
     }
 
-    fun updateSectionScore(sectionScore: SectionScore) {
-        Log.d(TAG, "Updating section score $sectionScore")
+    fun updateSectionScore(updatedRecord: SectionScore) {
+        Log.d(TAG, "Updating section score $updatedRecord")
         // TODO save in DAO
         val newScores =
-            _scoreCard.value?.sections?.filterNot { it.sectionNumber.equals(sectionScore.sectionNumber) }
-                ?.plus(sectionScore)
+            _scoreCard.value?.sections?.map { original ->
+                if (original.sectionNumber == updatedRecord.sectionNumber)
+                    updatedRecord
+                else original
+            }
         newScores?.let {
             _scoreCard.postValue(_scoreCard.value?.copy(sections = it))
         }

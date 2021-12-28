@@ -23,6 +23,7 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
  */
 class PointsEntryFragment : Fragment() {
     private var _binding: FragmentPointsEntryBinding? = null
+
     // This property is only valid between onCreateView and
     // onDestroyView.
     private val binding get() = _binding!!
@@ -31,12 +32,14 @@ class PointsEntryFragment : Fragment() {
 
     private val eventScores: EventScoreViewModel by activityViewModels {
         EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao())
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+        )
     }
 
     private val scoreCardViewModel: ScoreCardViewModel by viewModels {
         ScoreCardViewModel.Factory(
-        (activity?.application as TrialsScoreApplication).database.riderScoreDao())
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+        )
     }
 
     override fun onCreateView(
@@ -65,17 +68,8 @@ class PointsEntryFragment : Fragment() {
             }
             binding.lapScoreContainer.adapter = adapter
 
-            // create SectionScoreAdapter and pass it a list of SectionScore
-            // along with binding
-            // bind data
-            // take readily available data from collection
-
-//            binding.lapScoreContainer.adapter = EventScoreAdapter(
-//                EventScore("Champ"),
-//                requireContext(),
-//                binding.lapScore)
-            binding.lapScore.setText(
-                getString(R.string.lap_score, scoreCard.getPoints(), scoreCard.getCleans()))
+            binding.lapScore.text =
+                getString(R.string.lap_score, scoreCard.getPoints(), scoreCard.getCleans())
         }
     }
 
