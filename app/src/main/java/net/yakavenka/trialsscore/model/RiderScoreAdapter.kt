@@ -7,6 +7,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
+import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.databinding.RiderScoreItemBinding
 
 
@@ -27,8 +28,9 @@ class RiderScoreAdapter(
     class ViewHolder(private val binding: RiderScoreItemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(scoreCard: RiderScoreAggregate) {
             binding.apply {
+                val sectionScores = SectionScore.Set(scoreCard.sections)
                 riderName.text = scoreCard.riderName
-                riderScore.text = root.resources.getString(R.string.lap_score, scoreCard.getCleans(), scoreCard.getPoints())
+                riderScore.text = root.resources.getString(R.string.lap_score, sectionScores.getPoints(), sectionScores.getCleans())
             }
         }
     }

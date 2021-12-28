@@ -68,9 +68,10 @@ class PointsEntryFragment : Fragment() {
                 scoreCardViewModel.updateSectionScore(sectionScore)
             }
             binding.lapScoreContainer.adapter = adapter
-
+        }
+        scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { sectionScores ->
             binding.lapScore.text =
-                getString(R.string.lap_score, scoreCard.getPoints(), scoreCard.getCleans())
+                getString(R.string.lap_score, sectionScores.getPoints(), sectionScores.getCleans())
         }
 
         binding.clearPointsButton.setOnClickListener {

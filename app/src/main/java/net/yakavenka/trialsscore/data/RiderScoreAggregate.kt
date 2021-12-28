@@ -13,12 +13,4 @@ data class RiderScoreAggregate(
 ) {
     val riderId: Int get() = riderEntity.id
     val riderName: String get() = riderEntity.riderName
-
-    fun getCleans(): Int {
-        return sections.filter { it.points == 0 }.count()
-    }
-
-    fun getPoints(): Int {
-        return sections.map { it.points }.sum()
-    }
 }
