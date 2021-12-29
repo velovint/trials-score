@@ -13,6 +13,9 @@
         <action
             android:id="@+id/action_eventScoreFragment_to_pointsEntryFragment"
             app:destination="@id/pointsEntryFragment" />
+        <action
+            android:id="@+id/action_eventScoreFragment_to_editRiderFragment"
+            app:destination="@id/editRiderFragment" />
     </fragment>
     <fragment
         android:id="@+id/pointsEntryFragment"
@@ -28,4 +31,9 @@
             app:popUpTo="@id/eventScoreFragment"
             app:popUpToInclusive="true" />
     </fragment>
+    <fragment
+        android:id="@+id/editRiderFragment"
+        android:name="net.yakavenka.trialsscore.EditRiderFragment"
+        android:label="fragment_edit_rider"
+        tools:layout="@layout/fragment_edit_rider" />
 </navigation>

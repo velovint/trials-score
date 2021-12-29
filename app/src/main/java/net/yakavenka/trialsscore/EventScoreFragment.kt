@@ -32,6 +32,11 @@ class EventScoreFragment : Fragment() {
         return binding.root
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -47,10 +52,10 @@ class EventScoreFragment : Fragment() {
 //            Log.d("EventScoreFragment", "Got scores " + scores)
             scores.let { adapter.submitList(scores) }
         }
-    }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        _binding = null
+        binding.floatingActionButton.setOnClickListener {
+            val action = EventScoreFragmentDirections.actionEventScoreFragmentToEditRiderFragment()
+            findNavController().navigate(action)
+        }
     }
 }
