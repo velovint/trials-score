@@ -5,7 +5,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import net.yakavenka.trialsscore.databinding.FragmentEditRiderBinding
+import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
+import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 /**
  * [Fragment] to Add/Edit rider info
@@ -14,6 +18,12 @@ class EditRiderFragment : Fragment() {
 
     private var _binding: FragmentEditRiderBinding? = null
     private val binding get() = _binding!!
+
+    private val viewModel: EditRiderViewModel by viewModels {
+        EditRiderViewModel.Factory(
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -28,4 +38,16 @@ class EditRiderFragment : Fragment() {
         _binding = null
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.saveAction.setOnClickListener {
+            viewModel.addRider(
+                binding.riderName.text.toString(),
+                binding.riderClass.text.toString()
+            )
+            val action = EditRiderFragmentDirections.actionEditRiderFragmentToEventScoreFragment()
+            findNavController().navigate(action)
+        }
+    }
 }

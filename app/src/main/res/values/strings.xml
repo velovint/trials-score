@@ -8,4 +8,7 @@
     <string name="scores_label">Scores</string>
     <string name="add_new_rider">Add new rider</string>
     <string name="clear_button">Clear</string>
+    <string name="rider_name_req">Rider Name *</string>
+    <string name="save_action">Save</string>
+    <string name="rider_class_req">Rider Class *</string>
 </resources>

@@ -22,4 +22,7 @@ interface RiderScoreDao {
 
     @Insert
     suspend fun insertAll(sectionScores: List<SectionScore>)
+
+    @Insert
+    suspend fun addRider(riderScore: RiderScore)
 }

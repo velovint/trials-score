@@ -35,5 +35,9 @@
         android:id="@+id/editRiderFragment"
         android:name="net.yakavenka.trialsscore.EditRiderFragment"
         android:label="fragment_edit_rider"
-        tools:layout="@layout/fragment_edit_rider" />
+        tools:layout="@layout/fragment_edit_rider" >
+        <action
+            android:id="@+id/action_editRiderFragment_to_eventScoreFragment"
+            app:destination="@id/eventScoreFragment" />
+    </fragment>
 </navigation>
