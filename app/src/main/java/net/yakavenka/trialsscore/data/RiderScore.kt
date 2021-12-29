@@ -7,5 +7,6 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "rider_score")
 data class RiderScore(
     @PrimaryKey val id: Int,
-    @ColumnInfo(name = "rider_name") val riderName: String,
+    @ColumnInfo(name = "name") val name: String,
+    @ColumnInfo(name = "class") val riderClass: String
 )

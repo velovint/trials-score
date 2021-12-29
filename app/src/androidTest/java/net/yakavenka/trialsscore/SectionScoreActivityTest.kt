@@ -26,7 +26,6 @@ class SectionScoreActivityTest {
             .check(matches(withText(StringContains.containsString("0 / 0"))))
     }
 
-
     @Test
     fun total_is_updated_on_click() {
         // this click currently lands on 3. need to find how to poke more accurate

@@ -12,5 +12,5 @@ data class RiderScoreAggregate(
     val sections: List<SectionScore>
 ) {
     val riderId: Int get() = riderEntity.id
-    val riderName: String get() = riderEntity.riderName
+    val riderName: String get() = riderEntity.name
 }

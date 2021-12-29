@@ -31,12 +31,6 @@ class PointsEntryFragment : Fragment() {
 
     private val navigationArgs: PointsEntryFragmentArgs by navArgs()
 
-    private val eventScores: EventScoreViewModel by activityViewModels {
-        EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
-        )
-    }
-
     private val scoreCardViewModel: ScoreCardViewModel by viewModels {
         ScoreCardViewModel.Factory(
             (activity?.application as TrialsScoreApplication).database.riderScoreDao()
@@ -62,9 +56,9 @@ class PointsEntryFragment : Fragment() {
 
         scoreCardViewModel.fetchScores(navigationArgs.riderId)
 
-        scoreCardViewModel.scoreCard.observe(viewLifecycleOwner) { scoreCard ->
-            Log.d("EventScoreFragment", "Loaded ScoreCard $scoreCard")
-            val adapter = SectionScoreAdapter(scoreCard.sections) { sectionScore ->
+        scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { scoreSet ->
+            Log.d("EventScoreFragment", "Loaded ScoreCard $scoreSet")
+            val adapter = SectionScoreAdapter(scoreSet.sectionScores) { sectionScore ->
                 scoreCardViewModel.updateSectionScore(sectionScore)
             }
             binding.lapScoreContainer.adapter = adapter
