@@ -32,21 +32,24 @@ class SectionScoreActivityTest {
     }
 
     @Test
-    fun sections_score_landing_page() {
+    fun navigateToScoreEntryPage() {
         val riderName = giverRegisteredRider()
 
         onView(withText(riderName)).perform(click())
 
         onView(withText("1")).check(matches(isDisplayed()))
-        onView(withText("10")).check(matches(isDisplayed()))
+        onView(withText("9")).check(matches(isDisplayed()))
         onView(withId(R.id.lap_score))
             .check(matches(withText(StringContains.containsString("0 / 0"))))
     }
 
     @Test
-    @Ignore("broken yet")
-    fun total_is_updated_on_click() {
-        // this click currently lands on 3. need to find how to poke more accurate
+    fun pointsEntryPageUpdatesTotalScore() {
+        val riderName = giverRegisteredRider()
+
+        onView(withText(riderName)).perform(click())
+
+        // this click currently lands on 2. need to find how to poke more accurate
         onView(withId(R.id.lap_score_container))
 //            .perform(RecyclerViewActions.scrollToPosition<EventScoreAdapter.ViewHolder>(0))
             .perform(RecyclerViewActions.actionOnItemAtPosition<EventScoreAdapter.ViewHolder>(
@@ -55,7 +58,7 @@ class SectionScoreActivityTest {
             ))
 
         onView(withId(R.id.lap_score))
-            .check(matches(withText(StringContains.containsString("score: 0 / 3"))))
+            .check(matches(withText(StringContains.containsString("2 / 0"))))
     }
 
     private fun giverRegisteredRider(): String {
