@@ -1,7 +1,7 @@
 ## TODO
-* Score formatter that can be shared between list and entry
-* Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though
 * Add SectionScoresRepository and move load or create scores logic in it
+* Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though
+* Score formatter that can be shared between list and entry
 * Move Clear button to top menu
 * Page title on score entry page
 * Group entries on leaderboard by class

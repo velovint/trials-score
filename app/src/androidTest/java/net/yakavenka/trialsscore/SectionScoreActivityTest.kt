@@ -9,9 +9,8 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.javafaker.Faker
-import net.yakavenka.trialsscore.adapter.EventScoreAdapter
+import net.yakavenka.trialsscore.model.SectionScoreAdapter
 import org.hamcrest.core.StringContains
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -52,7 +51,7 @@ class SectionScoreActivityTest {
         // this click currently lands on 2. need to find how to poke more accurate
         onView(withId(R.id.lap_score_container))
 //            .perform(RecyclerViewActions.scrollToPosition<EventScoreAdapter.ViewHolder>(0))
-            .perform(RecyclerViewActions.actionOnItemAtPosition<EventScoreAdapter.ViewHolder>(
+            .perform(RecyclerViewActions.actionOnItemAtPosition<SectionScoreAdapter.ViewHolder>(
                 0,
                 click()
             ))
