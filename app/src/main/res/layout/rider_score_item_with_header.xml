@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <TextView
+        style="@style/Widget.Inventory.Header"
+        android:id="@+id/rider_class_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Advanced" />
+    <TextView
+        style="@style/Widget.Inventory.Header"
+        android:id="@+id/rider_name_header"
+        app:layout_constraintTop_toBottomOf="@id/rider_class_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/rider_score_header"
+        app:layout_constraintHorizontal_weight="2"
+        android:text="@string/rider_label" />
+
+    <TextView
+        style="@style/Widget.Inventory.Header"
+        android:id="@+id/rider_score_header"
+        app:layout_constraintTop_toBottomOf="@id/rider_class_header"
+        app:layout_constraintStart_toEndOf="@id/rider_name_header"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1"
+        android:text="@string/scores_label" />
+
+    <View
+        android:id="@+id/divider"
+        android:layout_marginTop="@dimen/text_margin"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rider_name_header"
+        style="@style/Divider"/>
+
+    <TextView
+        android:id="@+id/rider_name"
+        style="@style/Widget.Inventory.ListItemTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/rider_score"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:layout_constraintHorizontal_weight="2"
+        tools:text="Champ" />
+
+    <TextView
+        android:id="@+id/rider_score"
+        style="@style/Widget.Inventory.ListItemTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        android:text="@string/lap_score"
+        android:layout_columnWeight="1"
+        app:layout_constraintStart_toEndOf="@id/rider_name"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/divider"
+        app:layout_constraintHorizontal_weight="1"
+        tools:text="0 / 0" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

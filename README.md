@@ -5,6 +5,7 @@
 * Page title on score entry page
 * Score formatter that can be shared between list and entry
 * How to use DI?
+* Edit rider name/class
 * ~Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though~
 * ~Add SectionScoresRepository and move load or create scores logic in it~
 * ~Update score calculation to ignore not scored sections~
