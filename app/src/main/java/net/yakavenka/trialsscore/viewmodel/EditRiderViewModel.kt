@@ -12,7 +12,7 @@ class EditRiderViewModel(
 ) : ViewModel() {
     fun addRider(name: String, riderClass: String) {
         viewModelScope.launch {
-            riderScoreDao.addRider(RiderScore(0, name, riderClass))
+            riderScoreDao.addRider(RiderScore(name = name, riderClass = riderClass))
         }
     }
 
