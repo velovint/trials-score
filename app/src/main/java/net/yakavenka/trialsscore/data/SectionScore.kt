@@ -12,12 +12,12 @@ data class SectionScore(
     class Set(val sectionScores: List<SectionScore>) {
 
         companion object {
-            fun createForRider(riderId: Int): List<SectionScore> {
+            fun createForRider(riderId: Int): SectionScore.Set {
                 val sectionScores = mutableListOf<SectionScore>()
                 range(1, 11).forEach { sectionNum ->
                     sectionScores.add(SectionScore(riderId, sectionNum, -1))
                 }
-                return sectionScores
+                return SectionScore.Set(sectionScores)
             }
         }
 
@@ -26,7 +26,10 @@ data class SectionScore(
         }
 
         fun getPoints(): Int {
-            return sectionScores.map { it.points }.sum()
+            return sectionScores
+                .map { it.points }
+                .filter { it >= 0 }
+                .sum()
         }
     }
 }

@@ -28,9 +28,9 @@ class ScoreCardViewModel(
             riderScoreDao.sectionScores(riderId).collect { sectionScores ->
                 if (sectionScores.isEmpty()) {
                     Log.d(TAG, "Creating blank score card for riderId=$riderId")
-                    val blankScoreCollection: List<SectionScore> = SectionScore.Set.createForRider(riderId)
-                    riderScoreDao.insertAll(blankScoreCollection)
-                    _sectionScores.postValue(SectionScore.Set(blankScoreCollection))
+                    val blankScoreSet = SectionScore.Set.createForRider(riderId)
+                    riderScoreDao.insertAll(blankScoreSet.sectionScores)
+                    _sectionScores.postValue(blankScoreSet)
                 } else {
                     _sectionScores.postValue(SectionScore.Set(sectionScores))
                 }

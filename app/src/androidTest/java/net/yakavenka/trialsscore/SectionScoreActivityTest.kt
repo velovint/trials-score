@@ -59,7 +59,7 @@ class SectionScoreActivityTest {
     }
 
     private fun giverRegisteredRider(): String {
-        val riderName = faker.name().fullName()
+        val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
         onView(withId(R.id.floating_action_button)).perform(click())
         onView(withId(R.id.rider_name)).perform(typeText(riderName))
         onView(withId(R.id.rider_class)).perform(typeText("Novice"))
