@@ -3,20 +3,18 @@ package net.yakavenka.trialsscore.viewmodel
 import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.SectionScore
+import net.yakavenka.trialsscore.data.SectionScoreRepository
+
+private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
-    private val riderScoreDao: RiderScoreDao
+    private val riderScoreDao: RiderScoreDao,
+    private val sectionScoreRepository: SectionScoreRepository
 ) : ViewModel() {
-    private val TAG = "EventScore"
-
-    private val _scoreCard: MutableLiveData<RiderScoreAggregate> = MutableLiveData()
-
-    val scoreCard: LiveData<RiderScoreAggregate>
-        get() = _scoreCard
 
     private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
 
@@ -25,16 +23,8 @@ class ScoreCardViewModel(
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            riderScoreDao.sectionScores(riderId).collect { sectionScores ->
-                if (sectionScores.isEmpty()) {
-                    Log.d(TAG, "Creating blank score card for riderId=$riderId")
-                    val blankScoreSet = SectionScore.Set.createForRider(riderId)
-                    riderScoreDao.insertAll(blankScoreSet.sectionScores)
-                    _sectionScores.postValue(blankScoreSet)
-                } else {
-                    _sectionScores.postValue(SectionScore.Set(sectionScores))
-                }
-            }
+            sectionScoreRepository.fetchOrInitRiderScore(riderId)
+                .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
 
@@ -42,15 +32,6 @@ class ScoreCardViewModel(
         Log.d(TAG, "Updating section score $updatedRecord")
         viewModelScope.launch {
             riderScoreDao.updateSectionScore(updatedRecord)
-        }
-        val newScores =
-            _scoreCard.value?.sections?.map { original ->
-                if (original.sectionNumber == updatedRecord.sectionNumber)
-                    updatedRecord
-                else original
-            }
-        newScores?.let {
-            _scoreCard.postValue(_scoreCard.value?.copy(sections = it))
         }
     }
 
@@ -64,7 +45,7 @@ class ScoreCardViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(riderScoreDao) as T
+                return ScoreCardViewModel(riderScoreDao, SectionScoreRepository(riderScoreDao)) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

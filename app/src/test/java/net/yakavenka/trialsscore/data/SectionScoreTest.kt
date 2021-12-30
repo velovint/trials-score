@@ -11,4 +11,5 @@ class SectionScoreTest {
         assertEquals("Points", 0, sut.getPoints())
         assertEquals("Cleans", 0, sut.getCleans())
     }
+
 }

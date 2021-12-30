@@ -14,6 +14,7 @@ import net.yakavenka.trialsscore.model.SectionScoreAdapter
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 
+private const val TAG = "PointsEntryFragment"
 /**
  * [Fragment] to enter rider points
  */
@@ -52,15 +53,14 @@ class PointsEntryFragment : Fragment() {
         scoreCardViewModel.fetchScores(navigationArgs.riderId)
 
         scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { scoreSet ->
-            Log.d("EventScoreFragment", "Loaded ScoreCard $scoreSet")
+            Log.d(TAG, "Loaded ScoreCard $scoreSet")
             val adapter = SectionScoreAdapter(scoreSet.sectionScores) { sectionScore ->
                 scoreCardViewModel.updateSectionScore(sectionScore)
             }
             binding.lapScoreContainer.adapter = adapter
-        }
-        scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { sectionScores ->
+
             binding.lapScore.text =
-                getString(R.string.lap_score, sectionScores.getPoints(), sectionScores.getCleans())
+                getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
         }
 
         binding.clearPointsButton.setOnClickListener {
