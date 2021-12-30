@@ -16,7 +16,7 @@ class RiderScoreAdapter(
 ) : ListAdapter<RiderScoreAggregate, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return ViewHolder(RiderScoreItemBinding.inflate(LayoutInflater.from(parent.context)))
+        return ViewHolder(RiderScoreItemBinding.inflate(LayoutInflater.from(parent.context), parent, false))
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

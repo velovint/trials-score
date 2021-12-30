@@ -9,17 +9,21 @@
     tools:context=".EventScoreFragment">
 
     <TextView
+        style="@style/Widget.Inventory.Header"
         android:id="@+id/rider_name_header"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/rider_score_header"
+        app:layout_constraintHorizontal_weight="2"
         android:text="@string/rider_label" />
+
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        style="@style/Widget.Inventory.Header"
+        android:id="@+id/rider_score_header"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/rider_name_header"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_weight="1"
         android:text="@string/scores_label" />
 
     <View
