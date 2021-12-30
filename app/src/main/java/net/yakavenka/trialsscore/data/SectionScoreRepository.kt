@@ -20,4 +20,12 @@ class SectionScoreRepository(
         dao.insertAll(blankScoreSet.sectionScores)
         return blankScoreSet
     }
+
+    suspend fun updateSectionScore(updatedRecord: SectionScore) {
+        dao.updateSectionScore(updatedRecord)
+    }
+
+    suspend fun deleteRiderScores(riderId: Int) {
+        dao.deleteRiderScores(riderId)
+    }
 }

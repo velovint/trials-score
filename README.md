@@ -1,12 +1,12 @@
 ## TODO
-* Add SectionScoresRepository and move load or create scores logic in it
-* Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though
-* Score formatter that can be shared between list and entry
-* Move Clear button to top menu
-* Page title on score entry page
 * Group entries on leaderboard by class
 * Sort entries on leaderboard by completed laps (desc), points (asc), name (asc)
+* Move Clear button to top menu
+* Page title on score entry page
+* Score formatter that can be shared between list and entry
 * How to use DI?
+* ~Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though~
+* ~Add SectionScoresRepository and move load or create scores logic in it~
 * ~Update score calculation to ignore not scored sections~
 * ~Reset database between integration tests~
 * ~Integration test for creating new rider record~

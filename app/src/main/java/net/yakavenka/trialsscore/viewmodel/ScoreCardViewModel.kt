@@ -12,7 +12,6 @@ import net.yakavenka.trialsscore.data.SectionScoreRepository
 private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
-    private val riderScoreDao: RiderScoreDao,
     private val sectionScoreRepository: SectionScoreRepository
 ) : ViewModel() {
 
@@ -23,7 +22,8 @@ class ScoreCardViewModel(
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            sectionScoreRepository.fetchOrInitRiderScore(riderId)
+            sectionScoreRepository
+                .fetchOrInitRiderScore(riderId)
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
@@ -31,13 +31,13 @@ class ScoreCardViewModel(
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")
         viewModelScope.launch {
-            riderScoreDao.updateSectionScore(updatedRecord)
+            sectionScoreRepository.updateSectionScore(updatedRecord)
         }
     }
 
     fun clearScores(riderId: Int) {
         viewModelScope.launch {
-            riderScoreDao.deleteRiderScores(riderId)
+            sectionScoreRepository.deleteRiderScores(riderId)
         }
     }
 
@@ -45,7 +45,7 @@ class ScoreCardViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(riderScoreDao, SectionScoreRepository(riderScoreDao)) as T
+                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao)) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
