@@ -1,4 +1,5 @@
 ## TODO
+* First rider in a class isn't marked is not finished
 * Sort riders who didn't finish by class/name instead of anything else 
 * Fix build warnings
 * Move Clear button to top menu
