@@ -1,5 +1,4 @@
 ## TODO
-* Mark riders who didn't finish yet
 * Sort riders who didn't finish by class/name instead of anything else 
 * Fix build warnings
 * Move Clear button to top menu
@@ -7,6 +6,7 @@
 * Score formatter that can be shared between list and entry
 * How to use DI?
 * Edit rider name/class
+* ~Mark riders who didn't finish yet~
 * ~Sort entries on leaderboard by completed laps (desc), points (asc), name (asc)~
 * ~Refactor leaderboard to aggregate results in the DB
   SELECT rs.name, rs.class, COUNT(ss.points) as sections_ridden,  SUM(ss.points) as points,
