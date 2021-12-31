@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
+import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.databinding.RiderScoreItemBinding
 import net.yakavenka.trialsscore.databinding.RiderScoreItemWithHeaderBinding
@@ -16,8 +17,8 @@ import net.yakavenka.trialsscore.databinding.RiderScoreItemWithHeaderBinding
 private const val TAG = "EventScoreFragment"
 
 class RiderScoreAdapter(
-    private val onClick: (RiderScoreAggregate) -> Unit
-) : ListAdapter<RiderScoreAggregate, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
+    private val onClick: (RiderScoreSummary) -> Unit
+) : ListAdapter<RiderScoreSummary, RiderScoreAdapter.ViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         Log.d(TAG, "Creating view of type $viewType")
@@ -54,26 +55,26 @@ class RiderScoreAdapter(
         if (position == 0) return true
         val prevItem = getItem(position - 1)
         val thisItem = getItem(position)
-        if (prevItem.riderEntity.riderClass != thisItem.riderEntity.riderClass) return true
+        if (prevItem.riderClass != thisItem.riderClass) return true
         return false
     }
 
     abstract class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        abstract fun bind(scoreCard: RiderScoreAggregate)
+        abstract fun bind(scoreCard: RiderScoreSummary)
     }
 
     class ViewHolderNoHeader(
         private val binding: RiderScoreItemBinding
     ) : ViewHolder(binding.root) {
 
-        override fun bind(scoreCard: RiderScoreAggregate) {
+        override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
-                val sectionScores = SectionScore.Set(scoreCard.sections)
+//                val sectionScores = SectionScore.Set(scoreCard.sections)
                 riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
-                    sectionScores.getPoints(),
-                    sectionScores.getCleans()
+                    scoreCard.points,
+                    scoreCard.numCleans
                 )
             }
         }
@@ -83,34 +84,32 @@ class RiderScoreAdapter(
         private val binding: RiderScoreItemWithHeaderBinding
     ) : ViewHolder(binding.root) {
 
-        override fun bind(scoreCard: RiderScoreAggregate) {
+        override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
-                val sectionScores = SectionScore.Set(scoreCard.sections)
-
-                riderNameHeader.text = scoreCard.riderEntity.riderClass
+                riderNameHeader.text = scoreCard.riderClass
 
                 riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
-                    sectionScores.getPoints(),
-                    sectionScores.getCleans()
+                    scoreCard.points,
+                    scoreCard.numCleans
                 )
             }
         }
     }
 
     companion object {
-        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RiderScoreAggregate>() {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<RiderScoreSummary>() {
             override fun areItemsTheSame(
-                oldItem: RiderScoreAggregate,
-                newItem: RiderScoreAggregate
+                oldItem: RiderScoreSummary,
+                newItem: RiderScoreSummary
             ): Boolean {
                 return oldItem.riderName == newItem.riderName
             }
 
             override fun areContentsTheSame(
-                oldItem: RiderScoreAggregate,
-                newItem: RiderScoreAggregate
+                oldItem: RiderScoreSummary,
+                newItem: RiderScoreSummary
             ): Boolean {
                 return false // TODO Fix
             }
