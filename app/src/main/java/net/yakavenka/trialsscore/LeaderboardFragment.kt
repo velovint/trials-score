@@ -9,13 +9,13 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import net.yakavenka.trialsscore.databinding.FragmentEventScoreBinding
+import net.yakavenka.trialsscore.databinding.FragmentLeaderboardBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
 import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
 
-class EventScoreFragment : Fragment() {
+class LeaderboardFragment : Fragment() {
 
-    private var _binding: FragmentEventScoreBinding? = null
+    private var _binding: FragmentLeaderboardBinding? = null
     private val binding get() = _binding!!
 
     private val eventScores: EventScoreViewModel by activityViewModels {
@@ -28,7 +28,7 @@ class EventScoreFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        _binding = FragmentEventScoreBinding.inflate(inflater, container, false)
+        _binding = FragmentLeaderboardBinding.inflate(inflater, container, false)
         return binding.root
     }
 
@@ -42,7 +42,7 @@ class EventScoreFragment : Fragment() {
 
         val adapter = RiderScoreAdapter {
             Log.d("EventScoreFragment", "Clicked on $it")
-            val action = EventScoreFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(it.riderId)
+            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(it.riderId)
             findNavController().navigate(action)
         }
         binding.recyclerView.adapter = adapter
@@ -54,7 +54,7 @@ class EventScoreFragment : Fragment() {
         }
 
         binding.floatingActionButton.setOnClickListener {
-            val action = EventScoreFragmentDirections.actionEventScoreFragmentToEditRiderFragment()
+            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment()
             findNavController().navigate(action)
         }
     }

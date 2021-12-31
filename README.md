@@ -1,11 +1,19 @@
 ## TODO
-* Group entries on leaderboard by class
+* Refactor leaderboard to aggregate results in the DB
+      SELECT rs.name, rs.class, COUNT(ss.points) as sections_ridden,  SUM(ss.points) as points,
+        SUM(CASE ss.points  WHEN 0 THEN 1 ELSE 0 END) AS cleans
+      FROM rider_score AS rs
+      LEFT JOIN section_score AS ss ON ss.riderId = rs.id AND ss.points >= 0
+      GROUP BY rs.id
+      ORDER BY class, sections_ridden DESC, points ASC, cleans DESC
 * Sort entries on leaderboard by completed laps (desc), points (asc), name (asc)
+* Fix build warnings
 * Move Clear button to top menu
 * Page title on score entry page
 * Score formatter that can be shared between list and entry
 * How to use DI?
 * Edit rider name/class
+* ~Group entries on leaderboard by class~
 * ~Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though~
 * ~Add SectionScoresRepository and move load or create scores logic in it~
 * ~Update score calculation to ignore not scored sections~
