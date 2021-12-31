@@ -1,12 +1,12 @@
 ## TODO
-* First rider in a class isn't marked is not finished
-* Sort riders who didn't finish by class/name instead of anything else 
 * Fix build warnings
 * Move Clear button to top menu
 * Page title on score entry page
 * Score formatter that can be shared between list and entry
 * How to use DI?
 * Edit rider name/class
+* ~First rider in a class isn't marked as not finished~
+* ~Sort riders who didn't finish by class/name instead of anything else~
 * ~Mark riders who didn't finish yet~
 * ~Sort entries on leaderboard by completed laps (desc), points (asc), name (asc)~
 * ~Refactor leaderboard to aggregate results in the DB

@@ -61,6 +61,11 @@ class RiderScoreAdapter(
 
     abstract class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         abstract fun bind(scoreCard: RiderScoreSummary)
+        fun getFormattedRiderName(scoreCard: RiderScoreSummary): String {
+            return if (scoreCard.isFinished())
+                scoreCard.riderName
+                else scoreCard.riderName + " *"
+        }
     }
 
     class ViewHolderNoHeader(
@@ -69,9 +74,7 @@ class RiderScoreAdapter(
 
         override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
-                var formattedRiderName = scoreCard.riderName
-                if (!scoreCard.isFinished()) formattedRiderName += " *"
-                riderName.text = formattedRiderName
+                riderName.text = getFormattedRiderName(scoreCard)
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
                     scoreCard.points,
@@ -88,8 +91,7 @@ class RiderScoreAdapter(
         override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
                 riderNameHeader.text = scoreCard.riderClass
-
-                riderName.text = scoreCard.riderName
+                riderName.text = getFormattedRiderName(scoreCard)
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
                     scoreCard.points,
