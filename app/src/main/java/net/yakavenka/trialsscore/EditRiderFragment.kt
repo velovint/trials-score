@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -40,6 +41,13 @@ class EditRiderFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item)
+            .apply { addAll(EditRiderViewModel.RIDER_CLASS_OPTIONS) }
+            .also { adapter ->
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                binding.riderClass.setAdapter(adapter)
+        }
 
         binding.saveAction.setOnClickListener {
             viewModel.addRider(

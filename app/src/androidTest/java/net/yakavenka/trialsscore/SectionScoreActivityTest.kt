@@ -5,11 +5,14 @@ import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
+import androidx.test.espresso.matcher.RootMatchers
 import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.javafaker.Faker
 import net.yakavenka.trialsscore.model.SectionScoreAdapter
+import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
+import org.hamcrest.Matchers.containsString
 import org.hamcrest.core.StringContains
 import org.junit.Rule
 import org.junit.Test
@@ -27,26 +30,26 @@ class SectionScoreActivityTest {
         val riderName = giverRegisteredRider()
 
         onView(withId(R.id.recycler_view)).check(matches(isDisplayed()))
-        onView(withText(riderName)).check(matches(isDisplayed()))
+        onView(withText(containsString(riderName))).check(matches(isDisplayed()))
     }
 
     @Test
     fun navigateToScoreEntryPage() {
         val riderName = giverRegisteredRider()
 
-        onView(withText(riderName)).perform(click())
+        onView(withText(containsString(riderName))).perform(click())
 
         onView(withText("1")).check(matches(isDisplayed()))
         onView(withText("9")).check(matches(isDisplayed()))
         onView(withId(R.id.lap_score))
-            .check(matches(withText(StringContains.containsString("0 / 0"))))
+            .check(matches(withText(containsString("0 / 0"))))
     }
 
     @Test
     fun pointsEntryPageUpdatesTotalScore() {
         val riderName = giverRegisteredRider()
 
-        onView(withText(riderName)).perform(click())
+        onView(withText(containsString(riderName))).perform(click())
 
         // this click currently lands on 2. need to find how to poke more accurate
         onView(withId(R.id.lap_score_container))
@@ -64,7 +67,11 @@ class SectionScoreActivityTest {
         val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
         onView(withId(R.id.floating_action_button)).perform(click())
         onView(withId(R.id.rider_name)).perform(typeText(riderName))
-        onView(withId(R.id.rider_class)).perform(typeText("Novice"))
+        onView(withId(R.id.rider_class_label)).perform(click())
+        EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
+        onView(withText(EditRiderViewModel.RIDER_CLASS_OPTIONS.random()))
+            .inRoot(RootMatchers.isPlatformPopup())
+            .perform(click())
         onView(withId(R.id.save_action)).perform(click())
         return riderName
     }

@@ -1,10 +1,12 @@
 ## TODO
-* Fix build warnings
+* Use Spinner to select class
+* Close soft keyboard after saving rider info
 * Move Clear button to top menu
 * Page title on score entry page
+* Edit rider name/class
 * Score formatter that can be shared between list and entry
 * How to use DI?
-* Edit rider name/class
+* ~Fix build warnings~
 * ~First rider in a class isn't marked as not finished~
 * ~Sort riders who didn't finish by class/name instead of anything else~
 * ~Mark riders who didn't finish yet~

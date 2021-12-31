@@ -10,6 +10,11 @@ import net.yakavenka.trialsscore.data.RiderScoreDao
 class EditRiderViewModel(
     val riderScoreDao: RiderScoreDao
 ) : ViewModel() {
+
+    companion object {
+        val RIDER_CLASS_OPTIONS: Set<String> = setOf("Keith", "Expert", "Advanced", "Intermediate", "Novice")
+    }
+
     fun addRider(name: String, riderClass: String) {
         viewModelScope.launch {
             riderScoreDao.addRider(RiderScore(name = name, riderClass = riderClass))
