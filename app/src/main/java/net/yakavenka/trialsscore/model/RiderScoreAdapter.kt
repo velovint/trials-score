@@ -42,7 +42,7 @@ class RiderScoreAdapter(
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val currentItem = getItem(position)
-//        holder.itemView.setOnClickListener { onClick(currentItem) }
+        holder.itemView.setOnClickListener { onClick(currentItem) }
         holder.bind(currentItem)
     }
 
@@ -87,7 +87,7 @@ class RiderScoreAdapter(
             binding.apply {
                 val sectionScores = SectionScore.Set(scoreCard.sections)
 
-                riderClassHeader.text = scoreCard.riderEntity.riderClass
+                riderNameHeader.text = scoreCard.riderEntity.riderClass
 
                 riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(

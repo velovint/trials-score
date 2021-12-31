@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RiderScoreDao {
-    @Query("SELECT * FROM rider_score")
+    @Query("SELECT * FROM rider_score ORDER BY class")
     fun getAll(): Flow<List<RiderScoreAggregate>>
 
     @Query("SELECT * FROM section_score WHERE riderId = :riderId")
