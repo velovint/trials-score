@@ -1,14 +1,12 @@
 package net.yakavenka.trialsscore.data
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.Query
-import androidx.room.Update
+import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface RiderScoreDao {
     @Query("SELECT * FROM rider_score ORDER BY class")
+    @Transaction
     fun getAll(): Flow<List<RiderScoreAggregate>>
 
     @Query("SELECT * FROM section_score WHERE riderId = :riderId")
