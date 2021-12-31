@@ -69,8 +69,9 @@ class RiderScoreAdapter(
 
         override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
-//                val sectionScores = SectionScore.Set(scoreCard.sections)
-                riderName.text = scoreCard.riderName
+                var formattedRiderName = scoreCard.riderName
+                if (!scoreCard.isFinished()) formattedRiderName += " *"
+                riderName.text = formattedRiderName
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
                     scoreCard.points,
