@@ -1,11 +1,12 @@
 package net.yakavenka.trialsscore
 
+import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
 import android.view.*
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -27,12 +28,11 @@ class LeaderboardFragment : Fragment() {
             (activity?.application as TrialsScoreApplication).database.riderScoreDao())
     }
 
+    private val exportPrompt: ActivityResultLauncher<String> = registerExportPrompt()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        registerForActivityResult(ActivityResultContracts.CreateDocument()) { uri ->
-            eventScores.exportReport(uri, requireContext().contentResolver)
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -56,8 +56,8 @@ class LeaderboardFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_export_results -> {
-                Log.d(TAG, "exporting results")
-                initDownload(Uri.parse("Downloads"))
+                Log.d(TAG, "init download")
+                exportPrompt.launch("report.txt", )
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -86,17 +86,21 @@ class LeaderboardFragment : Fragment() {
         }
     }
 
-    private fun initDownload(pickerInitialUri: Uri) {
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "text/plain"
-            putExtra(Intent.EXTRA_TITLE, "report.txt")
-
-            // Optionally, specify a URI for the directory that should be opened in
-            // the system file picker before your app creates the document.
-            putExtra(DocumentsContract.EXTRA_INITIAL_URI, pickerInitialUri)
+    private fun registerExportPrompt(): ActivityResultLauncher<String> {
+        val contract = object : ActivityResultContracts.CreateDocument() {
+            override fun createIntent(context: Context, input: String): Intent {
+                return super.createIntent(context, input).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "plain"
+                    // Optionally, specify a URI for the directory that should be opened in
+                    // the system file picker before your app creates the document.
+                    putExtra(DocumentsContract.EXTRA_INITIAL_URI, "Downloads")
+                }
+            }
         }
-        startActivity(intent)
+        return registerForActivityResult(contract) { uri ->
+            eventScores.exportReport(uri, requireContext().contentResolver)
+        }
     }
 
 }
