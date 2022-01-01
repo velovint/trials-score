@@ -9,4 +9,5 @@
     <string name="rider_name_req">Rider Name *</string>
     <string name="save_action">Save</string>
     <string name="rider_class_req">Rider Class *</string>
+    <string name="export_to_csv">Export to CSV</string>
 </resources>
