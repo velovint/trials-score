@@ -1,8 +1,11 @@
 package net.yakavenka.trialsscore.data
 
 import com.github.javafaker.Faker
+import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.comparesEqualTo
 import org.hamcrest.Matchers.equalTo
+import org.junit.Assert
 import org.junit.Test
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -21,6 +24,18 @@ class LeaderboardScoreSortOrderTest {
 
         val actual: List<String> = list.sortedWith(LeaderboardScoreSortOrder()).map { it.riderClass }
         assertThat("Num groups", numGroups(actual), equalTo(2))
+    }
+
+    @Test
+    fun sortUsesPredefinedSortOrder() {
+        val list = mutableListOf<RiderScoreSummary>()
+        EditRiderViewModel.RIDER_CLASS_OPTIONS
+            .sortedWith { _, _ -> (-1..1).random() }
+            .forEach { list.add(createScore(riderClass = it)) }
+
+        val actual = list.sortedWith(LeaderboardScoreSortOrder()).map { it.riderClass }
+
+        Assert.assertEquals(EditRiderViewModel.RIDER_CLASS_OPTIONS.toList(), actual.toList())
     }
 
     @Test
