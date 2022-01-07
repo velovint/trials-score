@@ -57,7 +57,7 @@ class LeaderboardFragment : Fragment() {
         return when (item.itemId) {
             R.id.action_export_results -> {
                 Log.d(TAG, "init download")
-                exportPrompt.launch("report.txt", )
+                exportPrompt.launch("report.csv", )
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -91,7 +91,7 @@ class LeaderboardFragment : Fragment() {
             override fun createIntent(context: Context, input: String): Intent {
                 return super.createIntent(context, input).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "plain"
+                    type = "application/excel"
                     // Optionally, specify a URI for the directory that should be opened in
                     // the system file picker before your app creates the document.
                     putExtra(DocumentsContract.EXTRA_INITIAL_URI, "Downloads")

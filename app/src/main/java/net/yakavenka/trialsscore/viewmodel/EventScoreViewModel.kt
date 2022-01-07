@@ -2,37 +2,43 @@ package net.yakavenka.trialsscore.viewmodel
 
 import android.content.ContentResolver
 import android.net.Uri
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.asLiveData
+import android.util.Log
+import androidx.lifecycle.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
+import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
-import java.lang.IllegalArgumentException
+
+private const val TAG = "EventScoreViewModel"
 
 class EventScoreViewModel(
-    scoreSummaryRepository: ScoreSummaryRepository
+    private val scoreSummaryRepository: ScoreSummaryRepository,
+    private val importExportService: CsvExchangeRepository
 ) : ViewModel() {
     val allScores: LiveData<List<RiderScoreSummary>> = scoreSummaryRepository.fetchSummary().asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
         try {
-            contentResolver.openFileDescriptor(uri, "w")?.use {
-                FileOutputStream(it.fileDescriptor).use {
-                    it.write(
-                        ("Overwritten at ${System.currentTimeMillis()}\n")
-                            .toByteArray()
-                    )
+            val descriptor = contentResolver.openFileDescriptor(uri, "w")
+            if (descriptor == null) {
+                Log.e("EventScoreViewModel", "Couldn't open $uri")
+                return
+            }
+
+            viewModelScope.launch {
+                scoreSummaryRepository.fetchFullResults().collect { result ->
+                    importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
                 }
             }
         } catch (e: FileNotFoundException) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to open file for export", e)
         } catch (e: IOException) {
-            e.printStackTrace()
+            Log.e(TAG, "Failed to open file for export", e)
         }
     }
 
@@ -40,7 +46,7 @@ class EventScoreViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return EventScoreViewModel(ScoreSummaryRepository(riderScoreDao)) as T
+                return EventScoreViewModel(ScoreSummaryRepository(riderScoreDao), CsvExchangeRepository()) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
