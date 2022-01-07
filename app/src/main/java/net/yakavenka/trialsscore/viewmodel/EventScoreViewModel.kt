@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
+import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -17,7 +18,8 @@ import java.io.IOException
 private const val TAG = "EventScoreViewModel"
 
 class EventScoreViewModel(
-    private val scoreSummaryRepository: ScoreSummaryRepository,
+    scoreSummaryRepository: ScoreSummaryRepository,
+    private val sectionScoreRepository: SectionScoreRepository,
     private val importExportService: CsvExchangeRepository
 ) : ViewModel() {
     val allScores: LiveData<List<RiderScoreSummary>> = scoreSummaryRepository.fetchSummary().asLiveData()
@@ -31,10 +33,11 @@ class EventScoreViewModel(
             }
 
             viewModelScope.launch {
-                scoreSummaryRepository.fetchFullResults().collect { result ->
+                sectionScoreRepository.fetchFullResults().collect { result ->
                     importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
                 }
             }
+            descriptor.close()
         } catch (e: FileNotFoundException) {
             Log.e(TAG, "Failed to open file for export", e)
         } catch (e: IOException) {
@@ -46,7 +49,11 @@ class EventScoreViewModel(
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return EventScoreViewModel(ScoreSummaryRepository(riderScoreDao), CsvExchangeRepository()) as T
+                return EventScoreViewModel(
+                    ScoreSummaryRepository(riderScoreDao),
+                    SectionScoreRepository(riderScoreDao),
+                    CsvExchangeRepository()
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
