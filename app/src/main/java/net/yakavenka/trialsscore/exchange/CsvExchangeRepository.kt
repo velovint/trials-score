@@ -24,7 +24,7 @@ class CsvExchangeRepository {
         val sectionsHeader = range(1, SectionScore.Set.TOTAL_SECTIONS + 1)
             .mapToObj {"S${it}" }
             .toList()
-        return arrayOf("Name,Class,Points,Cleans").plus(sectionsHeader)
+        return arrayOf("Name", "Class", "Points", "Cleans").plus(sectionsHeader)
     }
 
     private fun riderScoreAsArray(score: RiderScoreAggregate): Array<String> {

@@ -4,6 +4,7 @@ import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScoreDao
@@ -32,12 +33,12 @@ class EventScoreViewModel(
                 return
             }
 
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 sectionScoreRepository.fetchFullResults().collect { result ->
                     importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
                 }
+                descriptor.close()
             }
-            descriptor.close()
         } catch (e: FileNotFoundException) {
             Log.e(TAG, "Failed to open file for export", e)
         } catch (e: IOException) {
