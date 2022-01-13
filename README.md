@@ -1,4 +1,6 @@
 ## TODO
+* Import riders
+* Crash on back button when selecting file to download
 * Close soft keyboard after saving rider info
 * Move Clear button to top menu
 * Page title on score entry page

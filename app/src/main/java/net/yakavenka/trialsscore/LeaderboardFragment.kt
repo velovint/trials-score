@@ -30,6 +30,8 @@ class LeaderboardFragment : Fragment() {
 
     private val exportPrompt: ActivityResultLauncher<String> = registerExportPrompt()
 
+    private val importPrompt: ActivityResultLauncher<Array<String>> = registerImportPrompt()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -58,6 +60,11 @@ class LeaderboardFragment : Fragment() {
             R.id.action_export_results -> {
                 Log.d(TAG, "init download")
                 exportPrompt.launch("report.csv", )
+                true
+            }
+            R.id.action_import_riders -> {
+                Log.d(TAG, "import riders")
+                importPrompt.launch(arrayOf("application/excel"))
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -100,6 +107,20 @@ class LeaderboardFragment : Fragment() {
         }
         return registerForActivityResult(contract) { uri ->
             eventScores.exportReport(uri, requireContext().contentResolver)
+        }
+    }
+
+    private fun registerImportPrompt(): ActivityResultLauncher<Array<String>> {
+        val contract = object : ActivityResultContracts.OpenDocument() {
+            override fun createIntent(context: Context, input: Array<out String>): Intent {
+                return super.createIntent(context, input).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    putExtra(DocumentsContract.EXTRA_INITIAL_URI, "Downloads")
+                }
+            }
+        }
+        return registerForActivityResult(contract) { uri ->
+            Log.d(TAG, "Ready to read document $uri")
         }
     }
 
