@@ -1,14 +1,16 @@
 package net.yakavenka.trialsscore.exchange
 
+import android.util.Log
+import com.opencsv.CSVParserBuilder
+import com.opencsv.CSVReader
+import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
-import java.io.InputStream
-import java.io.OutputStream
-import java.io.OutputStreamWriter
+import java.io.*
 import java.util.stream.IntStream.range
 import kotlin.streams.toList
 
@@ -25,18 +27,19 @@ class CsvExchangeRepository {
     }
 
     fun importRiders(inputStream: InputStream): Flow<RiderScore> = flow {
-        emit(RiderScore(0, "New Test Rider", "Novice"))
-        //            inputStream!!.use {
-//                var counter = 0
-//                BufferedReader(InputStreamReader(inputStream)).use { reader ->
-//                    var line: String? = reader.readLine()
-//                    while (line != null) {
-//                        counter++
-//                        line = reader.readLine()
-//                    }
-//                }
+
+//        val parser = CSVParserBuilder()
+//            .withIgnoreLeadingWhiteSpace(true)
+//            .build()
+//        var counter = 0
+        CSVReaderBuilder((InputStreamReader(inputStream)))
+//            .withCSVParser(parser)
+            .build().use {
+            it.forEach { line ->
+                emit(RiderScore(0, line[0], line[1]))
+            }
+        }
 //                Log.d(TAG, "Read $counter lines from $uri")
-//            }
     }
 
     private fun generateHeader(): Array<String> {

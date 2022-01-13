@@ -1,7 +1,8 @@
 ## TODO
-* Import riders
+* Import rider list from CSV (Name, Class)
 * Crash on back button when selecting file to download
 * Close soft keyboard after saving rider info
+* Display progress notification for both import and export
 * Move Clear button to top menu
 * Page title on score entry page
 * Edit rider name/class
@@ -20,6 +21,7 @@
   LEFT JOIN section_score AS ss ON ss.riderId = rs.id AND ss.points >= 0
   GROUP BY rs.id
   ORDER BY class, sections_ridden DESC, points ASC, cleans DESC~
+* ~Export event results to Excel~
 * ~Group entries on leaderboard by class~
 * ~Move score updating and merge logic out of ScoreCardViewModel. Not sure where it should be though~
 * ~Add SectionScoresRepository and move load or create scores logic in it~
@@ -31,8 +33,6 @@
 * ~Create new score card for rider - 10 sections with -1 points committed to the DB~
 
 ## Future ideas
-* Export event results to Excel
-* Import rider list from CSV (Name, Class)
 * Configurable classes
 * Split sections in to laps and enter one lap at a time
 
