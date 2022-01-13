@@ -121,6 +121,7 @@ class LeaderboardFragment : Fragment() {
         }
         return registerForActivityResult(contract) { uri ->
             Log.d(TAG, "Ready to read document $uri")
+            eventScores.importRiders(uri, requireContext().contentResolver)
         }
     }
 

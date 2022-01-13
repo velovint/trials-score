@@ -34,4 +34,8 @@ class SectionScoreRepository(
     suspend fun deleteRiderScores(riderId: Int) {
         dao.deleteRiderScores(riderId)
     }
+
+    suspend fun addRider(rider: RiderScore) {
+        dao.addRider(rider)
+    }
 }

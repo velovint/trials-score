@@ -12,9 +12,7 @@ import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
-import java.io.FileNotFoundException
-import java.io.FileOutputStream
-import java.io.IOException
+import java.io.*
 
 private const val TAG = "EventScoreViewModel"
 
@@ -44,6 +42,19 @@ class EventScoreViewModel(
         } catch (e: IOException) {
             Log.e(TAG, "Failed to open file for export", e)
         }
+    }
+
+    fun importRiders(uri: Uri, contentResolver: ContentResolver) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val inputStream = contentResolver.openInputStream(uri)
+            if (inputStream == null) {
+                Log.e(TAG, "Can't open file $uri")
+            }
+            importExportService.importRiders(inputStream!!).collect { rider ->
+                sectionScoreRepository.addRider(rider)
+            }
+        }
+
     }
 
     class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
