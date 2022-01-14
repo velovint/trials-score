@@ -7,10 +7,8 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.RiderScoreDao
-import net.yakavenka.trialsscore.data.RiderScoreSummary
-import net.yakavenka.trialsscore.data.ScoreSummaryRepository
-import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.TrialsScoreApplication
+import net.yakavenka.trialsscore.data.*
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.*
 
@@ -55,6 +53,12 @@ class EventScoreViewModel(
             }
         }
 
+    }
+
+    fun clearAll() {
+        viewModelScope.launch(Dispatchers.IO) {
+            sectionScoreRepository.purge()
+        }
     }
 
     class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
