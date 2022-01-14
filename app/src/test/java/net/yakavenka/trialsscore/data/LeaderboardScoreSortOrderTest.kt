@@ -3,7 +3,6 @@ package net.yakavenka.trialsscore.data
 import com.github.javafaker.Faker
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.comparesEqualTo
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert
 import org.junit.Test
@@ -99,6 +98,17 @@ class LeaderboardScoreSortOrderTest {
 
         val rider1Position = actual.indexOf(rider1)
         assertThat("Name sort", actual.indexOf(rider2), equalTo(rider1Position + 1))
+    }
+
+    @Test
+    fun generateTestData() {
+        val classes = EditRiderViewModel.RIDER_CLASS_OPTIONS.toMutableList()
+        classes.addAll(classes.takeLast(3))
+        classes.addAll(classes.takeLast(3))
+        repeat(100) {
+            println(faker.name().firstName() + " " + faker.name().lastName() + ","
+                + classes.random())
+        }
     }
 
     private fun createScore(

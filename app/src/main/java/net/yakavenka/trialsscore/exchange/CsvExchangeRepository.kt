@@ -1,8 +1,5 @@
 package net.yakavenka.trialsscore.exchange
 
-import android.util.Log
-import com.opencsv.CSVParserBuilder
-import com.opencsv.CSVReader
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.flow.Flow
@@ -10,7 +7,10 @@ import kotlinx.coroutines.flow.flow
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
-import java.io.*
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.OutputStream
+import java.io.OutputStreamWriter
 import java.util.stream.IntStream.range
 import kotlin.streams.toList
 
@@ -34,11 +34,10 @@ class CsvExchangeRepository {
 //        var counter = 0
         CSVReaderBuilder((InputStreamReader(inputStream)))
 //            .withCSVParser(parser)
-            .build().use {
-            it.forEach { line ->
+            .build()
+            .forEach { line ->
                 emit(RiderScore(0, line[0], line[1]))
             }
-        }
 //                Log.d(TAG, "Read $counter lines from $uri")
     }
 
