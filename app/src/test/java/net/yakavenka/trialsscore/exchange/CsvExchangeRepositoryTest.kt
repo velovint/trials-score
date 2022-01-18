@@ -8,6 +8,7 @@ import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayInputStream
@@ -68,10 +69,14 @@ class CsvExchangeRepositoryTest {
         assertThat(rider.name, equalTo("Rider, 1"))
     }
 
-    @Ignore("incomplete")
     @Test
-    fun importRidersIgnoresInvalidLines() {
+    fun importRidersIgnoresInvalidLines() = runBlocking {
+        val input = ByteArrayInputStream(("\nRider 1,Novice").toByteArray())
 
+        val rider = sut.importRiders(input).first()
+
+        assertThat(rider.name, equalTo("Rider 1"))
+        assertThat(rider.riderClass, equalTo("Novice"))
     }
 
     private fun sampleImportStream(): InputStream {

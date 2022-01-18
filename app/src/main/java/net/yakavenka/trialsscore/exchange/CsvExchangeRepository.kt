@@ -1,5 +1,6 @@
 package net.yakavenka.trialsscore.exchange
 
+import android.util.Log
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +14,8 @@ import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.util.stream.IntStream.range
 import kotlin.streams.toList
+
+private const val TAG = "CsvExchangeRepository"
 
 class CsvExchangeRepository {
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
@@ -28,17 +31,15 @@ class CsvExchangeRepository {
 
     fun importRiders(inputStream: InputStream): Flow<RiderScore> = flow {
 
-//        val parser = CSVParserBuilder()
-//            .withIgnoreLeadingWhiteSpace(true)
-//            .build()
-//        var counter = 0
         CSVReaderBuilder((InputStreamReader(inputStream)))
-//            .withCSVParser(parser)
             .build()
             .forEach { line ->
-                emit(RiderScore(0, line[0].trim(), line[1].trim()))
+                if (line.size < 2) {
+                    Log.d(TAG, "CSV line has invalid format [$line]")
+                } else {
+                    emit(RiderScore(0, line[0].trim(), line[1].trim()))
+                }
             }
-//                Log.d(TAG, "Read $counter lines from $uri")
     }
 
     private fun generateHeader(): Array<String> {
