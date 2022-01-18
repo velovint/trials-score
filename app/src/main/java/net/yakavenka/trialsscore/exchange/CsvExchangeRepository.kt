@@ -36,7 +36,7 @@ class CsvExchangeRepository {
 //            .withCSVParser(parser)
             .build()
             .forEach { line ->
-                emit(RiderScore(0, line[0], line[1]))
+                emit(RiderScore(0, line[0].trim(), line[1].trim()))
             }
 //                Log.d(TAG, "Read $counter lines from $uri")
     }

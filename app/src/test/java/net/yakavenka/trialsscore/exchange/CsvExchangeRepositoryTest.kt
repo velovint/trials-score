@@ -49,6 +49,25 @@ class CsvExchangeRepositoryTest {
         assertThat(rider.riderClass, equalTo("Novice"))
     }
 
+    @Test
+    fun importRidersRemovesWhitespaces() = runBlocking {
+        val input = ByteArrayInputStream(("Rider 1 , Novice \n").toByteArray())
+
+        val rider = sut.importRiders(input).first()
+
+        assertThat(rider.name, equalTo("Rider 1"))
+        assertThat(rider.riderClass, equalTo("Novice"))
+    }
+
+    @Test
+    fun importRidersWithQuotes() = runBlocking {
+        val input = ByteArrayInputStream(("\"Rider, 1\",Novice\n").toByteArray())
+
+        val rider = sut.importRiders(input).first()
+
+        assertThat(rider.name, equalTo("Rider, 1"))
+    }
+
     @Ignore("incomplete")
     @Test
     fun importRidersIgnoresInvalidLines() {
