@@ -1,13 +1,14 @@
 ## TODO
-* Close soft keyboard after saving rider info
-* Display progress notification for both import and export
 * Move Clear button to top menu
 * Page title on score entry page
 * Edit rider name/class
+* 30 sections
+* Display progress notification for both import and export
 * Score formatter that can be shared between list and entry
 * How to use DI?
 * App icon
 * Publish to app store
+* ~Close soft keyboard after saving rider info~
 * ~Crash on back button when selecting file to download~
 * ~Normalize CSV input to ignore extra spaces and quotes~
 * ~more cleans is better place~
