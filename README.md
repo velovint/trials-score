@@ -1,6 +1,4 @@
 ## TODO
-* Normalize CSV input to ignore extra spaces and quotes
-* Crash on back button when selecting file to download
 * Close soft keyboard after saving rider info
 * Display progress notification for both import and export
 * Move Clear button to top menu
@@ -10,6 +8,8 @@
 * How to use DI?
 * App icon
 * Publish to app store
+* ~Crash on back button when selecting file to download~
+* ~Normalize CSV input to ignore extra spaces and quotes~
 * ~more cleans is better place~
 * ~Import rider list from CSV (Name, Class)~
 * ~Use Spinner to select class~

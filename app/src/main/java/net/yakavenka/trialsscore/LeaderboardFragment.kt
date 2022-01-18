@@ -116,6 +116,10 @@ class LeaderboardFragment : Fragment() {
             }
         }
         return registerForActivityResult(contract) { uri ->
+            if (uri == null) {
+                Log.i(TAG, "Export file is not selected. Skipping.")
+                return@registerForActivityResult
+            }
             eventScores.exportReport(uri, requireContext().contentResolver)
         }
     }
@@ -130,7 +134,10 @@ class LeaderboardFragment : Fragment() {
             }
         }
         return registerForActivityResult(contract) { uri ->
-            Log.d(TAG, "Ready to read document $uri")
+            if (uri == null) {
+                Log.i(TAG, "Import file is not selected. Skipping.")
+                return@registerForActivityResult
+            }
             eventScores.importRiders(uri, requireContext().contentResolver)
         }
     }
