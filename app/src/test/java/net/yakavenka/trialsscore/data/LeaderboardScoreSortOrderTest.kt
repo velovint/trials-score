@@ -89,7 +89,7 @@ class LeaderboardScoreSortOrderTest {
     fun sortByCleansOnSamePoints() {
         val list = mutableListOf<RiderScoreSummary>()
         val rider1 = createScore()
-        val rider2 = rider1.copy(numCleans = rider1.numCleans + 1)
+        val rider2 = rider1.copy(numCleans = rider1.numCleans - 1)
         list.add(rider2)
         list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
         list.add(rider1)
@@ -97,7 +97,7 @@ class LeaderboardScoreSortOrderTest {
         val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
 
         val rider1Position = actual.indexOf(rider1)
-        assertThat("Name sort", actual.indexOf(rider2), equalTo(rider1Position + 1))
+        assertThat("More cleans in better", actual.indexOf(rider2), equalTo(rider1Position + 1))
     }
 
     @Test

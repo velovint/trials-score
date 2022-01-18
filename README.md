@@ -1,5 +1,5 @@
 ## TODO
-* Import rider list from CSV (Name, Class)
+* Normalize CSV input to ignore extra spaces and quotes
 * Crash on back button when selecting file to download
 * Close soft keyboard after saving rider info
 * Display progress notification for both import and export
@@ -8,6 +8,10 @@
 * Edit rider name/class
 * Score formatter that can be shared between list and entry
 * How to use DI?
+* App icon
+* Publish to app store
+* ~more cleans is better place~
+* ~Import rider list from CSV (Name, Class)~
 * ~Use Spinner to select class~
 * ~Fix build warnings~
 * ~First rider in a class isn't marked as not finished~

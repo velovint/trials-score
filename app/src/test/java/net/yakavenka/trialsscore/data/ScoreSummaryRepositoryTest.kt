@@ -57,6 +57,14 @@ class ScoreSummaryRepositoryTest {
             TODO("Not yet implemented")
         }
 
+        override suspend fun deleteAllRiders() {
+            TODO("Not yet implemented")
+        }
+
+        override suspend fun deleteAllScores() {
+            TODO("Not yet implemented")
+        }
+
         override suspend fun deleteRiderScores(riderId: Int) {
             TODO("Not yet implemented")
         }

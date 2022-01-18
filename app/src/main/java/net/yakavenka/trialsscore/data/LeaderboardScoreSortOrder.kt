@@ -29,7 +29,7 @@ class LeaderboardScoreSortOrder : Comparator<RiderScoreSummary> {
     }
 
     private fun compareCleans(left: RiderScoreSummary, right: RiderScoreSummary): Int {
-        return left.numCleans.compareTo(right.numCleans)
+        return right.numCleans.compareTo(left.numCleans) // note reversal
     }
 
     private fun compareFinished(left: RiderScoreSummary, right: RiderScoreSummary): Int {
