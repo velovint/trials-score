@@ -12,7 +12,7 @@ data class SectionScore(
     class Set(val sectionScores: List<SectionScore>) {
 
         companion object {
-            const val TOTAL_SECTIONS = 10
+            const val TOTAL_SECTIONS = 30
             fun createForRider(riderId: Int): Set {
                 val sectionScores = mutableListOf<SectionScore>()
                 range(1, TOTAL_SECTIONS + 1).forEach { sectionNum ->

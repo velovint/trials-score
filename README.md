@@ -1,13 +1,14 @@
 ## TODO
+* score entry fragment scrolls to the top with each punch
 * Move Clear button to top menu
 * Page title on score entry page
 * Edit rider name/class
-* 30 sections
 * Display progress notification for both import and export
 * Score formatter that can be shared between list and entry
 * How to use DI?
 * App icon
 * Publish to app store
+* ~30 sections~
 * ~Close soft keyboard after saving rider info~
 * ~Crash on back button when selecting file to download~
 * ~Normalize CSV input to ignore extra spaces and quotes~
