@@ -4,7 +4,9 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rider_score_item"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/margin_between_elements"
+    android:paddingBottom="@dimen/margin_between_elements">
 
     <TextView
         android:id="@+id/rider_name"
