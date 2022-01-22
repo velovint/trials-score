@@ -107,14 +107,19 @@ class RiderScoreAdapter(
                 oldItem: RiderScoreSummary,
                 newItem: RiderScoreSummary
             ): Boolean {
-                return oldItem.riderName == newItem.riderName
+                return oldItem.riderId == newItem.riderId
             }
 
             override fun areContentsTheSame(
                 oldItem: RiderScoreSummary,
                 newItem: RiderScoreSummary
             ): Boolean {
-                return false // TODO Fix
+                return compareBy(
+                        RiderScoreSummary::riderName,
+                        RiderScoreSummary::riderClass,
+                        RiderScoreSummary::points,
+                        RiderScoreSummary::numCleans
+                    ).compare(oldItem, newItem) == 0
             }
         }
     }

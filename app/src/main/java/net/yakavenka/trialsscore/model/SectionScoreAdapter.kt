@@ -62,8 +62,7 @@ class SectionScoreAdapter(
                 oldItem: SectionScore,
                 newItem: SectionScore
             ): Boolean {
-                return areItemsTheSame(oldItem, newItem)
-                        && oldItem.points == newItem.points
+                return oldItem.points == newItem.points
             }
         }
     }

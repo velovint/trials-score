@@ -1,5 +1,4 @@
 ## TODO
-* score entry fragment scrolls to the top with each punch
 * Move Clear button to top menu
 * Page title on score entry page
 * Edit rider name/class
@@ -8,6 +7,7 @@
 * How to use DI?
 * App icon
 * Publish to app store
+* ~score entry fragment scrolls to the top with each punch~
 * ~30 sections~
 * ~Close soft keyboard after saving rider info~
 * ~Crash on back button when selecting file to download~
