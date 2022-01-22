@@ -50,15 +50,17 @@ class PointsEntryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val adapter = SectionScoreAdapter { sectionScore ->
+            scoreCardViewModel.updateSectionScore(sectionScore)
+        }
+        binding.lapScoreContainer.adapter = adapter
+
         scoreCardViewModel.fetchScores(navigationArgs.riderId)
 
         scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { scoreSet ->
             Log.d(TAG, "Loaded ScoreCard $scoreSet")
-            val adapter = SectionScoreAdapter(scoreSet.sectionScores) { sectionScore ->
-                scoreCardViewModel.updateSectionScore(sectionScore)
-            }
-            binding.lapScoreContainer.adapter = adapter
 
+            scoreSet.let { adapter.submitList(scoreSet.sectionScores) }
             binding.lapScore.text =
                 getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
         }

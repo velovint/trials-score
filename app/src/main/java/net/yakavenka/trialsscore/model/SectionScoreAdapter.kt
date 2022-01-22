@@ -3,14 +3,15 @@ package net.yakavenka.trialsscore.model
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.RadioButton
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.databinding.SectionScoreItemBinding
 
 class SectionScoreAdapter(
-    private val dataSet: List<SectionScore>,
     private val onChangeCallback: (SectionScore) -> Unit
-) : RecyclerView.Adapter<SectionScoreAdapter.ViewHolder>()  {
+) : ListAdapter<SectionScore, SectionScoreAdapter.ViewHolder>(DIFF_CALLBACK)  {
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -20,11 +21,7 @@ class SectionScoreAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(dataSet[position], onChangeCallback)
-    }
-
-    override fun getItemCount(): Int {
-        return dataSet.size
+        holder.bind(getItem(position), onChangeCallback)
     }
 
     class ViewHolder(private val binding: SectionScoreItemBinding) : RecyclerView.ViewHolder(binding.root) {
@@ -49,5 +46,25 @@ class SectionScoreAdapter(
             pointsButtn.setOnClickListener { onChangeCallback(sectionScore.copy(points = numPoints)) }
         }
 
+    }
+
+    companion object {
+        private val DIFF_CALLBACK = object : DiffUtil.ItemCallback<SectionScore>() {
+            override fun areItemsTheSame(
+                oldItem: SectionScore,
+                newItem: SectionScore
+            ): Boolean {
+                return oldItem.riderId == newItem.riderId
+                        && oldItem.sectionNumber == newItem.sectionNumber
+            }
+
+            override fun areContentsTheSame(
+                oldItem: SectionScore,
+                newItem: SectionScore
+            ): Boolean {
+                return areItemsTheSame(oldItem, newItem)
+                        && oldItem.points == newItem.points
+            }
+        }
     }
 }
