@@ -9,6 +9,9 @@ interface RiderScoreDao {
     @Transaction
     fun getAll(): Flow<List<RiderScoreAggregate>>
 
+    @Query("SELECT * FROM rider_score WHERE id = :riderId")
+    fun getRider(riderId: Int): Flow<RiderScore>
+
     @Query("SELECT * FROM section_score WHERE riderId = :riderId")
     fun sectionScores(riderId: Int): Flow<List<SectionScore>>
 

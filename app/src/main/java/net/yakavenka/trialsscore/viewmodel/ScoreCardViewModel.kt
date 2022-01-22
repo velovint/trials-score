@@ -5,6 +5,7 @@ import androidx.lifecycle.*
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
+import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
@@ -19,6 +20,11 @@ class ScoreCardViewModel(
 
     val sectionScores: LiveData<SectionScore.Set>
         get() = _sectionScores
+
+    private val _riderInfo: MutableLiveData<RiderScore> = MutableLiveData()
+
+    val riderInfo: LiveData<RiderScore>
+        get() = _riderInfo
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
@@ -38,6 +44,12 @@ class ScoreCardViewModel(
     fun clearScores(riderId: Int) {
         viewModelScope.launch {
             sectionScoreRepository.deleteRiderScores(riderId)
+        }
+    }
+
+    fun loadRiderInfo(riderId: Int) {
+        viewModelScope.launch {
+            sectionScoreRepository.getRiderInfo(riderId).collect(_riderInfo::postValue)
         }
     }
 

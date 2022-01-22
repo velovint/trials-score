@@ -86,7 +86,8 @@ class LeaderboardFragment : Fragment() {
 
         val adapter = RiderScoreAdapter {
             Log.d("EventScoreFragment", "Clicked on $it")
-            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(it.riderId)
+            val action = LeaderboardFragmentDirections
+                .actionEventScoreFragmentToPointsEntryFragment(it.riderId, it.riderName)
             findNavController().navigate(action)
         }
         binding.recyclerView.adapter = adapter

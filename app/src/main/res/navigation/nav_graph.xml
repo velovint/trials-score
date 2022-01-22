@@ -20,8 +20,8 @@
     <fragment
         android:id="@+id/pointsEntryFragment"
         android:name="net.yakavenka.trialsscore.PointsEntryFragment"
-        android:label="fragment_points_entry"
-        tools:layout="@layout/fragment_points_entry" >
+        android:label="{riderName}"
+        tools:layout="@layout/fragment_points_entry">
         <argument
             android:name="riderId"
             app:argType="integer" />
@@ -30,6 +30,9 @@
             app:destination="@id/eventScoreFragment"
             app:popUpTo="@id/eventScoreFragment"
             app:popUpToInclusive="true" />
+        <argument
+            android:name="riderName"
+            app:argType="string" />
     </fragment>
     <fragment
         android:id="@+id/editRiderFragment"

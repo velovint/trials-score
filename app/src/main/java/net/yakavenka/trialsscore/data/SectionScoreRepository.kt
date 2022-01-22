@@ -43,4 +43,8 @@ class SectionScoreRepository(
         dao.deleteAllScores()
         dao.deleteAllRiders()
     }
+
+    fun getRiderInfo(riderId: Int): Flow<RiderScore> {
+        return dao.getRider(riderId)
+    }
 }
