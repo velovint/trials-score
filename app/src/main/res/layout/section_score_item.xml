@@ -12,6 +12,7 @@
         android:layout_marginTop="14dp"
         tools:text="10"/>
     <RadioGroup
+        android:id="@+id/section_score_group"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal">

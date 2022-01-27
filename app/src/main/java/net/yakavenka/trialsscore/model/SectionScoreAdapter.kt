@@ -27,7 +27,9 @@ class SectionScoreAdapter(
     class ViewHolder(private val binding: SectionScoreItemBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(sectionScore: SectionScore, onChangeCallback: (SectionScore) -> Unit) {
             binding.apply {
+//                Log.d("SectionScoreAdapter", "Binding ${sectionScore}")
                 lapNumber.text = sectionScore.sectionNumber.toString()
+                sectionScoreGroup.clearCheck()
                 bindRadio(sectionScore0, 0, sectionScore, onChangeCallback)
                 bindRadio(sectionScore1, 1, sectionScore, onChangeCallback)
                 bindRadio(sectionScore2, 2, sectionScore, onChangeCallback)
@@ -42,6 +44,7 @@ class SectionScoreAdapter(
             sectionScore: SectionScore,
             onChangeCallback: (SectionScore) -> Unit
         ) {
+//            Log.d("SectionScoreAdapter", "Binding ${sectionScore}")
             pointsButtn.isChecked = sectionScore.points == numPoints
             pointsButtn.setOnClickListener { onChangeCallback(sectionScore.copy(points = numPoints)) }
         }
