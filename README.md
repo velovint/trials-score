@@ -1,12 +1,16 @@
 ## TODO
-* Move Clear button to top menu
-* Page title on score entry page
 * Edit rider name/class
 * Display progress notification for both import and export
-* Score formatter that can be shared between list and entry
-* How to use DI?
 * App icon
+* Configurable classes
+* Score formatter that can be shared between list and entry
+* Request confirmation before removing individ
+  ual and all scores
+* How to use DI?
+* Change app name when launching
 * Publish to app store
+* ~Move Clear button to top menu~
+* ~Page title on score entry page~
 * ~score entry fragment scrolls to the top with each punch~
 * ~30 sections~
 * ~Close soft keyboard after saving rider info~
@@ -39,6 +43,5 @@
 * ~Create new score card for rider - 10 sections with -1 points committed to the DB~
 
 ## Future ideas
-* Configurable classes
 * Split sections in to laps and enter one lap at a time
 

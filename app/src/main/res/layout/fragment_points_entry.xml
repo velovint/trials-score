@@ -36,13 +36,4 @@
         app:layout_constraintStart_toEndOf="@id/lap_score_label"
         tools:text="6 / 1" />
 
-    <Button
-        android:id="@+id/clear_points_button"
-        style="?attr/materialButtonOutlinedStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/clear_button"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
-
 </androidx.constraintlayout.widget.ConstraintLayout>

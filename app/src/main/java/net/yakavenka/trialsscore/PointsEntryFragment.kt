@@ -2,9 +2,7 @@ package net.yakavenka.trialsscore
 
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -33,6 +31,15 @@ class PointsEntryFragment : Fragment() {
         )
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.points_entry_fragment_menu, menu)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -45,6 +52,16 @@ class PointsEntryFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_clean_rider_scores -> {
+                clearResults()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -64,15 +81,12 @@ class PointsEntryFragment : Fragment() {
             binding.lapScore.text =
                 getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
         }
-
-        binding.clearPointsButton.setOnClickListener {
-            scoreCardViewModel.clearScores(navigationArgs.riderId)
-            val action = PointsEntryFragmentDirections.actionPointsEntryFragmentToEventScoreFragment()
-            findNavController().navigate(action)
-        }
     }
 
-    fun clearResults() {
+    private fun clearResults() {
         Log.d("PointsEntryFragment", "Clearing results")
+        scoreCardViewModel.clearScores(navigationArgs.riderId)
+        val action = PointsEntryFragmentDirections.actionPointsEntryFragmentToEventScoreFragment()
+        findNavController().navigate(action)
     }
 }
