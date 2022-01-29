@@ -10,9 +10,11 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.javafaker.Faker
+import net.yakavenka.trialsscore.data.RiderScore
+import net.yakavenka.trialsscore.model.RiderScoreAdapter
 import net.yakavenka.trialsscore.model.SectionScoreAdapter
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
-import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.*
 import org.hamcrest.core.StringContains
 import org.junit.Rule
 import org.junit.Test
@@ -27,17 +29,17 @@ class SectionScoreActivityTest {
 
     @Test
     fun addNewRiderCreatesEntry() {
-        val riderName = giverRegisteredRider()
+        val entry = giverRegisteredRider()
 
-        onView(withId(R.id.recycler_view)).check(matches(isDisplayed()))
-        onView(withText(containsString(riderName))).check(matches(isDisplayed()))
+        scrollToRider(entry)
+        onView(withText(containsString(entry.name))).check(matches(isDisplayed()))
     }
 
     @Test
     fun navigateToScoreEntryPage() {
-        val riderName = giverRegisteredRider()
+        val rider = giverRegisteredRider()
 
-        onView(withText(containsString(riderName))).perform(click())
+        openScoreEntry(rider)
 
         onView(withText("1")).check(matches(isDisplayed()))
         onView(withText("9")).check(matches(isDisplayed()))
@@ -47,9 +49,9 @@ class SectionScoreActivityTest {
 
     @Test
     fun pointsEntryPageUpdatesTotalScore() {
-        val riderName = giverRegisteredRider()
+        val rider = giverRegisteredRider()
 
-        onView(withText(containsString(riderName))).perform(click())
+        openScoreEntry(rider)
 
         // this click currently lands on 2. need to find how to poke more accurate
         onView(withId(R.id.lap_score_container))
@@ -63,16 +65,29 @@ class SectionScoreActivityTest {
             .check(matches(withText(StringContains.containsString("2 / 0"))))
     }
 
-    private fun giverRegisteredRider(): String {
+    private fun giverRegisteredRider(): RiderScore {
         val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
+        val riderClass = EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
         onView(withId(R.id.floating_action_button)).perform(click())
         onView(withId(R.id.rider_name)).perform(typeText(riderName))
         onView(withId(R.id.rider_class_label)).perform(click())
         EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
-        onView(withText(EditRiderViewModel.RIDER_CLASS_OPTIONS.random()))
+        onView(withText(riderClass))
             .inRoot(RootMatchers.isPlatformPopup())
             .perform(click())
         onView(withId(R.id.save_action)).perform(click())
-        return riderName
+        return RiderScore(name = riderName, riderClass = riderClass )
+    }
+
+    private fun openScoreEntry(rider: RiderScore) {
+        scrollToRider(rider)
+        onView(withText(containsString(rider.name))).perform(click())
+    }
+
+    private fun scrollToRider(rider: RiderScore) {
+        onView(withId(R.id.recycler_view))
+            .perform(RecyclerViewActions.scrollTo<RiderScoreAdapter.ViewHolder>(
+                hasDescendant(withText(containsString(rider.name)))
+            ))
     }
 }
