@@ -10,6 +10,8 @@ import android.widget.ArrayAdapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.databinding.FragmentEditRiderBinding
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
@@ -18,6 +20,8 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
  * [Fragment] to Add/Edit rider info
  */
 class EditRiderFragment : Fragment() {
+
+    private val navigationArgs: EditRiderFragmentArgs by navArgs()
 
     private var _binding: FragmentEditRiderBinding? = null
     private val binding get() = _binding!!
@@ -55,13 +59,39 @@ class EditRiderFragment : Fragment() {
                 binding.riderClass.setAdapter(adapter)
         }
 
-        binding.saveAction.setOnClickListener {
-            viewModel.addRider(
-                binding.riderName.text.toString(),
-                binding.riderClass.text.toString()
-            )
-            val action = EditRiderFragmentDirections.actionEditRiderFragmentToEventScoreFragment()
-            findNavController().navigate(action)
+        val id = navigationArgs.riderId
+        if (id > 0) {
+            viewModel.loadRider(id).observe(viewLifecycleOwner) { bind(it) }
+        } else {
+            binding.saveAction.setOnClickListener { addRider() }
         }
+    }
+
+    private fun bind(rider: RiderScore) {
+        binding.apply {
+            riderName.setText(rider.name)
+            riderClass.setText(rider.riderClass, false)
+            saveAction.setOnClickListener { updateRider() }
+        }
+    }
+
+    private fun updateRider() {
+        viewModel.updateRider(
+            navigationArgs.riderId,
+            binding.riderName.text.toString(),
+            binding.riderClass.text.toString()
+        )
+        val action = EditRiderFragmentDirections.actionEditRiderFragmentToPointsEntryFragment(
+            riderId = navigationArgs.riderId, riderName = binding.riderName.text.toString())
+        findNavController().navigate(action)
+    }
+
+    private fun addRider() {
+        viewModel.addRider(
+            binding.riderName.text.toString(),
+            binding.riderClass.text.toString()
+        )
+        val action = EditRiderFragmentDirections.actionEditRiderFragmentToEventScoreFragment()
+        findNavController().navigate(action)
     }
 }

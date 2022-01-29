@@ -14,4 +14,5 @@
     <string name="configure_event">Configure event</string>
     <string name="clear_all_data">Clear all data</string>
     <string name="clear_rider_scores">Clear rider scores</string>
+    <string name="edit_rider_info">Edit rider info</string>
 </resources>

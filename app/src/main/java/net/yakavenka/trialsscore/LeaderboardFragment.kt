@@ -99,7 +99,8 @@ class LeaderboardFragment : Fragment() {
         }
 
         binding.floatingActionButton.setOnClickListener {
-            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment()
+            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment(
+                title = getString(R.string.add_new_rider))
             findNavController().navigate(action)
         }
     }

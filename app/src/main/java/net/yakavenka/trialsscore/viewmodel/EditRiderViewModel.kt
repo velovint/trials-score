@@ -1,8 +1,6 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.*
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
@@ -18,6 +16,16 @@ class EditRiderViewModel(
     fun addRider(name: String, riderClass: String) {
         viewModelScope.launch {
             riderScoreDao.addRider(RiderScore(name = name, riderClass = riderClass))
+        }
+    }
+
+    fun loadRider(id: Int): LiveData<RiderScore> {
+        return riderScoreDao.getRider(id).asLiveData()
+    }
+
+    fun updateRider(id: Int, name: String, riderClass: String) {
+        viewModelScope.launch {
+            riderScoreDao.updateRider(RiderScore(id = id, name = name, riderClass = riderClass))
         }
     }
 

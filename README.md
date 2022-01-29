@@ -1,5 +1,8 @@
 ## TODO
 * Edit rider name/class
+* Wiki/GH pages
+* License
+* Publish
 * Display progress notification for both import and export
 * App icon
 * Configurable classes

@@ -60,6 +60,14 @@ class PointsEntryFragment : Fragment() {
                 clearResults()
                 true
             }
+            R.id.action_edit_rider -> {
+                val action = PointsEntryFragmentDirections.actionPointsEntryFragmentToEditRiderFragment(
+                    title = getString(R.string.edit_rider_info),
+                    riderId = navigationArgs.riderId
+                )
+                findNavController().navigate(action)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }

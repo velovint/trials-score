@@ -38,4 +38,6 @@ interface RiderScoreDao {
             "      GROUP BY rs.id\n" +
             "      ORDER BY class, sections_ridden DESC, points ASC, cleans DESC")
     fun fetchSummary(): Flow<List<RiderScoreSummary>>
+    @Update
+    suspend fun updateRider(riderScore: RiderScore)
 }

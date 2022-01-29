@@ -33,14 +33,31 @@
         <argument
             android:name="riderName"
             app:argType="string" />
+        <action
+            android:id="@+id/action_pointsEntryFragment_to_editRiderFragment"
+            app:destination="@id/editRiderFragment" />
     </fragment>
     <fragment
         android:id="@+id/editRiderFragment"
         android:name="net.yakavenka.trialsscore.EditRiderFragment"
-        android:label="fragment_edit_rider"
-        tools:layout="@layout/fragment_edit_rider" >
+        android:label="{title}"
+        tools:layout="@layout/fragment_edit_rider">
         <action
             android:id="@+id/action_editRiderFragment_to_eventScoreFragment"
-            app:destination="@id/eventScoreFragment" />
+            app:destination="@id/eventScoreFragment"
+            app:popUpTo="@id/eventScoreFragment"
+            app:popUpToInclusive="true" />
+        <argument
+            android:name="riderId"
+            android:defaultValue="0"
+            app:argType="integer" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_editRiderFragment_to_pointsEntryFragment"
+            app:destination="@id/pointsEntryFragment"
+            app:popUpTo="@id/pointsEntryFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 </navigation>
