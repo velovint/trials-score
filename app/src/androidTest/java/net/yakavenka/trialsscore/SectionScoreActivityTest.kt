@@ -1,8 +1,9 @@
 package net.yakavenka.trialsscore
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.typeText
+import androidx.test.espresso.NoMatchingViewException
+import androidx.test.espresso.PerformException
+import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.contrib.RecyclerViewActions
 import androidx.test.espresso.matcher.RootMatchers
@@ -10,6 +11,7 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.javafaker.Faker
+import junit.framework.AssertionFailedError
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
 import net.yakavenka.trialsscore.model.SectionScoreAdapter
@@ -65,18 +67,37 @@ class SectionScoreActivityTest {
             .check(matches(withText(StringContains.containsString("2 / 0"))))
     }
 
-    private fun giverRegisteredRider(): RiderScore {
-        val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
-        val riderClass = EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
-        onView(withId(R.id.floating_action_button)).perform(click())
-        onView(withId(R.id.rider_name)).perform(typeText(riderName))
-        onView(withId(R.id.rider_class_label)).perform(click())
-        EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
-        onView(withText(riderClass))
-            .inRoot(RootMatchers.isPlatformPopup())
-            .perform(click())
+    @Test
+    fun editRiderInfo() {
+        val rider = giverRegisteredRider()
+        openScoreEntry(rider)
+        onView(withId(R.id.action_edit_rider)).perform(click())
+
+        // verify current values
+        onView(withId(R.id.rider_name)).check(matches(withText(rider.name)))
+        onView(withId(R.id.rider_class)).check(matches(withText(rider.riderClass)))
+
+        // update
+        val updatedRider = enterRiderDetails()
         onView(withId(R.id.save_action)).perform(click())
-        return RiderScore(name = riderName, riderClass = riderClass )
+        onView(isRoot()).perform(pressBack())
+
+        // old rider no longer on the screen
+        try {
+            scrollToRider(rider)
+            throw AssertionFailedError("Old rider entry should not be present, but $rider was found")
+        } catch (_: PerformException) {}
+
+        // new rider is in the list
+        scrollToRider(updatedRider)
+        onView(withText(containsString(updatedRider.name))).check(matches(isDisplayed()))
+    }
+
+    private fun giverRegisteredRider(): RiderScore {
+        onView(withId(R.id.floating_action_button)).perform(click())
+        val rider = enterRiderDetails()
+        onView(withId(R.id.save_action)).perform(click())
+        return rider
     }
 
     private fun openScoreEntry(rider: RiderScore) {
@@ -89,5 +110,17 @@ class SectionScoreActivityTest {
             .perform(RecyclerViewActions.scrollTo<RiderScoreAdapter.ViewHolder>(
                 hasDescendant(withText(containsString(rider.name)))
             ))
+    }
+
+    private fun enterRiderDetails(): RiderScore {
+        val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
+        val riderClass = EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
+        onView(withId(R.id.rider_name)).perform(clearText(), typeText(riderName))
+        onView(withId(R.id.rider_class_label)).perform(click())
+        EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
+        onView(withText(riderClass))
+            .inRoot(RootMatchers.isPlatformPopup())
+            .perform(click())
+        return RiderScore(name = riderName, riderClass = riderClass)
     }
 }
