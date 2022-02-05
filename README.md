@@ -1,8 +1,5 @@
 ## TODO
-* Edit rider name/class
 * Wiki/GH pages
-* License
-* Publish
 * Display progress notification for both import and export
 * App icon
 * Configurable classes
@@ -12,6 +9,9 @@
 * How to use DI?
 * Change app name when launching
 * Publish to app store
+* ~License~
+* ~Publish~
+* ~Edit rider name/class~
 * ~Move Clear button to top menu~
 * ~Page title on score entry page~
 * ~score entry fragment scrolls to the top with each punch~
@@ -47,4 +47,7 @@
 
 ## Future ideas
 * Split sections in to laps and enter one lap at a time
+
+This project is licensed under the terms of the GNU GENERAL PUBLIC LICENSE.
+
 
