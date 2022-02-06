@@ -7,9 +7,9 @@ It's only available for Android 8+.
 It's in development stage.
 It's free and released under GPLv3 license.
 
-![Leaderboard screen](img/leaderboard.png)
+<p><img src="img/leaderboard.png" width="100" alt="Leaderboard screen" /></p>
 
-![Score entry screen](img/score-entry.png)
+<p><img src="img/score-entry.png" width="100" alt="Score entry screen" /></p>
 
 ## Usage scenario
 TODO
