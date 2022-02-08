@@ -1,37 +1,105 @@
-## Welcome to GitHub Pages
+## Summary
 
-You can use the [editor on GitHub](https://github.com/velovint/trials-score/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+This is Android application to help count score for motorcycle trials events.
+Its main goal is to help event organizers to count scores and share them quickly at the event location.
+It does not require cell reception.
+It's only available for Android 8+.
+It's in development stage.
+It's free and released under GPLv3 license.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+<img src="img/leaderboard.png" width="300" alt="Leaderboard screen" />
 
-### Markdown
+<img src="img/score-entry.png" width="300" alt="Score entry screen" />
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+## Usage scenario
+1. Configure event: classes, number of laps and sections (incomplete)  
+2. Import rider list
+3. Manually enter or edit rider information if needed
+4. Record scores as riders turn in their cards
+5. Share scores
+6. Export scores to generate final score sheets
 
-```markdown
-Syntax highlighted code block
+### Configure event
+This feature is not implemented and currently hardcoded for the following classes:
+* Champ
+* Expert
+* Advanced
+* Intermediate
+* Novice
 
-# Header 1
-## Header 2
-### Header 3
+Events are configure to display 30 sections in single loop.
 
-- Bulleted
-- List
+### Import rider list
+Assuming you have rider list exported from your registration system. 
+Create Excel spreadsheet with just 2 columns: rider name and rider class.
+It's best to keep rider class matching classes you configured in the app.
+Otherwise you'll have to edit each rider in the app and set correct class.
 
-1. Numbered
-2. List
+| Tamara Murazik | Advanced |
+| --- | --- |
+| Damian Brakus | Intermediate |
+| Uriel Mills | Expert |
+| Sabrina McGlynn | Advanced | 
+| Shannon Ritchie | Novice |
+| Baylee Cruickshank | Intermediate |
 
-**Bold** and _Italic_ and `Code` text
+Note, do not include header as application will try to import it as a rider.
+Save the spreadsheet as CSV file.
+Most spreadsheet application use comma as delimiter, this should work just fine.
+If you want to check raw exported file, it should look like this.
 
-[Link](url) and ![Image](src)
+```csv
+Tamara Murazik,Advanced
+Damian Brakus,Intermediate
+Uriel Mills,Expert
+Sabrina McGlynn,Advanced
+Shannon Ritchie,Novice
+Baylee Cruickshank,Intermediate
 ```
 
-For more details see [Basic writing and formatting syntax](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax).
+Copy file onto device and import the list using application menu from the main screen.
 
-### Jekyll Themes
+<img src="img/import-riders.png" width="300" alt="Import menu" />
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/velovint/trials-score/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+### Manually enter or edit rider info
 
-### Support or Contact
+You can add new rider from Leaderboard (home) screen.
+You can edit rider info from score entry screen. 
+Simply tap on rider name and you should see "pencil" icon.
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### Entering scores
+Leaderboard is sorted by using the following order:
+
+* finished riders
+  * points
+  * cleans
+* not finisher riders (marked by asterisk)
+  * first name
+
+Tapping on rider name opens their score entry screen.
+Results are saved as you "punch" the score card.
+When finished simply use "back" button to return to previous screen.
+There is no way to "undo" score entry.
+You can clear entire score for the rider using "Clear rider score" menu option in the top right corner.
+
+### Sharing scores
+The only way to share scores at the moment is by giving the score entry device to a rider.
+They may alter scores as there is currently no way to lock entries.
+
+### Export results
+This application doesn't attempt to generate nice score sheets. 
+Instead it lets you export raw results into Excel and friends.
+You can then generate final score sheets as you probably do right now.
+
+Export is available from the Leaderboard screen.
+It generate CSV file that you can import into your spreadsheets application.
+Sample output, once imported, look like this.
+
+| Name | Class | Points | Cleans | S1 | S2 | S3 | S4 | S5 | S6 | S7 | S8 | S9 | S10 | S11 | S12 | S13 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Armani Bergstrom | Expert | 20 | 13 | 0 | 1 | 1 | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 1 | 2 |  
+| Cecilia Collier | Expert | 5   | 26 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
+| Dorothy Rogahn | Expert | 76   |  0 | 1 | 2 | 1 | 1 | 3 | 2 | 5 | 3 | 2 | 3 | 2 | 1 | 2 |
+
+## Roadmap
+TODO

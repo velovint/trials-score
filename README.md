@@ -1,14 +1,14 @@
 ## TODO
-* Wiki/GH pages
+* Configurable classes
+* Move TODO out of README
 * Display progress notification for both import and export
 * App icon
-* Configurable classes
 * Score formatter that can be shared between list and entry
-* Request confirmation before removing individ
-  ual and all scores
+* Request confirmation before removing individual and all scores
 * How to use DI?
 * Change app name when launching
 * Publish to app store
+* ~Wiki/GH pages~
 * ~License~
 * ~Publish~
 * ~Edit rider name/class~
