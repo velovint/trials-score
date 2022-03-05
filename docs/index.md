@@ -101,5 +101,10 @@ Sample output, once imported, look like this.
 | Cecilia Collier | Expert | 5   | 26 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
 | Dorothy Rogahn | Expert | 76   |  0 | 1 | 2 | 1 | 1 | 3 | 2 | 5 | 3 | 2 | 3 | 2 | 1 | 2 |
 
+## How to install
+As of March 2022 this application is in internal testing is on its first field test. 
+I plan to make it publicly available once it allows you to configure classes.
+If you want to give it a try before that please get in touch with me on [facebook](https://www.facebook.com/vitali.yakavenka/).
+
 ## Roadmap
-TODO
+See issues on GitHub for future ideas and their status 
