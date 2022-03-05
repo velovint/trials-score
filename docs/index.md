@@ -35,15 +35,16 @@ Create Excel spreadsheet with just 2 columns: rider name and rider class.
 It's best to keep rider class matching classes you configured in the app.
 Otherwise you'll have to edit each rider in the app and set correct class.
 
-| Tamara Murazik | Advanced |
+| | | 
 | --- | --- |
+| Tamara Murazik | Advanced |
 | Damian Brakus | Intermediate |
 | Uriel Mills | Expert |
 | Sabrina McGlynn | Advanced | 
 | Shannon Ritchie | Novice |
 | Baylee Cruickshank | Intermediate |
 
-Note, do not include header as application will try to import it as a rider.
+Note, do not include table header as application will try to import it as a rider.
 Save the spreadsheet as CSV file.
 Most spreadsheet application use comma as delimiter, this should work just fine.
 If you want to check raw exported file, it should look like this.
