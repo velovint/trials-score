@@ -85,5 +85,9 @@ class ScoreSummaryRepositoryTest {
             emit(summary)
         }
 
+        override suspend fun updateRider(riderScore: RiderScore) {
+            TODO("Not yet implemented")
+        }
+
     }
 }
