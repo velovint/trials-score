@@ -9,12 +9,23 @@
     android:paddingBottom="@dimen/margin_between_elements">
 
     <TextView
-        android:id="@+id/rider_name"
+        android:id="@+id/rider_standing"
         style="@style/Widget.Inventory.ListItemTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="sans-serif"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/rider_name"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintHorizontal_weight="0.2"
+        tools:text="1" />
+    <TextView
+        android:id="@+id/rider_name"
+        style="@style/Widget.Inventory.ListItemTextView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif"
+        app:layout_constraintStart_toEndOf="@id/rider_standing"
         app:layout_constraintEnd_toStartOf="@id/rider_score"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_weight="2"

@@ -65,6 +65,10 @@ class RiderScoreAdapter(
             return if (scoreCard.isFinished()) scoreCard.riderName
                 else "* " + scoreCard.riderName
         }
+
+        fun getFormattedRiderStanding(scoreCard: RiderScoreSummary): CharSequence {
+            return if (scoreCard.isFinished()) "0" else "*"
+        }
     }
 
     class ViewHolderNoHeader(
@@ -73,7 +77,8 @@ class RiderScoreAdapter(
 
         override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
-                riderName.text = getFormattedRiderName(scoreCard)
+                riderStanding.text = getFormattedRiderStanding(scoreCard)
+                riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
                     scoreCard.points,
@@ -90,7 +95,8 @@ class RiderScoreAdapter(
         override fun bind(scoreCard: RiderScoreSummary) {
             binding.apply {
                 riderNameHeader.text = scoreCard.riderClass
-                riderName.text = getFormattedRiderName(scoreCard)
+                riderStanding.text = getFormattedRiderStanding(scoreCard)
+                riderName.text = scoreCard.riderName
                 riderScore.text = root.resources.getString(
                     R.string.lap_score,
                     scoreCard.points,
