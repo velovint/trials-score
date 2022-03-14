@@ -67,7 +67,7 @@ class RiderScoreAdapter(
         }
 
         fun getFormattedRiderStanding(scoreCard: RiderScoreSummary): CharSequence {
-            return if (scoreCard.isFinished()) "0" else "*"
+            return if (scoreCard.isFinished()) scoreCard.standing.toString() else "*"
         }
     }
 
