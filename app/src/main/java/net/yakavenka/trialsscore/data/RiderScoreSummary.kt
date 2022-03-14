@@ -11,8 +11,13 @@ data class RiderScoreSummary(
     @ColumnInfo(name = "points") val points: Int,
     @ColumnInfo(name = "cleans") val numCleans: Int
 ) {
+    /**
+     * Holder for rider standing
+     *
+     * Make sure to check isFinished() before using it
+     */
     @Ignore
-    var standing: Int = 10
+    var standing: Int = 0
 
     fun isFinished(): Boolean {
         return sectionsRidden == SectionScore.Set.TOTAL_SECTIONS

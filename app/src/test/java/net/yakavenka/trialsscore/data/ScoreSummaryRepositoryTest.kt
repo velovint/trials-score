@@ -35,21 +35,21 @@ class ScoreSummaryRepositoryTest {
     @Test
     fun fetchSummarySetsStandingsWithinAClass() = runBlocking {
         dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
-//        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
+        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
         dao.summary.add(RiderScoreSummary(3, "Rider3", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8))
 
         val actual = sut.fetchSummary().first()
 
-        assertThat("Top rider", actual.first().riderName, equalTo("Rider3"))
-        assertThat("Top place", actual.first().standing, equalTo(1))
-        assertThat("Second place", actual.get(1).standing, equalTo(2))
+        assertThat("Top novice", actual[1].riderName, equalTo("Rider3"))
+        assertThat("Top place", actual[1].standing, equalTo(1))
+        assertThat("Second novice", actual[2].standing, equalTo(2))
     }
 
     private fun numGroups(actual: List<String>): Int {
         var result = 0
         var lastValue: String? = null
         for (entry in actual) {
-            if (!entry.equals(lastValue)) result ++
+            if (entry != lastValue) result ++
             lastValue = entry
         }
         return result

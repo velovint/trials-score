@@ -6,10 +6,9 @@ import kotlinx.coroutines.flow.map
 class ScoreSummaryRepository(private val riderScoreDao: RiderScoreDao) {
     fun fetchSummary(): Flow<List<RiderScoreSummary>> {
         return riderScoreDao.fetchSummary().map {
-            // group by class
-            // sort all classes
-            // set standing
-            // flatten
+            // consider alternative approach to simplify whole grouping/sorting/enumerating logic
+            // group by class, sort all classes, set standing by index in the list
+            // optionally flatten back
             val result = it.sortedWith(LeaderboardScoreSortOrder())
             enumerate(result)
             result
@@ -21,7 +20,7 @@ class ScoreSummaryRepository(private val riderScoreDao: RiderScoreDao) {
         var prevClass = ""
         var standing = 1
         for (entry: RiderScoreSummary in result) {
-            if (!prevClass.equals(entry.riderClass)) standing = 1
+            if (prevClass != entry.riderClass) standing = 1
             entry.standing = standing
             prevClass = entry.riderClass
             standing++
