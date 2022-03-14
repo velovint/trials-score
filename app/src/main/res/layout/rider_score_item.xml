@@ -17,7 +17,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/rider_name"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintHorizontal_weight="0.2"
+        app:layout_constraintHorizontal_weight="0.25"
         tools:text="1" />
     <TextView
         android:id="@+id/rider_name"
