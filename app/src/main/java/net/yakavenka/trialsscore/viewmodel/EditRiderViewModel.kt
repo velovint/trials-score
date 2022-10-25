@@ -10,7 +10,21 @@ class EditRiderViewModel(
 ) : ViewModel() {
 
     companion object {
-        val RIDER_CLASS_OPTIONS: Set<String> = setOf("Champ", "Expert", "Advanced", "Intermediate", "Novice", "Vintage A", "Vintage B", "Exhibition")
+        val RIDER_CLASS_OPTIONS: Set<String> = setOf(
+            "Pro+",
+            "Pro",
+            "Champ",
+            "Expert",
+            "Advanced",
+            "Clubman",
+            "Intermediate",
+            "Sportsman",
+            "Novice",
+            "Twinshock",
+            "Vintage A",
+            "Vintage B",
+            "Exhibition",
+            "Open")
     }
 
     fun addRider(name: String, riderClass: String) {
