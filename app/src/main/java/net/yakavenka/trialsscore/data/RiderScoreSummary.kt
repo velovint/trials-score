@@ -23,4 +23,8 @@ data class RiderScoreSummary(
         return sectionsRidden == SectionScore.Set.TOTAL_SECTIONS
     }
 
+    fun getProgress(): Int {
+        return sectionsRidden * 100 / SectionScore.Set.TOTAL_SECTIONS
+    }
+
 }

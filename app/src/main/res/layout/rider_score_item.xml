@@ -44,5 +44,10 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintHorizontal_weight="1"
         tools:text="0 / 0" />
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/rider_progress"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/rider_name" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

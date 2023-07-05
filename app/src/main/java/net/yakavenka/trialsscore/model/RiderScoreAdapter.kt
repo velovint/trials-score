@@ -84,6 +84,10 @@ class RiderScoreAdapter(
                     scoreCard.points,
                     scoreCard.numCleans
                 )
+                if (scoreCard.getProgress() in listOf(0, 100)) {
+                    riderProgress.visibility = View.GONE
+                }
+                riderProgress.progress = scoreCard.getProgress()
             }
         }
     }
@@ -102,6 +106,10 @@ class RiderScoreAdapter(
                     scoreCard.points,
                     scoreCard.numCleans
                 )
+                if (scoreCard.getProgress() in listOf(0, 100)) {
+                    riderProgress.visibility = View.GONE
+                }
+                riderProgress.progress = scoreCard.getProgress()
             }
         }
     }
