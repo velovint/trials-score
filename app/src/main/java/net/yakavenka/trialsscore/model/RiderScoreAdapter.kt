@@ -67,7 +67,11 @@ class RiderScoreAdapter(
         }
 
         fun getFormattedRiderStanding(scoreCard: RiderScoreSummary): CharSequence {
-            return if (scoreCard.isFinished()) scoreCard.standing.toString() else "*"
+            // https://unicode.org/charts/nameslist/c_2800.html
+            if (scoreCard.isFinished()) return scoreCard.standing.toString()
+            else if (scoreCard.getProgress() > 60) return "⠅"
+            else if (scoreCard.getProgress() > 30) return "⠂"
+            else return "*"
         }
     }
 
@@ -84,10 +88,6 @@ class RiderScoreAdapter(
                     scoreCard.points,
                     scoreCard.numCleans
                 )
-                if (scoreCard.getProgress() in listOf(0, 100)) {
-                    riderProgress.visibility = View.GONE
-                }
-                riderProgress.progress = scoreCard.getProgress()
             }
         }
     }
@@ -106,10 +106,6 @@ class RiderScoreAdapter(
                     scoreCard.points,
                     scoreCard.numCleans
                 )
-                if (scoreCard.getProgress() in listOf(0, 100)) {
-                    riderProgress.visibility = View.GONE
-                }
-                riderProgress.progress = scoreCard.getProgress()
             }
         }
     }
