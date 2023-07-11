@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.transform
 class SectionScoreRepository(
     private val dao: RiderScoreDao
 ) {
-    fun fetchOrInitRiderScore(riderId: Int): Flow<SectionScore.Set> {
+    fun fetchOrInitRiderScore(riderId: Int, numSections: Int): Flow<SectionScore.Set> {
         return dao.sectionScores(riderId)
             .map { SectionScore.Set(it) }
             .transform {
-                if (it.sectionScores.isEmpty()) emit(initRiderScoreSet(riderId))
+                if (it.sectionScores.isEmpty()) emit(initRiderScoreSet(riderId, numSections))
                 else emit(it)
             }
     }
@@ -21,8 +21,8 @@ class SectionScoreRepository(
         return dao.getAll()
     }
 
-    suspend fun initRiderScoreSet(riderId: Int): SectionScore.Set {
-        val blankScoreSet = SectionScore.Set.createForRider(riderId)
+    suspend fun initRiderScoreSet(riderId: Int, numSections: Int): SectionScore.Set {
+        val blankScoreSet = SectionScore.Set.createForRider(riderId, numSections)
         dao.insertAll(blankScoreSet.sectionScores)
         return blankScoreSet
     }

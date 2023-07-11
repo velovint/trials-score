@@ -2,21 +2,25 @@ package net.yakavenka.trialsscore.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.*
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.transform
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 
 private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
-    private val sectionScoreRepository: SectionScoreRepository
+    private val sectionScoreRepository: SectionScoreRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
+    private val userPreferencesFlow = userPreferencesRepository.userPreferencesFlow
 
     val sectionScores: LiveData<SectionScore.Set>
         get() = _sectionScores
@@ -26,10 +30,11 @@ class ScoreCardViewModel(
     val riderInfo: LiveData<RiderScore>
         get() = _riderInfo
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            sectionScoreRepository
-                .fetchOrInitRiderScore(riderId)
+            userPreferencesFlow
+                .flatMapLatest { sectionScoreRepository.fetchOrInitRiderScore(riderId, it.numSections) }
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
@@ -53,11 +58,13 @@ class ScoreCardViewModel(
         }
     }
 
-    class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
+    class Factory(
+        private val riderScoreDao: RiderScoreDao,
+        private val userPreferencesRepository: UserPreferencesRepository) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao)) as T
+                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), userPreferencesRepository) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }
