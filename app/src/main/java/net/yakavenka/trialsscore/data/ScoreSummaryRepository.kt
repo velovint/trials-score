@@ -1,11 +1,17 @@
 package net.yakavenka.trialsscore.data
 
+import android.content.SharedPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ScoreSummaryRepository(private val riderScoreDao: RiderScoreDao) {
+class ScoreSummaryRepository(
+    private val riderScoreDao: RiderScoreDao,
+    private val sharedPreferences: SharedPreferences
+) {
     fun fetchSummary(): Flow<List<RiderScoreSummary>> {
         return riderScoreDao.fetchSummary().map {
+            val numSections = sharedPreferences.getString("num_sections", "30")!!.toInt()
+            it.forEach { summary -> summary.totalSections = numSections }
             // consider alternative approach to simplify whole grouping/sorting/enumerating logic
             // group by class, sort all classes, set standing by index in the list
             // optionally flatten back

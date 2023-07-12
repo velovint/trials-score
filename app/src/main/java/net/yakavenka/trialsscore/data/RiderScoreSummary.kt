@@ -18,13 +18,15 @@ data class RiderScoreSummary(
      */
     @Ignore
     var standing: Int = 0
+    @Ignore
+    var totalSections: Int = 0
 
     fun isFinished(): Boolean {
-        return sectionsRidden == SectionScore.Set.TOTAL_SECTIONS
+        return sectionsRidden == totalSections
     }
 
     fun getProgress(): Int {
-        return sectionsRidden * 100 / SectionScore.Set.TOTAL_SECTIONS
+        return sectionsRidden * 100 / totalSections
     }
 
 }

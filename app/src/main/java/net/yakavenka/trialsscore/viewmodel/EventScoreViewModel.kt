@@ -1,13 +1,13 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.content.ContentResolver
+import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.*
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.*
@@ -51,6 +51,7 @@ class EventScoreViewModel(
             importExportService.importRiders(inputStream!!).collect { rider ->
                 sectionScoreRepository.addRider(rider)
             }
+            // TODO inputStream.close()
         }
 
     }
@@ -61,12 +62,15 @@ class EventScoreViewModel(
         }
     }
 
-    class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
+    class Factory(
+        private val riderScoreDao: RiderScoreDao,
+        private val sharedPreferences: SharedPreferences
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return EventScoreViewModel(
-                    ScoreSummaryRepository(riderScoreDao),
+                    ScoreSummaryRepository(riderScoreDao, sharedPreferences),
                     SectionScoreRepository(riderScoreDao),
                     CsvExchangeRepository()
                 ) as T

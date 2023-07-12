@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
+import androidx.preference.PreferenceManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import net.yakavenka.trialsscore.databinding.FragmentLeaderboardBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
@@ -31,7 +32,9 @@ class LeaderboardFragment : Fragment() {
 
     private val eventScores: EventScoreViewModel by activityViewModels {
         EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao())
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
+            PreferenceManager.getDefaultSharedPreferences(activity?.applicationContext)
+        )
     }
 
     private val exportPrompt: ActivityResultLauncher<String> = registerExportPrompt()
