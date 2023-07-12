@@ -1,39 +1,17 @@
 package net.yakavenka.trialsscore.data
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.emptyPreferences
-import androidx.datastore.preferences.core.intPreferencesKey
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.map
-import java.io.IOException
+import android.content.SharedPreferences
 
 data class UserPreferences(val numSections: Int)
 
-class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
-    private object PreferencesKeys {
-        val NUM_SECTIONS = intPreferencesKey("num_sections")
+class UserPreferencesRepository(private val sharedPreferences: SharedPreferences) {
+
+    fun fetchPreferences(): UserPreferences {
+        val numSections = sharedPreferences.getString(NUM_SECTIONS_KEY, "30")!!.toInt()
+        return UserPreferences(numSections)
     }
 
-    val userPreferencesFlow = dataStore.data
-        .catch { exception ->
-            // dataStore.data throws an IOException when an error is encountered when reading data
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
-        }
-        .map { preferences ->
-            // Get NUM_SECTIONS preference key
-            val numSections = preferences[PreferencesKeys.NUM_SECTIONS] ?: SectionScore.Set.TOTAL_SECTIONS
-            UserPreferences(numSections)
-        }
-
-    suspend fun updateNumSections(numSections: Int) {
-        dataStore.edit { preferences ->
-            preferences[PreferencesKeys.NUM_SECTIONS] = numSections
-        }
+    companion object {
+        const val NUM_SECTIONS_KEY = "num_sections"
     }
 }

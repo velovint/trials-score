@@ -15,12 +15,10 @@ private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
     private val sectionScoreRepository: SectionScoreRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
-    private val preferences: SharedPreferences
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
-    private val userPreferencesFlow = userPreferencesRepository.userPreferencesFlow
 
     val sectionScores: LiveData<SectionScore.Set>
         get() = _sectionScores
@@ -32,8 +30,7 @@ class ScoreCardViewModel(
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            val numSections = preferences.getString("num_sections", SectionScore.Set.TOTAL_SECTIONS.toString())!!.toInt()
-            sectionScoreRepository.fetchOrInitRiderScore(riderId, numSections)
+            sectionScoreRepository.fetchOrInitRiderScore(riderId, userPreferencesRepository.fetchPreferences().numSections)
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
@@ -59,13 +56,12 @@ class ScoreCardViewModel(
 
     class Factory(
         private val riderScoreDao: RiderScoreDao,
-        private val userPreferencesRepository: UserPreferencesRepository,
-        private val preferences: SharedPreferences
+        private val sharedPreferences: SharedPreferences
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), userPreferencesRepository, preferences) as T
+                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), UserPreferencesRepository(sharedPreferences)) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

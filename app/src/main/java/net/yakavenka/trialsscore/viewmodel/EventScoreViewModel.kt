@@ -51,7 +51,7 @@ class EventScoreViewModel(
             importExportService.importRiders(inputStream!!).collect { rider ->
                 sectionScoreRepository.addRider(rider)
             }
-            // TODO inputStream.close()
+            inputStream.close()
         }
 
     }
@@ -70,7 +70,7 @@ class EventScoreViewModel(
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return EventScoreViewModel(
-                    ScoreSummaryRepository(riderScoreDao, sharedPreferences),
+                    ScoreSummaryRepository(riderScoreDao, UserPreferencesRepository(sharedPreferences)),
                     SectionScoreRepository(riderScoreDao),
                     CsvExchangeRepository()
                 ) as T
