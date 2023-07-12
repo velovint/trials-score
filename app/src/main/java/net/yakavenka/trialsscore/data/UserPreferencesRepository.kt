@@ -27,7 +27,7 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
         }
         .map { preferences ->
             // Get NUM_SECTIONS preference key
-            val numSections = preferences[PreferencesKeys.NUM_SECTIONS] ?: 1
+            val numSections = preferences[PreferencesKeys.NUM_SECTIONS] ?: SectionScore.Set.TOTAL_SECTIONS
             UserPreferences(numSections)
         }
 

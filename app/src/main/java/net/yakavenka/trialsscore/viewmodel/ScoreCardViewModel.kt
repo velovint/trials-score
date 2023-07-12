@@ -1,10 +1,9 @@
 package net.yakavenka.trialsscore.viewmodel
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
@@ -16,7 +15,8 @@ private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
     private val sectionScoreRepository: SectionScoreRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val userPreferencesRepository: UserPreferencesRepository,
+    private val preferences: SharedPreferences
 ) : ViewModel() {
 
     private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
@@ -30,11 +30,10 @@ class ScoreCardViewModel(
     val riderInfo: LiveData<RiderScore>
         get() = _riderInfo
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            userPreferencesFlow
-                .flatMapLatest { sectionScoreRepository.fetchOrInitRiderScore(riderId, it.numSections) }
+            val numSections = preferences.getString("num_sections", SectionScore.Set.TOTAL_SECTIONS.toString())!!.toInt()
+            sectionScoreRepository.fetchOrInitRiderScore(riderId, numSections)
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
@@ -60,11 +59,13 @@ class ScoreCardViewModel(
 
     class Factory(
         private val riderScoreDao: RiderScoreDao,
-        private val userPreferencesRepository: UserPreferencesRepository) : ViewModelProvider.Factory {
+        private val userPreferencesRepository: UserPreferencesRepository,
+        private val preferences: SharedPreferences
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), userPreferencesRepository) as T
+                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), userPreferencesRepository, preferences) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

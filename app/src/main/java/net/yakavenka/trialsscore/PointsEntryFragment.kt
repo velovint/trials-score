@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.preference.PreferenceManager
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.databinding.FragmentPointsEntryBinding
 import net.yakavenka.trialsscore.model.SectionScoreAdapter
@@ -34,7 +35,8 @@ class PointsEntryFragment : Fragment() {
     private val scoreCardViewModel: ScoreCardViewModel by viewModels {
         ScoreCardViewModel.Factory(
             (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
-            UserPreferencesRepository((activity?.application as TrialsScoreApplication).preferencesDataStore)
+            UserPreferencesRepository((activity?.application as TrialsScoreApplication).preferencesDataStore),
+            PreferenceManager.getDefaultSharedPreferences(activity?.applicationContext)
         )
     }
 

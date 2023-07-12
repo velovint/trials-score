@@ -2,11 +2,13 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <EditTextPreference
-        android:defaultValue="3"
+        android:defaultValue="30"
+        android:digits="0123456789"
+        android:inputType="numberDecimal"
         android:key="num_sections"
         android:selectAllOnFocus="true"
         android:singleLine="true"
         android:title="Number of sections"
-        app:summary="Total number of sections for riders to ride in the event" />
+        app:useSimpleSummaryProvider="true" />
 
 </PreferenceScreen>
