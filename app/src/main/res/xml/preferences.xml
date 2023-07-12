@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <EditTextPreference
+        android:defaultValue="3"
+        android:key="num_sections"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="Number of sections"
+        app:summary="Total number of sections for riders to ride in the event" />
+
+</PreferenceScreen>

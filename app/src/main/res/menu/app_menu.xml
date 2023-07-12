@@ -6,9 +6,9 @@
         android:icon="@drawable/ic_export_results"
         android:title="@string/export_to_csv"
         app:showAsAction="ifRoom" />
-    <item android:id="@+id/action_configure_event"
-        android:title="@string/configure_event"
-        android:enabled="false"/>
+    <item
+        android:id="@+id/eventSettingsFragment"
+        android:title="@string/configure_event" />
     <item android:id="@+id/action_import_riders"
         android:icon="@drawable/ic_import_riders"
         android:title="@string/import_riders" />

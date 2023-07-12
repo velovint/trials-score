@@ -16,6 +16,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.LinearLayoutManager
 import net.yakavenka.trialsscore.databinding.FragmentLeaderboardBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
@@ -61,6 +62,8 @@ class LeaderboardFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val navController = findNavController()
+
         return when (item.itemId) {
             R.id.action_export_results -> {
                 Log.d(TAG, "init download")
@@ -76,7 +79,7 @@ class LeaderboardFragment : Fragment() {
                 eventScores.clearAll()
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
         }
     }
 
