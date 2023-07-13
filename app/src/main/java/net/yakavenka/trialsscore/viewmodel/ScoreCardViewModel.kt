@@ -1,19 +1,21 @@
 package net.yakavenka.trialsscore.viewmodel
 
+import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 
 private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
-    private val sectionScoreRepository: SectionScoreRepository
+    private val sectionScoreRepository: SectionScoreRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
@@ -28,8 +30,7 @@ class ScoreCardViewModel(
 
     fun fetchScores(riderId: Int) {
         viewModelScope.launch {
-            sectionScoreRepository
-                .fetchOrInitRiderScore(riderId)
+            sectionScoreRepository.fetchOrInitRiderScore(riderId, userPreferencesRepository.fetchPreferences().numSections)
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }
@@ -53,11 +54,14 @@ class ScoreCardViewModel(
         }
     }
 
-    class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
+    class Factory(
+        private val riderScoreDao: RiderScoreDao,
+        private val sharedPreferences: SharedPreferences
+    ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao)) as T
+                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), UserPreferencesRepository(sharedPreferences)) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

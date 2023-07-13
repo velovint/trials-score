@@ -13,9 +13,9 @@ data class SectionScore(
 
         companion object {
             const val TOTAL_SECTIONS = 30
-            fun createForRider(riderId: Int): Set {
+            fun createForRider(riderId: Int, numSections: Int): Set {
                 val sectionScores = mutableListOf<SectionScore>()
-                range(1, TOTAL_SECTIONS + 1).forEach { sectionNum ->
+                range(1, numSections + 1).forEach { sectionNum ->
                     sectionScores.add(SectionScore(riderId, sectionNum, -1))
                 }
                 return Set(sectionScores)

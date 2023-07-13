@@ -26,7 +26,7 @@ class LeaderboardScoreSortOrderTest {
     }
 
     @Test
-    fun sortUsesPredefinedSortOrder() {
+    fun sortUsesPredefinedClassSortOrder() {
         val list = mutableListOf<RiderScoreSummary>()
         EditRiderViewModel.RIDER_CLASS_OPTIONS
             .sortedWith { _, _ -> (-1..1).random() }
@@ -115,6 +115,7 @@ class LeaderboardScoreSortOrderTest {
         riderName: String = faker.name().firstName(),
         riderClass: String = "Novice",
         sectionsRidden: Int = SectionScore.Set.TOTAL_SECTIONS,
+        totalSections: Int = SectionScore.Set.TOTAL_SECTIONS,
         points: Int = faker.number().numberBetween(1, 50), // exclude min/max so that we can inc/dec both,
         numCleans: Int  = faker.number().numberBetween(1, 10)
     ): RiderScoreSummary {
@@ -124,7 +125,8 @@ class LeaderboardScoreSortOrderTest {
             riderClass,
             sectionsRidden,
             points,
-            numCleans
+            numCleans,
+            totalSections
         )
     }
 

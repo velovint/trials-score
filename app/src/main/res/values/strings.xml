@@ -11,7 +11,7 @@
     <string name="rider_class_req">Rider Class *</string>
     <string name="export_to_csv">Export to CSV</string>
     <string name="import_riders">Import Riders</string>
-    <string name="configure_event">Configure event</string>
+    <string name="configure_event">Settings</string>
     <string name="clear_all_data">Clear all data</string>
     <string name="clear_rider_scores">Clear rider scores</string>
     <string name="edit_rider_info">Edit rider info</string>

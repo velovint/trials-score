@@ -2,7 +2,12 @@ package net.yakavenka.trialsscore
 
 import android.os.Bundle
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -27,7 +32,8 @@ class PointsEntryFragment : Fragment() {
 
     private val scoreCardViewModel: ScoreCardViewModel by viewModels {
         ScoreCardViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
+            (activity?.application as TrialsScoreApplication).sharedPreferences
         )
     }
 

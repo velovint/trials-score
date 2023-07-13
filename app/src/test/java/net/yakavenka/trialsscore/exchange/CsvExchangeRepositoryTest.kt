@@ -88,7 +88,7 @@ class CsvExchangeRepositoryTest {
     }
 
     private fun sampleSectionScore(): RiderScoreAggregate {
-        val sections = SectionScore.Set.createForRider(1).sectionScores.toMutableList()
+        val sections = SectionScore.Set.createForRider(1, 30).sectionScores.toMutableList()
         sections[0] = sections[0].copy(points = 0)
         sections[1] = sections[1].copy(points = 0)
         sections[2] = sections[2].copy(points = 5)

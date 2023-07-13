@@ -6,7 +6,7 @@ import org.junit.Test
 class SectionScoreTest {
     @Test
     fun blankScoreSet() {
-        val sut = SectionScore.Set.createForRider(1)
+        val sut = SectionScore.Set.createForRider(1, 30)
 
         assertEquals("Points", 0, sut.getPoints())
         assertEquals("Cleans", 0, sut.getCleans())

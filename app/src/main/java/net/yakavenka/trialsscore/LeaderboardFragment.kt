@@ -5,19 +5,19 @@ import android.content.Intent
 import android.os.Bundle
 import android.provider.DocumentsContract
 import android.util.Log
-import android.view.*
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.ScoreDatabase
 import net.yakavenka.trialsscore.databinding.FragmentLeaderboardBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
 import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
@@ -31,7 +31,8 @@ class LeaderboardFragment : Fragment() {
 
     private val eventScores: EventScoreViewModel by activityViewModels {
         EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao())
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+        )
     }
 
     private val exportPrompt: ActivityResultLauncher<String> = registerExportPrompt()
@@ -62,6 +63,8 @@ class LeaderboardFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val navController = findNavController()
+
         return when (item.itemId) {
             R.id.action_export_results -> {
                 Log.d(TAG, "init download")
@@ -77,7 +80,7 @@ class LeaderboardFragment : Fragment() {
                 eventScores.clearAll()
                 true
             }
-            else -> super.onOptionsItemSelected(item)
+            else -> item.onNavDestinationSelected(navController) || super.onOptionsItemSelected(item)
         }
     }
 

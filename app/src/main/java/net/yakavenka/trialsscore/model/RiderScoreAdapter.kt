@@ -8,9 +8,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import net.yakavenka.trialsscore.R
-import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.RiderScoreSummary
-import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.databinding.RiderScoreItemBinding
 import net.yakavenka.trialsscore.databinding.RiderScoreItemWithHeaderBinding
 
@@ -61,10 +59,6 @@ class RiderScoreAdapter(
 
     abstract class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         abstract fun bind(scoreCard: RiderScoreSummary)
-        fun getFormattedRiderName(scoreCard: RiderScoreSummary): String {
-            return if (scoreCard.isFinished()) scoreCard.riderName
-                else "* " + scoreCard.riderName
-        }
 
         fun getFormattedRiderStanding(scoreCard: RiderScoreSummary): CharSequence {
             // https://unicode.org/charts/nameslist/c_2800.html
