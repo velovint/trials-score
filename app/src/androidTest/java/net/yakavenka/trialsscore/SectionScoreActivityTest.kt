@@ -1,7 +1,6 @@
 package net.yakavenka.trialsscore
 
 import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.NoMatchingViewException
 import androidx.test.espresso.PerformException
 import androidx.test.espresso.action.ViewActions.*
 import androidx.test.espresso.assertion.ViewAssertions.matches
@@ -115,7 +114,7 @@ class SectionScoreActivityTest {
     private fun enterRiderDetails(): RiderScore {
         val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
         val riderClass = EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
-        onView(withId(R.id.rider_name)).perform(clearText(), typeText(riderName))
+        onView(withId(R.id.rider_name)).perform(clearText(), typeText(riderName), closeSoftKeyboard())
         onView(withId(R.id.rider_class_label)).perform(click())
         EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
         onView(withText(riderClass))
