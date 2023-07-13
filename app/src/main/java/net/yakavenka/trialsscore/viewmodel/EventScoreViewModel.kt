@@ -63,14 +63,13 @@ class EventScoreViewModel(
     }
 
     class Factory(
-        private val riderScoreDao: RiderScoreDao,
-        private val sharedPreferences: SharedPreferences
+        private val riderScoreDao: RiderScoreDao
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
                 @Suppress("UNCHECKED_CAST")
                 return EventScoreViewModel(
-                    ScoreSummaryRepository(riderScoreDao, UserPreferencesRepository(sharedPreferences)),
+                    ScoreSummaryRepository(riderScoreDao),
                     SectionScoreRepository(riderScoreDao),
                     CsvExchangeRepository()
                 ) as T

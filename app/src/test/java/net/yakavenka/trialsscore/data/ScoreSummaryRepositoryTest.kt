@@ -12,11 +12,11 @@ import org.junit.Test
 class ScoreSummaryRepositoryTest {
     private val dao: RiderScoreDaoFake = RiderScoreDaoFake()
 
-    private val sut = ScoreSummaryRepository(dao, UserPreferencesRepository(SharedPreferencesFake()))
+    private val sut = ScoreSummaryRepository(dao)
 
     @Test
     fun fetchSummaryReturnsAList() = runBlocking {
-        dao.summary.add(RiderScoreSummary(1, "Rider", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
+        dao.summary.add(RiderScoreSummary(1, "Rider", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
 
         val actual = sut.fetchSummary().first()
         assertThat(actual, not(empty()))
@@ -24,9 +24,9 @@ class ScoreSummaryRepositoryTest {
 
     @Test
     fun fetchSummarySortsResultByClass() = runBlocking {
-        dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
-        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
-        dao.summary.add(RiderScoreSummary(3, "Rider3", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
+        dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
+        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
+        dao.summary.add(RiderScoreSummary(3, "Rider3", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
 
         val actual: List<String> = sut.fetchSummary().first().map { it.riderClass }
 
@@ -35,9 +35,9 @@ class ScoreSummaryRepositoryTest {
 
     @Test
     fun fetchSummarySetsStandingsWithinAClass() = runBlocking {
-        dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
-        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
-        dao.summary.add(RiderScoreSummary(3, "Rider3", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8))
+        dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
+        dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
+        dao.summary.add(RiderScoreSummary(3, "Rider3", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8, SectionScore.Set.TOTAL_SECTIONS))
 
         val actual = sut.fetchSummary().first()
 

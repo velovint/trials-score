@@ -4,12 +4,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class ScoreSummaryRepository(
-    private val riderScoreDao: RiderScoreDao,
-    private val userPreferencesRepository: UserPreferencesRepository
+    private val riderScoreDao: RiderScoreDao
 ) {
     fun fetchSummary(): Flow<List<RiderScoreSummary>> {
         return riderScoreDao.fetchSummary().map {
-            it.forEach { summary -> summary.totalSections = userPreferencesRepository.fetchPreferences().numSections }
             // consider alternative approach to simplify whole grouping/sorting/enumerating logic
             // group by class, sort all classes, set standing by index in the list
             // optionally flatten back
