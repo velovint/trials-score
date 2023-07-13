@@ -12,7 +12,9 @@ class EventSettingsFragment : PreferenceFragmentCompat() {
 
         val numSections: EditTextPreference? = findPreference(UserPreferencesRepository.NUM_SECTIONS_KEY)
         numSections?.setOnBindEditTextListener { editText ->
+            // no idea why values from preferences.xml don't work
             editText.inputType = InputType.TYPE_CLASS_NUMBER
+            editText.selectAll()
         }
     }
 }
