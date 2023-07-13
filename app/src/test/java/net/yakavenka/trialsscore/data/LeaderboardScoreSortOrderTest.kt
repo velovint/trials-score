@@ -60,8 +60,9 @@ class LeaderboardScoreSortOrderTest {
             riderId = idCnt.incrementAndGet(),
             sectionsRidden = 0,
             points = rider1.points - 1)
+            .apply { totalSections = SectionScore.Set.TOTAL_SECTIONS }
         list.add(rider2)
-        list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
+        list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced").apply { totalSections = SectionScore.Set.TOTAL_SECTIONS })
         list.add(rider1)
 
         val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
@@ -75,8 +76,11 @@ class LeaderboardScoreSortOrderTest {
         val list = mutableListOf<RiderScoreSummary>()
         val rider1 = createScore(sectionsRidden = 0)
         val rider2 = rider1.copy(riderId = idCnt.incrementAndGet(), riderName = rider1.riderName + "z")
+            .apply { totalSections = SectionScore.Set.TOTAL_SECTIONS }
         list.add(rider2)
-        list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
+        list.add(
+            rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced")
+                .apply { totalSections = SectionScore.Set.TOTAL_SECTIONS })
         list.add(rider1)
 
         val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
@@ -125,7 +129,7 @@ class LeaderboardScoreSortOrderTest {
             sectionsRidden,
             points,
             numCleans
-        )
+        ).apply { totalSections = SectionScore.Set.TOTAL_SECTIONS }
     }
 
     private fun numGroups(actual: List<String>): Int {

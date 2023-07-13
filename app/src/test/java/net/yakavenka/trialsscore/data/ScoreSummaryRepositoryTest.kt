@@ -1,5 +1,6 @@
 package net.yakavenka.trialsscore.data
 
+import android.content.SharedPreferences
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -11,7 +12,7 @@ import org.junit.Test
 class ScoreSummaryRepositoryTest {
     private val dao: RiderScoreDaoFake = RiderScoreDaoFake()
 
-    private val sut = ScoreSummaryRepository(dao)
+    private val sut = ScoreSummaryRepository(dao, UserPreferencesRepository(SharedPreferencesFake()))
 
     @Test
     fun fetchSummaryReturnsAList() = runBlocking {
@@ -99,6 +100,57 @@ class ScoreSummaryRepositoryTest {
         }
 
         override suspend fun updateRider(riderScore: RiderScore) {
+            TODO("Not yet implemented")
+        }
+
+    }
+
+    class SharedPreferencesFake : SharedPreferences {
+        override fun getAll(): MutableMap<String, *> {
+            TODO("Not yet implemented")
+        }
+
+        override fun getString(key: String?, defValue: String?): String? {
+            if (key == UserPreferencesRepository.NUM_SECTIONS_KEY) return "30"
+            return null
+        }
+
+        override fun getStringSet(
+            key: String?,
+            defValues: MutableSet<String>?
+        ): MutableSet<String>? {
+            TODO("Not yet implemented")
+        }
+
+        override fun getInt(key: String?, defValue: Int): Int {
+            TODO("Not yet implemented")
+        }
+
+        override fun getLong(key: String?, defValue: Long): Long {
+            TODO("Not yet implemented")
+        }
+
+        override fun getFloat(key: String?, defValue: Float): Float {
+            TODO("Not yet implemented")
+        }
+
+        override fun getBoolean(key: String?, defValue: Boolean): Boolean {
+            TODO("Not yet implemented")
+        }
+
+        override fun contains(key: String?): Boolean {
+            TODO("Not yet implemented")
+        }
+
+        override fun edit(): SharedPreferences.Editor {
+            TODO("Not yet implemented")
+        }
+
+        override fun registerOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {
+            TODO("Not yet implemented")
+        }
+
+        override fun unregisterOnSharedPreferenceChangeListener(listener: SharedPreferences.OnSharedPreferenceChangeListener?) {
             TODO("Not yet implemented")
         }
 
