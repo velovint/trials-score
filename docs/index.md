@@ -20,14 +20,29 @@ It's free and released under GPLv3 license.
 6. Export scores to generate final score sheets
 
 ### Configure event
-This feature is not implemented and currently hardcoded for the following classes:
+**Note**
+This feature is only partially implemented.
+
+You can configure total number of sections in the event via Settings menu available from the main screen.
+It's best to configure it before you start entering riders scores since score card is initialized upon first score entry.
+
+<img src="img/settings.png" width="300" alt="Settings screen" />
+
+Application is currently hardcoded to support the following classes:
+* Pro+
+* Pro
 * Champ
 * Expert
 * Advanced
+* Clubman
 * Intermediate
+* Sportsman
 * Novice
-
-Events are configure to display 30 sections in single loop.
+* Twinshock
+* Vintage A
+* Vintage B
+* Exhibition
+* Open
 
 ### Import rider list
 Assuming you have rider list exported from your registration system. 
