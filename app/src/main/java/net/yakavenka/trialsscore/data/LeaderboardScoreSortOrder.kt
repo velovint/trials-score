@@ -1,8 +1,6 @@
 package net.yakavenka.trialsscore.data
 
-import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
-
-class LeaderboardScoreSortOrder : Comparator<RiderScoreSummary> {
+class LeaderboardScoreSortOrder(private val riderClasses: Set<String>) : Comparator<RiderScoreSummary> {
     override fun compare(left: RiderScoreSummary, right: RiderScoreSummary): Int {
         val classComparison = compareClass(left, right)
         if (classComparison != 0) return classComparison
@@ -24,8 +22,8 @@ class LeaderboardScoreSortOrder : Comparator<RiderScoreSummary> {
 
     private fun compareClass(left: RiderScoreSummary, right: RiderScoreSummary): Int {
         if (left.riderClass.equals(right.riderClass)) return 0
-        return EditRiderViewModel.RIDER_CLASS_OPTIONS.indexOf(left.riderClass)
-            .compareTo(EditRiderViewModel.RIDER_CLASS_OPTIONS.indexOf(right.riderClass))
+        return riderClasses.indexOf(left.riderClass)
+            .compareTo(riderClasses.indexOf(right.riderClass))
     }
 
     private fun compareCleans(left: RiderScoreSummary, right: RiderScoreSummary): Int {

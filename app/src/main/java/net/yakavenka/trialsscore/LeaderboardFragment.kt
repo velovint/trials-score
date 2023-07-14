@@ -31,7 +31,8 @@ class LeaderboardFragment : Fragment() {
 
     private val eventScores: EventScoreViewModel by activityViewModels {
         EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao()
+            (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
+            (activity?.application as TrialsScoreApplication).sharedPreferences
         )
     }
 
