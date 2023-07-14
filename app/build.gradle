@@ -58,9 +58,7 @@ dependencies {
 
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    // TODO use -ktx version
-    implementation "androidx.preference:preference:$preference_version"
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation "androidx.preference:preference-ktx:$preference_version"
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
