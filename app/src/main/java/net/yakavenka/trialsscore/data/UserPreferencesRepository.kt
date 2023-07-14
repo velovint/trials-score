@@ -2,16 +2,32 @@ package net.yakavenka.trialsscore.data
 
 import android.content.SharedPreferences
 
-data class UserPreferences(val numSections: Int)
+data class UserPreferences(val numSections: Int, val riderClasses: Set<String>)
 
 class UserPreferencesRepository(private val sharedPreferences: SharedPreferences) {
 
     fun fetchPreferences(): UserPreferences {
-        val numSections = sharedPreferences.getString(NUM_SECTIONS_KEY, "30")!!.toInt()
-        return UserPreferences(numSections)
+        val numSections = sharedPreferences.getString(NUM_SECTIONS_KEY, DEFAULT_NUM_SECTIONS.toString())!!.toInt()
+        val riderClasses = sharedPreferences
+            .getString(RIDER_CLASSES_KEY, DEFAULT_RIDER_CLASSES.joinToString(", "))!!
+            .split(",")
+            .map { it.trim() }
+            .toSet()
+        return UserPreferences(numSections, riderClasses)
     }
 
     companion object {
         const val NUM_SECTIONS_KEY = "num_sections"
+        const val DEFAULT_NUM_SECTIONS = 30
+        const val RIDER_CLASSES_KEY = "rider_classes"
+        val DEFAULT_RIDER_CLASSES: Set<String> = setOf(
+            "Champ",
+            "Expert",
+            "Advanced",
+            "Intermediate",
+            "Novice",
+            "Vintage A",
+            "Vintage B",
+            "Exhibition")
     }
 }

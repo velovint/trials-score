@@ -11,4 +11,10 @@
         android:title="Number of sections"
         app:useSimpleSummaryProvider="true" />
 
+    <EditTextPreference
+        android:key="rider_classes"
+        android:title="Classes"
+        android:singleLine="false"
+        app:useSimpleSummaryProvider="true" />
+
 </PreferenceScreen>
