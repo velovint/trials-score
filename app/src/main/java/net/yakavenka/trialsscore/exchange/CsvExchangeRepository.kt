@@ -21,7 +21,7 @@ class CsvExchangeRepository {
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 
-        writer.writeNext(generateHeader(), false)
+        writer.writeNext(generateHeader(result), false)
         result
             .map(::riderScoreAsArray)
             .forEach { writer.writeNext(it, false) }
@@ -42,8 +42,9 @@ class CsvExchangeRepository {
             }
     }
 
-    private fun generateHeader(): Array<String> {
-        val sectionsHeader = range(1, SectionScore.Set.TOTAL_SECTIONS + 1)
+    private fun generateHeader(result: List<RiderScoreAggregate>): Array<String> {
+        val numSections = result.map { it.sections.size }.firstOrNull() ?: 30
+        val sectionsHeader = range(1, numSections + 1)
             .mapToObj {"S${it}" }
             .toList()
         return arrayOf("Name", "Class", "Points", "Cleans").plus(sectionsHeader)

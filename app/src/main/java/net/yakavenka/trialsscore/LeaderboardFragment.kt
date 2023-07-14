@@ -44,6 +44,7 @@ class LeaderboardFragment : Fragment() {
         setHasOptionsMenu(true)
     }
 
+    // can't find much documentation to replace deprecated method
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.app_menu, menu)
     }
@@ -109,10 +110,11 @@ class LeaderboardFragment : Fragment() {
     }
 
     private fun registerExportPrompt(): ActivityResultLauncher<String> {
-        val contract = object : ActivityResultContracts.CreateDocument() {
+        val contract = object : ActivityResultContracts.CreateDocument("text/csv") {
             override fun createIntent(context: Context, input: String): Intent {
                 return super.createIntent(context, input).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
+                    // TODO do I still need this?
                     type = "text/csv"
                     // Optionally, specify a URI for the directory that should be opened in
                     // the system file picker before your app creates the document.
@@ -131,7 +133,7 @@ class LeaderboardFragment : Fragment() {
 
     private fun registerImportPrompt(): ActivityResultLauncher<Array<String>> {
         val contract = object : ActivityResultContracts.OpenDocument() {
-            override fun createIntent(context: Context, input: Array<out String>): Intent {
+            override fun createIntent(context: Context, input: Array<String>): Intent {
                 return super.createIntent(context, input).apply {
                     addCategory(Intent.CATEGORY_OPENABLE)
                     putExtra(DocumentsContract.EXTRA_INITIAL_URI, "Downloads")
