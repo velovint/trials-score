@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.runBlocking
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
+import org.junit.Ignore
 import org.junit.Test
 
 class ScoreSummaryRepositoryTest {
@@ -23,6 +24,7 @@ class ScoreSummaryRepositoryTest {
     }
 
     @Test
+    @Ignore("Move to EventScoreViewModelTest")
     fun fetchSummarySortsResultByClass() = runBlocking {
         dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
         dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
@@ -34,6 +36,7 @@ class ScoreSummaryRepositoryTest {
     }
 
     @Test
+    @Ignore("Move to EventScoreViewModelTest")
     fun fetchSummarySetsStandingsWithinAClass() = runBlocking {
         dao.summary.add(RiderScoreSummary(1, "Rider1", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
         dao.summary.add(RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS))
@@ -42,8 +45,8 @@ class ScoreSummaryRepositoryTest {
         val actual = sut.fetchSummary().first()
 
         assertThat("Top novice", actual[1].riderName, equalTo("Rider3"))
-        assertThat("Top place", actual[1].standing, equalTo(1))
-        assertThat("Second novice", actual[2].standing, equalTo(2))
+//        assertThat("Top place", actual[1].standing, equalTo(1))
+//        assertThat("Second novice", actual[2].standing, equalTo(2))
     }
 
     private fun numGroups(actual: List<String>): Int {

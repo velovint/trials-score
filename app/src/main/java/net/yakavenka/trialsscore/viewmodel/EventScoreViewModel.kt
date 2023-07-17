@@ -16,7 +16,8 @@ private const val TAG = "EventScoreViewModel"
 
 data class RiderStanding(
     val scoreSummary: RiderScoreSummary,
-    val standing: Int
+    val standing: Int,
+    val totalSections: Int
 ) {
     val riderClass: String
         get() = scoreSummary.riderClass
@@ -34,11 +35,11 @@ data class RiderStanding(
         get() = scoreSummary.numCleans
 
     fun isFinished(): Boolean {
-        return scoreSummary.isFinished()
+        return scoreSummary.sectionsRidden == totalSections
     }
 
     fun getProgress(): Int {
-        return scoreSummary.getProgress()
+        return scoreSummary.sectionsRidden * 100 / totalSections
     }
 }
 
@@ -52,18 +53,19 @@ class EventScoreViewModel(
         scoreSummaryRepository.fetchSummary().map(this::sortAndEnumerate).asLiveData()
 
     private fun sortAndEnumerate(summary: List<RiderScoreSummary>): List<RiderStanding> {
-        val result = summary.sortedWith(LeaderboardScoreSortOrder(preferencesRepository.fetchPreferences().riderClasses))
-        return applyStandings(result)
+        val prefs = preferencesRepository.fetchPreferences()
+        val result = summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, prefs.numSections))
+        return applyStandings(result, prefs.numSections)
     }
 
     // set standing for a sorted list of score summaries
-    private fun applyStandings(scores: List<RiderScoreSummary>): List<RiderStanding> {
+    private fun applyStandings(scores: List<RiderScoreSummary>, totalSections: Int): List<RiderStanding> {
         val result = mutableListOf<RiderStanding>()
         var prevClass = ""
         var standing = 1
         for (entry: RiderScoreSummary in scores) {
             if (prevClass != entry.riderClass) standing = 1
-            result.add(RiderStanding(entry, standing))
+            result.add(RiderStanding(entry, standing, totalSections))
             prevClass = entry.riderClass
             standing++
         }

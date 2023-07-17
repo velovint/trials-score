@@ -11,8 +11,10 @@ import java.util.concurrent.atomic.AtomicInteger
 
 class LeaderboardScoreSortOrderTest {
     private val idCnt =  AtomicInteger()
-
     private val faker = Faker()
+    private val classes = setOf("Novice", "Intermediate", "Advanced")
+    private val numSections = 5
+    private val sut = LeaderboardScoreSortOrder(classes, numSections)
 
     @Test
     fun sortByClass() {
@@ -21,20 +23,19 @@ class LeaderboardScoreSortOrderTest {
         list.add(createScore(riderClass = "Advanced"))
         list.add(createScore(riderClass = "Novice"))
 
-        val actual: List<String> = list.sortedWith(LeaderboardScoreSortOrder()).map { it.riderClass }
+        val actual: List<String> = list.sortedWith(sut).map { it.riderClass }
         assertThat("Num groups", numGroups(actual), equalTo(2))
     }
 
     @Test
     fun sortUsesPredefinedClassSortOrder() {
         val list = mutableListOf<RiderScoreSummary>()
-        EditRiderViewModel.RIDER_CLASS_OPTIONS
-            .sortedWith { _, _ -> (-1..1).random() }
+        classes.shuffled()
             .forEach { list.add(createScore(riderClass = it)) }
 
-        val actual = list.sortedWith(LeaderboardScoreSortOrder()).map { it.riderClass }
+        val actual = list.sortedWith(sut).map { it.riderClass }
 
-        Assert.assertEquals(EditRiderViewModel.RIDER_CLASS_OPTIONS.toList(), actual.toList())
+        Assert.assertEquals(classes.toList(), actual.toList())
     }
 
     @Test
@@ -46,7 +47,7 @@ class LeaderboardScoreSortOrderTest {
         list.add(rider1.copy(points = rider1.points + 1, riderClass = "Advanced"))
         list.add(rider1)
 
-        val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
+        val actual: List<RiderScoreSummary> = list.sortedWith(sut)
 
         val rider1Position = actual.indexOf(rider1)
         assertThat("Next to smaller score", actual.indexOf(rider2), equalTo(rider1Position + 1))
@@ -55,7 +56,7 @@ class LeaderboardScoreSortOrderTest {
     @Test
     fun sortByFinishedRider() {
         val list = mutableListOf<RiderScoreSummary>()
-        val rider1 = createScore(sectionsRidden = SectionScore.Set.TOTAL_SECTIONS)
+        val rider1 = createScore(sectionsRidden = numSections)
         val rider2 = rider1.copy(
             riderId = idCnt.incrementAndGet(),
             sectionsRidden = 0,
@@ -64,7 +65,7 @@ class LeaderboardScoreSortOrderTest {
         list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
         list.add(rider1)
 
-        val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
+        val actual: List<RiderScoreSummary> = list.sortedWith(sut)
 
         val rider1Position = actual.indexOf(rider1)
         assertThat("Not finished after finished", actual.indexOf(rider2), equalTo(rider1Position + 1))
@@ -79,7 +80,7 @@ class LeaderboardScoreSortOrderTest {
         list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
         list.add(rider1)
 
-        val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
+        val actual: List<RiderScoreSummary> = list.sortedWith(sut)
 
         val rider1Position = actual.indexOf(rider1)
         assertThat("Name sort", actual.indexOf(rider2), equalTo(rider1Position + 1))
@@ -94,7 +95,7 @@ class LeaderboardScoreSortOrderTest {
         list.add(rider1.copy(riderId = idCnt.incrementAndGet(), riderClass = "Advanced"))
         list.add(rider1)
 
-        val actual: List<RiderScoreSummary> = list.sortedWith(LeaderboardScoreSortOrder())
+        val actual: List<RiderScoreSummary> = list.sortedWith(sut)
 
         val rider1Position = actual.indexOf(rider1)
         assertThat("More cleans in better", actual.indexOf(rider2), equalTo(rider1Position + 1))

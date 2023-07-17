@@ -1,6 +1,6 @@
 package net.yakavenka.trialsscore.data
 
-class LeaderboardScoreSortOrder(private val riderClasses: Set<String>) : Comparator<RiderScoreSummary> {
+class LeaderboardScoreSortOrder(private val riderClasses: Set<String>, private val totalSections: Int) : Comparator<RiderScoreSummary> {
     override fun compare(left: RiderScoreSummary, right: RiderScoreSummary): Int {
         val classComparison = compareClass(left, right)
         if (classComparison != 0) return classComparison
@@ -10,7 +10,7 @@ class LeaderboardScoreSortOrder(private val riderClasses: Set<String>) : Compara
         if (finishedComparison != 0) return finishedComparison
 
         // not finished compared by name
-        if (!left.isFinished()) return compareNames(left, right)
+        if (left.sectionsRidden <= totalSections) return compareNames(left, right)
 
         // finished compared by points
         val pointsComparison = comparePoints(left, right)
@@ -31,7 +31,9 @@ class LeaderboardScoreSortOrder(private val riderClasses: Set<String>) : Compara
     }
 
     private fun compareFinished(left: RiderScoreSummary, right: RiderScoreSummary): Int {
-        return right.isFinished().compareTo(left.isFinished()) // note reversal
+        val rightFinished = right.sectionsRidden == totalSections
+        val leftFinished = left.sectionsRidden == totalSections
+        return rightFinished.compareTo(leftFinished) // note reversal
     }
 
     private fun compareNames(left: RiderScoreSummary, right: RiderScoreSummary): Int {
