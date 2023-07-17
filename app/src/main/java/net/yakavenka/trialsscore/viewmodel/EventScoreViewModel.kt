@@ -14,31 +14,60 @@ import java.io.*
 
 private const val TAG = "EventScoreViewModel"
 
+data class RiderStanding(
+    val scoreSummary: RiderScoreSummary,
+    val standing: Int
+) {
+    val riderClass: String
+        get() = scoreSummary.riderClass
+
+    val riderId: Int
+        get() = scoreSummary.riderId
+
+    val riderName: String
+        get() = scoreSummary.riderName
+
+    val points: Int
+        get() = scoreSummary.points
+
+    val numCleans: Int
+        get() = scoreSummary.numCleans
+
+    fun isFinished(): Boolean {
+        return scoreSummary.isFinished()
+    }
+
+    fun getProgress(): Int {
+        return scoreSummary.getProgress()
+    }
+}
+
 class EventScoreViewModel(
     scoreSummaryRepository: ScoreSummaryRepository,
     private val sectionScoreRepository: SectionScoreRepository,
     private val importExportService: CsvExchangeRepository,
     private val preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
-    val allScores: LiveData<List<RiderScoreSummary>> =
+    val allScores: LiveData<List<RiderStanding>> =
         scoreSummaryRepository.fetchSummary().map(this::sortAndEnumerate).asLiveData()
 
-    private fun sortAndEnumerate(summary: List<RiderScoreSummary>): List<RiderScoreSummary> {
+    private fun sortAndEnumerate(summary: List<RiderScoreSummary>): List<RiderStanding> {
         val result = summary.sortedWith(LeaderboardScoreSortOrder(preferencesRepository.fetchPreferences().riderClasses))
-        enumerate(result)
-        return result
+        return applyStandings(result)
     }
 
     // set standing for a sorted list of score summaries
-    private fun enumerate(result: List<RiderScoreSummary>) {
+    private fun applyStandings(scores: List<RiderScoreSummary>): List<RiderStanding> {
+        val result = mutableListOf<RiderStanding>()
         var prevClass = ""
         var standing = 1
-        for (entry: RiderScoreSummary in result) {
+        for (entry: RiderScoreSummary in scores) {
             if (prevClass != entry.riderClass) standing = 1
-            entry.standing = standing
+            result.add(RiderStanding(entry, standing))
             prevClass = entry.riderClass
             standing++
         }
+        return result
     }
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {

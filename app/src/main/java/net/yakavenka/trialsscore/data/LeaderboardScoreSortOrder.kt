@@ -21,7 +21,7 @@ class LeaderboardScoreSortOrder(private val riderClasses: Set<String>) : Compara
     }
 
     private fun compareClass(left: RiderScoreSummary, right: RiderScoreSummary): Int {
-        if (left.riderClass.equals(right.riderClass)) return 0
+        if (left.riderClass == right.riderClass) return 0
         return riderClasses.indexOf(left.riderClass)
             .compareTo(riderClasses.indexOf(right.riderClass))
     }
