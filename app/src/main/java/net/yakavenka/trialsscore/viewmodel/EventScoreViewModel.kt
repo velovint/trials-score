@@ -47,30 +47,12 @@ class EventScoreViewModel(
     scoreSummaryRepository: ScoreSummaryRepository,
     private val sectionScoreRepository: SectionScoreRepository,
     private val importExportService: CsvExchangeRepository,
-    private val preferencesRepository: UserPreferencesRepository
+    preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
     val allScores: LiveData<List<RiderStanding>> =
-        scoreSummaryRepository.fetchSummary().map(this::sortAndEnumerate).asLiveData()
-
-    private fun sortAndEnumerate(summary: List<RiderScoreSummary>): List<RiderStanding> {
-        val prefs = preferencesRepository.fetchPreferences()
-        val result = summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, prefs.numSections))
-        return applyStandings(result, prefs.numSections)
-    }
-
-    // set standing for a sorted list of score summaries
-    private fun applyStandings(scores: List<RiderScoreSummary>, totalSections: Int): List<RiderStanding> {
-        val result = mutableListOf<RiderStanding>()
-        var prevClass = ""
-        var standing = 1
-        for (entry: RiderScoreSummary in scores) {
-            if (prevClass != entry.riderClass) standing = 1
-            result.add(RiderStanding(entry, standing, totalSections))
-            prevClass = entry.riderClass
-            standing++
-        }
-        return result
-    }
+        scoreSummaryRepository.fetchSummary()
+            .map { summary -> RiderStandingTransformation().invoke(summary, preferencesRepository.fetchPreferences()) }
+            .asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
         try {

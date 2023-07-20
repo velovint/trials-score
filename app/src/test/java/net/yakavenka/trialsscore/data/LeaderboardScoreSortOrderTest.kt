@@ -1,7 +1,6 @@
 package net.yakavenka.trialsscore.data
 
 import com.github.javafaker.Faker
-import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert
@@ -103,7 +102,7 @@ class LeaderboardScoreSortOrderTest {
 
     @Test
     fun generateTestData() {
-        val classes = EditRiderViewModel.RIDER_CLASS_OPTIONS.toMutableList()
+        val classes = UserPreferencesRepository.DEFAULT_RIDER_CLASSES.toMutableList()
         classes.addAll(classes.takeLast(3))
         classes.addAll(classes.takeLast(3))
         repeat(100) {
