@@ -16,7 +16,7 @@ class ScoreSummaryRepositoryTest {
 
     @Test
     fun fetchSummaryReturnsAList() = runBlocking {
-        dao.summary.add(RiderScoreSummary(1, "Rider", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8))
+        dao.summary.add(RiderScoreSummary(1, "Rider", "Novice", 10, 5, 8))
 
         val actual = sut.fetchSummary().first()
         assertThat(actual, not(empty()))

@@ -2,7 +2,6 @@ package net.yakavenka.trialsscore.viewmodel
 
 import com.github.javafaker.Faker
 import net.yakavenka.trialsscore.data.RiderScoreSummary
-import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.UserPreferences
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import org.hamcrest.CoreMatchers.equalTo
@@ -33,9 +32,9 @@ class RiderStandingTransformationTest {
     @Test
     fun transformationSetsStandingsWithinAClass() {
         val summary = listOf(
-            RiderScoreSummary(1, "Novice Second", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8),
-            RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8),
-            RiderScoreSummary(3, "Novice Winner", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8)
+            RiderScoreSummary(1, "Novice Second", "Novice", numSections, 5, 8),
+            RiderScoreSummary(2, "Rider2", "Advanced", numSections, 5, 8),
+            RiderScoreSummary(3, "Novice Winner", "Novice", numSections, 2, 8)
         )
 
         val actual = sut.invoke(summary, UserPreferences(numSections, classes)).filter { it.riderClass == "Novice" }
