@@ -9,5 +9,4 @@ data class RiderScoreSummary(
     @ColumnInfo(name = "sections_ridden") val sectionsRidden: Int,
     @ColumnInfo(name = "points") val points: Int,
     @ColumnInfo(name = "cleans") val numCleans: Int,
-    @ColumnInfo(name = "total_sections") val totalSections: Int
 )

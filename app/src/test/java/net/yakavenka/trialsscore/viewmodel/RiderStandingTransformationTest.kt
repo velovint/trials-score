@@ -33,9 +33,9 @@ class RiderStandingTransformationTest {
     @Test
     fun transformationSetsStandingsWithinAClass() {
         val summary = listOf(
-            RiderScoreSummary(1, "Novice Second", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS),
-            RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8, SectionScore.Set.TOTAL_SECTIONS),
-            RiderScoreSummary(3, "Novice Winner", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8, SectionScore.Set.TOTAL_SECTIONS)
+            RiderScoreSummary(1, "Novice Second", "Novice", SectionScore.Set.TOTAL_SECTIONS, 5, 8),
+            RiderScoreSummary(2, "Rider2", "Advanced", SectionScore.Set.TOTAL_SECTIONS, 5, 8),
+            RiderScoreSummary(3, "Novice Winner", "Novice", SectionScore.Set.TOTAL_SECTIONS, 2, 8)
         )
 
         val actual = sut.invoke(summary, UserPreferences(numSections, classes)).filter { it.riderClass == "Novice" }
@@ -110,7 +110,6 @@ class RiderStandingTransformationTest {
         riderName: String = faker.name().firstName(),
         riderClass: String = "Novice",
         sectionsRidden: Int = numSections,
-        totalSections: Int = numSections,
         points: Int = faker.number().numberBetween(1, 50), // exclude min/max so that we can inc/dec both,
         numCleans: Int  = faker.number().numberBetween(1, 10)
     ): RiderScoreSummary {
@@ -120,8 +119,7 @@ class RiderStandingTransformationTest {
             riderClass,
             sectionsRidden,
             points,
-            numCleans,
-            totalSections
+            numCleans
         )
     }
 
