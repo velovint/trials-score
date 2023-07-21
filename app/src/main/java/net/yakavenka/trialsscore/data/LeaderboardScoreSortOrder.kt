@@ -10,7 +10,7 @@ class LeaderboardScoreSortOrder(private val riderClasses: Set<String>, private v
         if (finishedComparison != 0) return finishedComparison
 
         // not finished compared by name
-        if (left.sectionsRidden <= totalSections) return compareNames(left, right)
+        if (left.sectionsRidden < totalSections) return compareNames(left, right)
 
         // finished compared by points
         val pointsComparison = comparePoints(left, right)
