@@ -12,7 +12,6 @@ data class SectionScore(
     class Set(val sectionScores: List<SectionScore>) {
 
         companion object {
-            const val TOTAL_SECTIONS = 30
             fun createForRider(riderId: Int, numSections: Int): Set {
                 val sectionScores = mutableListOf<SectionScore>()
                 range(1, numSections + 1).forEach { sectionNum ->
@@ -23,7 +22,7 @@ data class SectionScore(
         }
 
         fun getCleans(): Int {
-            return sectionScores.filter { it.points == 0 }.count()
+            return sectionScores.count { it.points == 0 }
         }
 
         fun getPoints(): Int {

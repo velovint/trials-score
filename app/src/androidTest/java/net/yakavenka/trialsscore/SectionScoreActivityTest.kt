@@ -12,9 +12,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.javafaker.Faker
 import junit.framework.AssertionFailedError
 import net.yakavenka.trialsscore.data.RiderScore
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
 import net.yakavenka.trialsscore.model.SectionScoreAdapter
-import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import org.hamcrest.Matchers.*
 import org.hamcrest.core.StringContains
 import org.junit.Rule
@@ -113,10 +113,9 @@ class SectionScoreActivityTest {
 
     private fun enterRiderDetails(): RiderScore {
         val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
-        val riderClass = EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
+        val riderClass = UserPreferencesRepository.DEFAULT_RIDER_CLASSES.random()
         onView(withId(R.id.rider_name)).perform(clearText(), typeText(riderName), closeSoftKeyboard())
         onView(withId(R.id.rider_class_label)).perform(click())
-        EditRiderViewModel.RIDER_CLASS_OPTIONS.random()
         onView(withText(riderClass))
             .inRoot(RootMatchers.isPlatformPopup())
             .perform(click())

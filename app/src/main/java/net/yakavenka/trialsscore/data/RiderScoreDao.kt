@@ -33,7 +33,6 @@ interface RiderScoreDao {
     suspend fun addRider(riderScore: RiderScore)
     @Query("SELECT rs.id, rs.name, rs.class,\n" +
             "        COUNT(CASE WHEN ss.points >= 0 THEN 1 ELSE NULL END) as sections_ridden,\n" +
-            "        COUNT(ss.points) as total_sections,\n" +
             "        SUM(CASE WHEN ss.points >= 0 THEN ss.points ELSE 0 END) as points,\n" +
             "        SUM(CASE ss.points WHEN 0 THEN 1 ELSE 0 END) AS cleans\n" +
             "      FROM rider_score AS rs\n" +

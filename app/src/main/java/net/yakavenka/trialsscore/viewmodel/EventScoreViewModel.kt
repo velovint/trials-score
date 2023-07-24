@@ -6,7 +6,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.*
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
@@ -14,12 +14,45 @@ import java.io.*
 
 private const val TAG = "EventScoreViewModel"
 
+data class RiderStanding(
+    val scoreSummary: RiderScoreSummary,
+    val standing: Int,
+    val totalSections: Int
+) {
+    val riderClass: String
+        get() = scoreSummary.riderClass
+
+    val riderId: Int
+        get() = scoreSummary.riderId
+
+    val riderName: String
+        get() = scoreSummary.riderName
+
+    val points: Int
+        get() = scoreSummary.points
+
+    val numCleans: Int
+        get() = scoreSummary.numCleans
+
+    fun isFinished(): Boolean {
+        return scoreSummary.sectionsRidden == totalSections
+    }
+
+    fun getProgress(): Int {
+        return scoreSummary.sectionsRidden * 100 / totalSections
+    }
+}
+
 class EventScoreViewModel(
     scoreSummaryRepository: ScoreSummaryRepository,
     private val sectionScoreRepository: SectionScoreRepository,
-    private val importExportService: CsvExchangeRepository
+    private val importExportService: CsvExchangeRepository,
+    preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
-    val allScores: LiveData<List<RiderScoreSummary>> = scoreSummaryRepository.fetchSummary().asLiveData()
+    val allScores: LiveData<List<RiderStanding>> =
+        scoreSummaryRepository.fetchSummary()
+            .map { summary -> RiderStandingTransformation().invoke(summary, preferencesRepository.fetchPreferences()) }
+            .asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
         try {
@@ -63,7 +96,8 @@ class EventScoreViewModel(
     }
 
     class Factory(
-        private val riderScoreDao: RiderScoreDao
+        private val riderScoreDao: RiderScoreDao,
+        private val sharedPreferences: SharedPreferences
     ) : ViewModelProvider.Factory {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
@@ -71,7 +105,8 @@ class EventScoreViewModel(
                 return EventScoreViewModel(
                     ScoreSummaryRepository(riderScoreDao),
                     SectionScoreRepository(riderScoreDao),
-                    CsvExchangeRepository()
+                    CsvExchangeRepository(),
+                    UserPreferencesRepository(sharedPreferences)
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")

@@ -12,9 +12,9 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import net.yakavenka.trialsscore.data.RiderScore
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.databinding.FragmentEditRiderBinding
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
-import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 /**
  * [Fragment] to Add/Edit rider info
@@ -30,6 +30,10 @@ class EditRiderFragment : Fragment() {
         EditRiderViewModel.Factory(
             (activity?.application as TrialsScoreApplication).database.riderScoreDao()
         )
+    }
+
+    private val userPreferencesRepository: UserPreferencesRepository by lazy {
+        UserPreferencesRepository((activity?.application as TrialsScoreApplication).sharedPreferences)
     }
 
     override fun onCreateView(
@@ -53,7 +57,7 @@ class EditRiderFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item)
-            .apply { addAll(EditRiderViewModel.RIDER_CLASS_OPTIONS) }
+            .apply { addAll(userPreferencesRepository.fetchPreferences().riderClasses) }
             .also { adapter ->
                 adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
                 binding.riderClass.setAdapter(adapter)
