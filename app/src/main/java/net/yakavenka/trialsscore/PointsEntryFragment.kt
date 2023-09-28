@@ -8,6 +8,9 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.material.MaterialTheme
+import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -52,6 +55,18 @@ class PointsEntryFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentPointsEntryBinding.inflate(inflater, container, false)
+        binding.composeView.apply {
+            // Dispose of the Composition when the view's LifecycleOwner
+            // is destroyed
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                // In Compose world
+                MaterialTheme {
+                    LapScore(scoreCardViewModel.sectionScores.observeAsState())
+                }
+            }
+
+        }
         return binding.root
     }
 
@@ -92,8 +107,8 @@ class PointsEntryFragment : Fragment() {
             Log.d(TAG, "Loaded ScoreCard $scoreSet")
 
             scoreSet.let { adapter.submitList(scoreSet.sectionScores) }
-            binding.lapScore.text =
-                getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
+//            binding.lapScore.text =
+//                getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
         }
     }
 

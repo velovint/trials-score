@@ -16,24 +16,13 @@
         app:layout_constraintTop_toTopOf="parent">
 
     </androidx.recyclerview.widget.RecyclerView>
-
-    <TextView
-        android:id="@+id/lap_score_label"
-        android:layout_width="wrap_content"
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/compose_view"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/lap_score_label"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Lap score:" />
-
-    <TextView
-        android:id="@+id/lap_score"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/lap_score"
-        android:layout_marginStart="@dimen/margin_between_elements"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toEndOf="@id/lap_score_label"
-        tools:text="6 / 1" />
+        tools:text="Lap score: 0 / 10"
+        />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

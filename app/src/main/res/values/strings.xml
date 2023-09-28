@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">TrialsScore</string>
     <string name="lap_score">%1$d / %2$d</string>
-    <string name="lap_score_label">Lap score:</string>
+    <string name="lap_score_label">Lap score: %1$d / %2$d</string>
     <string name="rider_label">Rider</string>
     <string name="scores_label">Scores</string>
     <string name="add_new_rider">Add new rider</string>

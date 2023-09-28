@@ -28,6 +28,11 @@ android {
 
     buildFeatures {
         viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.4.6"
     }
 
     buildTypes {
@@ -51,9 +56,14 @@ android {
 }
 
 dependencies {
+    def composeBom = platform('androidx.compose:compose-bom:2023.01.00')
+    implementation composeBom
+
     implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
+    // TODO upgrade to material 3
+    implementation 'androidx.compose.material:material'
+    implementation 'com.google.android.material:material'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
@@ -62,6 +72,7 @@ dependencies {
 
     // Room
     implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.compose.runtime:runtime-livedata"
     // To use Kotlin annotation processing tool (kapt)
     kapt "androidx.room:room-compiler:$room_version"
     // optional - Kotlin Extensions and Coroutines support for Room
@@ -74,12 +85,24 @@ dependencies {
     // CSV
     implementation "com.opencsv:opencsv:4.1"
 
+    // Android Studio Preview support
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    debugImplementation 'androidx.compose.ui:ui-tooling'
+
+    testImplementation composeBom
+
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.hamcrest:hamcrest-library:1.3'
     testImplementation 'com.github.javafaker:javafaker:0.15'
 
+    androidTestImplementation composeBom
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.2'
     androidTestImplementation 'com.github.javafaker:javafaker:0.15'
+
+    // UI Tests
+    androidTestImplementation 'androidx.compose.ui:ui-test-junit4'
+    debugImplementation 'androidx.compose.ui:ui-test-manifest'
+
 }
