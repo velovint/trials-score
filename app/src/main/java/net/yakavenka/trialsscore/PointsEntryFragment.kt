@@ -9,14 +9,13 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.compose.material.MaterialTheme
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import net.yakavenka.trialsscore.components.LapScoreScreen
 import net.yakavenka.trialsscore.databinding.FragmentPointsEntryBinding
-import net.yakavenka.trialsscore.model.SectionScoreAdapter
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 
@@ -62,7 +61,7 @@ class PointsEntryFragment : Fragment() {
             setContent {
                 // In Compose world
                 MaterialTheme {
-                    LapScore(scoreCardViewModel.sectionScores.observeAsState())
+                    LapScoreScreen(scoreCardViewModel)
                 }
             }
 
@@ -96,20 +95,7 @@ class PointsEntryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = SectionScoreAdapter { sectionScore ->
-            scoreCardViewModel.updateSectionScore(sectionScore)
-        }
-        binding.lapScoreContainer.adapter = adapter
-
         scoreCardViewModel.fetchScores(navigationArgs.riderId)
-
-        scoreCardViewModel.sectionScores.observe(viewLifecycleOwner) { scoreSet ->
-            Log.d(TAG, "Loaded ScoreCard $scoreSet")
-
-            scoreSet.let { adapter.submitList(scoreSet.sectionScores) }
-//            binding.lapScore.text =
-//                getString(R.string.lap_score, scoreSet.getPoints(), scoreSet.getCleans())
-        }
     }
 
     private fun clearResults() {
