@@ -13,6 +13,8 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.yakavenka.trialsscore.data.SectionScore
@@ -42,7 +44,7 @@ fun LapScoreCard(scoreSet: SectionScore.Set, modifier: Modifier = Modifier, onUp
             ScoreEntryItem(
                 sectionScore = sectionScore,
                 modifier = Modifier.padding(8.dp),
-                onUpdate = { newScore -> onUpdate(sectionScore.copy(points = newScore))}
+                onPunch = { newScore -> onUpdate(sectionScore.copy(points = newScore))}
             )
         }
     }
@@ -52,15 +54,15 @@ fun LapScoreCard(scoreSet: SectionScore.Set, modifier: Modifier = Modifier, onUp
 fun ScoreEntryItem(
     sectionScore: SectionScore,
     modifier: Modifier = Modifier,
-    onUpdate: (Int) -> Unit = {}
+    onPunch: (Int) -> Unit = {}
 ) {
-    Row(modifier = modifier) {
+    Row(modifier = modifier.semantics { contentDescription = "Section ${sectionScore.sectionNumber}" }) {
         Text(text = sectionScore.sectionNumber.toString())
-        RadioButton(selected = sectionScore.points == 0, onClick = { onUpdate(0) })
-        RadioButton(selected = sectionScore.points == 1, onClick = { onUpdate(1) })
-        RadioButton(selected = sectionScore.points == 2, onClick = { onUpdate(2) })
-        RadioButton(selected = sectionScore.points == 3, onClick = { onUpdate(3) })
-        RadioButton(selected = sectionScore.points == 5, onClick = { onUpdate(5) })
+        RadioButton(selected = sectionScore.points == 0, onClick = { onPunch(0) }, modifier = Modifier.semantics { contentDescription = "0" })
+        RadioButton(selected = sectionScore.points == 1, onClick = { onPunch(1) }, modifier = Modifier.semantics { contentDescription = "1" })
+        RadioButton(selected = sectionScore.points == 2, onClick = { onPunch(2) })
+        RadioButton(selected = sectionScore.points == 3, onClick = { onPunch(3) })
+        RadioButton(selected = sectionScore.points == 5, onClick = { onPunch(5) })
     }
 }
 
