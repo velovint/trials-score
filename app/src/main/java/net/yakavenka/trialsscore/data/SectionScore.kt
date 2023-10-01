@@ -31,5 +31,9 @@ data class SectionScore(
                 .filter { it >= 0 }
                 .sum()
         }
+
+        fun getLoopNumber(): Int {
+            return 1
+        }
     }
 }

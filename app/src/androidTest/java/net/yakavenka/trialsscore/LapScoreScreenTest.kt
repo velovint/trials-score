@@ -83,9 +83,3 @@ class LapScoreScreenTest {
         )
     }
 }
-
-@Composable
-@Preview
-fun ScoreCardPreview() {
-    LapScoreCard(scoreSet = SectionScore.Set.createForRider(1, 3))
-}

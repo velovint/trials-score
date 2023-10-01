@@ -14,7 +14,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
-import net.yakavenka.trialsscore.components.LapScoreScreen
+import net.yakavenka.trialsscore.components.LoopScoreEntryScreen
 import net.yakavenka.trialsscore.databinding.FragmentPointsEntryBinding
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
@@ -61,7 +61,7 @@ class PointsEntryFragment : Fragment() {
             setContent {
                 // In Compose world
                 MaterialTheme {
-                    LapScoreScreen(scoreCardViewModel)
+                    LoopScoreEntryScreen(scoreCardViewModel)
                 }
             }
 

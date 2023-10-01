@@ -7,32 +7,49 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.Button
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.RadioButton
+import androidx.compose.material.Surface
+import androidx.compose.material.Tab
+import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 @Composable
-fun LapScoreScreen(scoreCardViewModel: ScoreCardViewModel) {
+fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel) {
     val sectionScores = scoreCardViewModel.sectionScores.observeAsState()
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         sectionScores.value?.let { scoreSet ->
-            LapScoreCard(
-                scoreSet = scoreSet,
-                modifier = Modifier.weight(1f),
-                onUpdate = { sectionScore -> scoreCardViewModel.updateSectionScore(sectionScore) })
-            LapScoreTotal(sectionScores = scoreSet)
+            LoopSelectionBar(scoreSet.getLoopNumber())
+            Column(modifier = Modifier.padding(16.dp)) {
+                LapScoreCard(
+                    scoreSet = scoreSet,
+                    modifier = Modifier.weight(1f),
+                    onUpdate = { sectionScore -> scoreCardViewModel.updateSectionScore(sectionScore) })
+                LapScoreTotal(sectionScores = scoreSet)
+        }}
+    }
+}
+
+@Composable
+fun LoopSelectionBar(currentLoop: Int = 1, totalLoops: Int = 3, modifier: Modifier = Modifier) {
+    if (totalLoops < 2) return
+    TabRow(selectedTabIndex = currentLoop - 1, modifier = modifier) {
+        repeat(totalLoops) { loopIdx ->
+            Tab(selected = true, onClick = { /*TODO*/ }, text = { Text(text = "Loop ${loopIdx+1}",  overflow = TextOverflow.Ellipsis) })
         }
     }
 }
@@ -43,7 +60,7 @@ fun LapScoreCard(scoreSet: SectionScore.Set, modifier: Modifier = Modifier, onUp
         items(items = scoreSet.sectionScores) { sectionScore ->
             ScoreEntryItem(
                 sectionScore = sectionScore,
-                modifier = Modifier.padding(8.dp),
+//                modifier = Modifier.padding(8.dp).fillMaxSize(),
                 onPunch = { newScore -> onUpdate(sectionScore.copy(points = newScore))}
             )
         }
@@ -56,8 +73,8 @@ fun ScoreEntryItem(
     modifier: Modifier = Modifier,
     onPunch: (Int) -> Unit = {}
 ) {
-    Row(modifier = modifier.semantics { contentDescription = "Section ${sectionScore.sectionNumber}" }) {
-        Text(text = sectionScore.sectionNumber.toString())
+    Row(modifier = modifier.semantics(properties = {contentDescription = "Section ${sectionScore.sectionNumber}" })) {
+        Text(text = sectionScore.sectionNumber.toString(), modifier = Modifier.align(Alignment.CenterVertically))
         RadioButton(selected = sectionScore.points == 0, onClick = { onPunch(0) }, modifier = Modifier.semantics { contentDescription = "0" })
         RadioButton(selected = sectionScore.points == 1, onClick = { onPunch(1) }, modifier = Modifier.semantics { contentDescription = "1" })
         RadioButton(selected = sectionScore.points == 2, onClick = { onPunch(2) })
@@ -66,24 +83,16 @@ fun ScoreEntryItem(
     }
 }
 
-
-@Preview(heightDp = 200)
 @Composable
-fun LazyListBottomBar() {
-    Column(Modifier.fillMaxSize()) {
+@Preview
+fun ScoreCardPreview() {
+    MaterialTheme {
+        Column {
+            LoopSelectionBar(currentLoop = 1)
+            LapScoreCard(scoreSet = SectionScore.Set.createForRider(1, 3))
+        }
+//        var state by remember { mutableStateOf(0) }
+//        val titles = listOf("Tab 1", "Tab 2", "Tab 3")
 
-        LazyColumn(Modifier.weight(1f)) {
-            items(50) { i ->
-                Text(
-                    "Row $i",
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
-            }
-        }
-        Button(onClick = { println("hi") }) {
-            Text("Hello")
-        }
     }
 }
