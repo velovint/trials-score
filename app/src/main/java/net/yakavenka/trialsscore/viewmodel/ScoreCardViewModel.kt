@@ -3,7 +3,8 @@ package net.yakavenka.trialsscore.viewmodel
 import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
@@ -28,9 +29,19 @@ class ScoreCardViewModel(
     val riderInfo: LiveData<RiderScore>
         get() = _riderInfo
 
-    fun fetchScores(riderId: Int) {
+    val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun fetchScores(riderId: Int, loopNumber: Int = 1) {
         viewModelScope.launch {
-            sectionScoreRepository.fetchOrInitRiderScore(riderId, userPreferencesRepository.fetchPreferences().numSections)
+            userPreferencesRepository.userPreferencesFlow.flatMapLatest { prefs ->
+                sectionScoreRepository.fetchOrInitRiderScore(
+                    riderId = riderId,
+                    loopNumber = loopNumber,
+                    numSections = prefs.numSections,
+                    numLoops = prefs.numLoops
+                )
+            }
                 .collect { scores -> _sectionScores.postValue(scores) }
         }
     }

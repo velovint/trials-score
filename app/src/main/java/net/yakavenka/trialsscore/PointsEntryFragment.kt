@@ -61,7 +61,7 @@ class PointsEntryFragment : Fragment() {
             setContent {
                 // In Compose world
                 MaterialTheme {
-                    LoopScoreEntryScreen(scoreCardViewModel)
+                    LoopScoreEntryScreen(scoreCardViewModel, navigationArgs.riderId)
                 }
             }
 
@@ -95,7 +95,7 @@ class PointsEntryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        scoreCardViewModel.fetchScores(navigationArgs.riderId)
+//        scoreCardViewModel.fetchScores(navigationArgs.riderId)
     }
 
     private fun clearResults() {

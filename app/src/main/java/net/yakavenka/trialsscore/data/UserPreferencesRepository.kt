@@ -1,10 +1,14 @@
 package net.yakavenka.trialsscore.data
 
 import android.content.SharedPreferences
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
-data class UserPreferences(val numSections: Int, val riderClasses: Set<String>)
+data class UserPreferences(val numSections: Int, val numLoops: Int, val riderClasses: Set<String>)
 
 class UserPreferencesRepository(private val sharedPreferences: SharedPreferences) {
+
+    val userPreferencesFlow: Flow<UserPreferences> = flowOf(fetchPreferences())
 
     fun fetchPreferences(): UserPreferences {
         val numSections = sharedPreferences.getString(NUM_SECTIONS_KEY, DEFAULT_NUM_SECTIONS.toString())!!.toInt()
@@ -13,7 +17,7 @@ class UserPreferencesRepository(private val sharedPreferences: SharedPreferences
             .split(",")
             .map { it.trim() }
             .toSet()
-        return UserPreferences(numSections, riderClasses)
+        return UserPreferences(numSections, 3, riderClasses)
     }
 
     companion object {
