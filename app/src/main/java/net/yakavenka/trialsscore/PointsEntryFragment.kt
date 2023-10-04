@@ -33,12 +33,7 @@ class PointsEntryFragment : Fragment() {
 
     private val navigationArgs: PointsEntryFragmentArgs by navArgs()
 
-    private val scoreCardViewModel: ScoreCardViewModel by viewModels {
-        ScoreCardViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
-            (activity?.application as TrialsScoreApplication).sharedPreferences
-        )
-    }
+    private val scoreCardViewModel: ScoreCardViewModel by viewModels {ScoreCardViewModel.Factory }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

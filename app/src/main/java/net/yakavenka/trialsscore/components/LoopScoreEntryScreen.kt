@@ -13,6 +13,8 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,12 +30,13 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (Int) -> Unit) {
     val sectionScores = scoreCardViewModel.sectionScores.observeAsState()
     val userPreference = scoreCardViewModel.userPreference.observeAsState()
+    val selectedLoop by scoreCardViewModel.selectedLoop.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
         LoopSelectionBar(
-            currentLoop = 1,
+            currentLoop = selectedLoop,
             totalLoops = userPreference.value?.numLoops ?: 1,
             onUpdate = { loop -> onNavigate(loop) }
         )
