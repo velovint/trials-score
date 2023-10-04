@@ -13,11 +13,7 @@ import androidx.compose.material.Tab
 import androidx.compose.material.TabRow
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -29,25 +25,19 @@ import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 @Composable
-fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, riderId: Int) {
+fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (Int) -> Unit) {
     val sectionScores = scoreCardViewModel.sectionScores.observeAsState()
     val userPreference = scoreCardViewModel.userPreference.observeAsState()
-    var selectedLoop by remember { mutableStateOf(1) }
-
-    scoreCardViewModel.fetchScores(riderId, selectedLoop)
 
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
+        LoopSelectionBar(
+            currentLoop = 1,
+            totalLoops = userPreference.value?.numLoops ?: 1,
+            onUpdate = { loop -> onNavigate(loop) }
+        )
         sectionScores.value?.let { scoreSet ->
-            LoopSelectionBar(
-                currentLoop = scoreSet.getLoopNumber(),
-                totalLoops = userPreference.value?.numLoops ?: 1,
-                onUpdate = { loop ->
-                    selectedLoop = loop
-                    scoreCardViewModel.fetchScores(scoreSet.sectionScores.first().riderId, selectedLoop)
-                }
-            )
             Column(modifier = Modifier.padding(16.dp)) {
                 LapScoreCard(
                     scoreSet = scoreSet,

@@ -2,6 +2,7 @@ package net.yakavenka.trialsscore.viewmodel
 
 import android.content.SharedPreferences
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
@@ -30,6 +31,8 @@ class ScoreCardViewModel(
         get() = _riderInfo
 
     val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
+
+    val selectedRiderId = mutableStateOf(-1)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun fetchScores(riderId: Int, loopNumber: Int = 1) {

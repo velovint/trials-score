@@ -36,6 +36,15 @@
         <action
             android:id="@+id/action_pointsEntryFragment_to_editRiderFragment"
             app:destination="@id/editRiderFragment" />
+        <argument
+            android:name="loop"
+            app:argType="integer"
+            android:defaultValue="1" />
+        <action
+            android:id="@+id/action_pointsEntryFragment_self"
+            app:destination="@id/pointsEntryFragment"
+            app:popUpTo="@id/pointsEntryFragment"
+            app:popUpToInclusive="true" />
     </fragment>
     <fragment
         android:id="@+id/editRiderFragment"

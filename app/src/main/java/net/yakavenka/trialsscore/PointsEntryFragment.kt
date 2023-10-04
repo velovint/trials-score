@@ -20,6 +20,7 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 
 private const val TAG = "PointsEntryFragment"
+
 /**
  * [Fragment] to enter rider points
  */
@@ -61,7 +62,16 @@ class PointsEntryFragment : Fragment() {
             setContent {
                 // In Compose world
                 MaterialTheme {
-                    LoopScoreEntryScreen(scoreCardViewModel, navigationArgs.riderId)
+                    LoopScoreEntryScreen(
+                        scoreCardViewModel,
+                        onNavigate = { loopNum ->
+                            val action = PointsEntryFragmentDirections.actionPointsEntryFragmentSelf(
+                                riderId = navigationArgs.riderId,
+                                loop = loopNum,
+                                riderName = navigationArgs.riderName
+                            )
+                            findNavController().navigate(action)
+                        })
                 }
             }
 
@@ -80,14 +90,17 @@ class PointsEntryFragment : Fragment() {
                 clearResults()
                 true
             }
+
             R.id.action_edit_rider -> {
-                val action = PointsEntryFragmentDirections.actionPointsEntryFragmentToEditRiderFragment(
-                    title = getString(R.string.edit_rider_info),
-                    riderId = navigationArgs.riderId
-                )
+                val action =
+                    PointsEntryFragmentDirections.actionPointsEntryFragmentToEditRiderFragment(
+                        title = getString(R.string.edit_rider_info),
+                        riderId = navigationArgs.riderId
+                    )
                 findNavController().navigate(action)
                 true
             }
+
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -95,7 +108,7 @@ class PointsEntryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-//        scoreCardViewModel.fetchScores(navigationArgs.riderId)
+        scoreCardViewModel.fetchScores(navigationArgs.riderId, navigationArgs.loop)
     }
 
     private fun clearResults() {
