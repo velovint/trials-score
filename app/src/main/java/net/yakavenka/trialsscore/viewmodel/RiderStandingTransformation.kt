@@ -12,9 +12,10 @@ class RiderStandingTransformation : (List<RiderScoreSummary>, UserPreferences) -
         summary: List<RiderScoreSummary>,
         prefs: UserPreferences
     ): List<RiderStanding> {
+        val totalSections = prefs.numSections * prefs.numLoops
         val result =
-            summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, prefs.numSections))
-        return applyStandings(result, prefs.numSections)
+            summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, totalSections))
+        return applyStandings(result, totalSections)
     }
 
     private fun applyStandings(
