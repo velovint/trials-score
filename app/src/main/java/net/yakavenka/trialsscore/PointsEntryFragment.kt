@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import net.yakavenka.trialsscore.components.LoopScoreEntryScreen
 import net.yakavenka.trialsscore.databinding.FragmentPointsEntryBinding
+import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 
@@ -56,7 +57,7 @@ class PointsEntryFragment : Fragment() {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 // In Compose world
-                MaterialTheme {
+                AppTheme {
                     LoopScoreEntryScreen(
                         scoreCardViewModel,
                         onNavigate = { loopNum ->

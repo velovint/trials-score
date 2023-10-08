@@ -15,6 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import net.yakavenka.trialsscore.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -78,5 +79,7 @@ fun EdirRiderScreen(modifier: Modifier = Modifier) {
 @Preview(widthDp = 200, heightDp = 600)
 @Composable
 fun EditRiderScreenPreview() {
-    EdirRiderScreen()
+    AppTheme {
+        EdirRiderScreen()
+    }
 }
