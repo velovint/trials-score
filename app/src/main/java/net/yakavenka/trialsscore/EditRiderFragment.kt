@@ -41,6 +41,7 @@ class EditRiderFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEditRiderBinding.inflate(inflater, container, false)
+
         return binding.root
     }
 
