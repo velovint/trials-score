@@ -1,7 +1,7 @@
 package net.yakavenka.trialsscore.components
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Button
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,66 +17,49 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 
 @OptIn(ExperimentalMaterial3Api::class)
+@Preview(widthDp = 200, heightDp = 600)
 @Composable
-fun EdirRiderScreen(modifier: Modifier = Modifier) {
-    var classDropdownExpanded by remember { mutableStateOf(false) }
+fun Sandbox() {
     val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
+    var expanded by remember { mutableStateOf(false) }
     var selectedOptionText by remember { mutableStateOf(options[0]) }
-    var riderName by remember { mutableStateOf("") }
-
-    Column(modifier = modifier) {
-        TextField(
-            value = riderName,
-            onValueChange = { riderName = it },
-            label = { Text("Name") },
-            singleLine = true
-        )
-
+    Box(modifier = Modifier.fillMaxSize()) {
+        // We want to react on tap/press on TextField to show menu
         ExposedDropdownMenuBox(
-            expanded = classDropdownExpanded,
+            expanded = expanded,
             onExpandedChange = {
-                classDropdownExpanded= !classDropdownExpanded
+                expanded = !expanded
             }
         ) {
             TextField(
                 readOnly = true,
                 value = selectedOptionText,
                 onValueChange = { },
-                label = { Text("Class") },
+                label = { Text("Label") },
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = classDropdownExpanded
+                        expanded = expanded
                     )
                 },
                 colors = ExposedDropdownMenuDefaults.textFieldColors()
             )
             ExposedDropdownMenu(
-                expanded = classDropdownExpanded,
+                expanded = expanded,
                 onDismissRequest = {
-                    classDropdownExpanded = false
+                    expanded = false
                 }
             ) {
                 options.forEach { selectionOption ->
                     DropdownMenuItem(
-                        text = { Text(text = selectionOption) },
+                        text = { Text(text = selectionOption)},
                         onClick = {
                             selectedOptionText = selectionOption
-                            classDropdownExpanded = false
+                            expanded = false
                         }
                     )
                 }
             }
         }
-
-        Button(onClick = { /* Do something! */ }) {
-            Text("Button")
-        }
-
     }
-}
 
-@Preview(widthDp = 200, heightDp = 600)
-@Composable
-fun EditRiderScreenPreview() {
-    EdirRiderScreen()
 }
