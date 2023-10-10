@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -13,7 +12,6 @@ import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.isNotSelected
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.tooling.preview.Preview
 import net.yakavenka.trialsscore.components.LapScoreCard
 import net.yakavenka.trialsscore.data.SectionScore
 import org.junit.Rule
@@ -26,7 +24,7 @@ class LapScoreScreenTest {
     @Test
     fun lapScoreUpdatesSelectedScore() {
         rule.setContent {
-            var scoreSet by remember { mutableStateOf(SectionScore.Set.createForRider(1, 3)) }
+            var scoreSet by remember { mutableStateOf(SectionScore.Set.createForRider(1, 3, 1)) }
             LapScoreCard(
                 scoreSet = scoreSet,
                 onUpdate = { sectionScore ->
@@ -44,7 +42,7 @@ class LapScoreScreenTest {
     @Test
     fun lapScoreKeepsTrackOfEnteredScores() {
         rule.setContent {
-            var scoreSet by remember { mutableStateOf(SectionScore.Set.createForRider(1, 3)) }
+            var scoreSet by remember { mutableStateOf(SectionScore.Set.createForRider(1, 3, 1)) }
             LapScoreCard(
                 scoreSet = scoreSet,
                 onUpdate = { sectionScore ->

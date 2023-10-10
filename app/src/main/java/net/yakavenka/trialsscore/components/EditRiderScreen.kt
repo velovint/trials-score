@@ -1,6 +1,8 @@
 package net.yakavenka.trialsscore.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -10,76 +12,141 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import net.yakavenka.trialsscore.ui.theme.AppTheme
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.flow.Flow
+import net.yakavenka.trialsscore.R
+import net.yakavenka.trialsscore.data.RiderScore
+import net.yakavenka.trialsscore.data.RiderScoreAggregate
+import net.yakavenka.trialsscore.data.RiderScoreDao
+import net.yakavenka.trialsscore.data.RiderScoreSummary
+import net.yakavenka.trialsscore.data.SectionScore
+import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EdirRiderScreen(modifier: Modifier = Modifier) {
-    var classDropdownExpanded by remember { mutableStateOf(false) }
-    val options = listOf("Option 1", "Option 2", "Option 3", "Option 4", "Option 5")
-    var selectedOptionText by remember { mutableStateOf(options[0]) }
-    var riderName by remember { mutableStateOf("") }
+fun EditRiderScreen(
+    viewModel: EditRiderViewModel,
+    modifier: Modifier = Modifier,
+    onSave: () -> Unit = {viewModel.saveRider(); }) {
 
-    Column(modifier = modifier) {
+    val userPreference by viewModel.userPreference.observeAsState()
+
+    Column(modifier = modifier.padding(8.dp)) {
         TextField(
-            value = riderName,
-            onValueChange = { riderName = it },
-            label = { Text("Name") },
-            singleLine = true
+            value = viewModel.riderName,
+            onValueChange = viewModel::updateRiderName,
+            label = { Text(stringResource(id = R.string.rider_name_req)) },
+            singleLine = true,
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth()
         )
 
+        // We want to react on tap/press on TextField to show menu
         ExposedDropdownMenuBox(
-            expanded = classDropdownExpanded,
-            onExpandedChange = {
-                classDropdownExpanded= !classDropdownExpanded
-            }
+            expanded = viewModel.riderClassExpanded,
+            onExpandedChange = viewModel::toggleRiderClassExpanded,
+            modifier = Modifier.padding(8.dp)
         ) {
             TextField(
+                // The `menuAnchor` modifier must be passed to the text field for correctness.
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth(),
                 readOnly = true,
-                value = selectedOptionText,
-                onValueChange = { },
-                label = { Text("Class") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(
-                        expanded = classDropdownExpanded
-                    )
-                },
-                colors = ExposedDropdownMenuDefaults.textFieldColors()
+                value = viewModel.riderClass,
+                onValueChange = {},
+                label = { Text(stringResource(id = R.string.rider_class_req)) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = viewModel.riderClassExpanded) },
+                colors = ExposedDropdownMenuDefaults.textFieldColors(),
             )
             ExposedDropdownMenu(
-                expanded = classDropdownExpanded,
-                onDismissRequest = {
-                    classDropdownExpanded = false
-                }
+                expanded = viewModel.riderClassExpanded,
+                onDismissRequest = { viewModel.toggleRiderClassExpanded(false) },
             ) {
-                options.forEach { selectionOption ->
+                userPreference?.riderClasses?.forEach { riderClass ->
                     DropdownMenuItem(
-                        text = { Text(text = selectionOption) },
+                        text = { Text(riderClass) },
                         onClick = {
-                            selectedOptionText = selectionOption
-                            classDropdownExpanded = false
-                        }
+                            viewModel.updateRiderClass(riderClass)
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
                 }
             }
         }
 
-        Button(onClick = { /* Do something! */ }) {
-            Text("Button")
+        Button(
+            onClick = onSave,
+            modifier = Modifier
+                .padding(vertical = 16.dp, horizontal = 8.dp)
+                .fillMaxWidth()
+        ) {
+            Text(stringResource(id = R.string.save_action))
         }
 
     }
 }
 
-@Preview(widthDp = 200, heightDp = 600)
+
+@Preview(widthDp = 400, heightDp = 600)
 @Composable
 fun EditRiderScreenPreview() {
-    AppTheme {
-        EdirRiderScreen()
+//    val riderScoreDao = RiderScoreDaoStub()
+//    val viewModel = EditRiderViewModel(riderScoreDao, UserPreferencesRepository(SharedPreferences { }))
+//
+//    AppTheme {
+//        EditRiderScreen(viewModel)
+//    }
+}
+
+class RiderScoreDaoStub : RiderScoreDao {
+
+    override fun getAll(): Flow<List<RiderScoreAggregate>> {
+        TODO("Not yet implemented")
+    }
+
+    override fun getRider(riderId: Int): Flow<RiderScore> {
+        TODO("Not yet implemented")
+    }
+
+    override fun sectionScores(riderId: Int, loopNumber: Int): Flow<List<SectionScore>> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateSectionScore(sectionScore: SectionScore) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteAllRiders() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteAllScores() {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteRiderScores(riderId: Int) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun insertAll(sectionScores: List<SectionScore>) {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun addRider(riderScore: RiderScore) {
+        TODO("Not yet implemented")
+    }
+
+    override fun fetchSummary(): Flow<List<RiderScoreSummary>> {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateRider(riderScore: RiderScore) {
+        TODO("Not yet implemented")
     }
 }

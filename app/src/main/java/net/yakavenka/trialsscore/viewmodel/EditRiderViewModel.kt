@@ -1,13 +1,33 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import androidx.lifecycle.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.launch
+import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 
 class EditRiderViewModel(
-    val riderScoreDao: RiderScoreDao
+    private val riderScoreDao: RiderScoreDao,
+    userPreferencesRepository: UserPreferencesRepository,
 ) : ViewModel() {
+
+    val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
+    var riderClass by mutableStateOf("")
+        private set
+    var riderClassExpanded by mutableStateOf(false)
+        private set
+    var riderName by mutableStateOf("")
+        private set
 
     fun addRider(name: String, riderClass: String) {
         viewModelScope.launch {
@@ -25,13 +45,31 @@ class EditRiderViewModel(
         }
     }
 
-    class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(EditRiderViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return EditRiderViewModel(riderScoreDao) as T
+    fun updateRiderName(name: String) {
+        riderName = name
+    }
+
+    fun toggleRiderClassExpanded(expanded: Boolean) {
+        riderClassExpanded = expanded
+    }
+
+    fun updateRiderClass(riderClass: String) {
+        this.riderClass = riderClass
+        toggleRiderClassExpanded(false)
+    }
+
+    fun saveRider() {
+        addRider(riderName, riderClass)
+    }
+
+    // Define ViewModel factory in a companion object
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
+                val sharedPreferences = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                EditRiderViewModel(riderScoreDao, UserPreferencesRepository(sharedPreferences))
             }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }
