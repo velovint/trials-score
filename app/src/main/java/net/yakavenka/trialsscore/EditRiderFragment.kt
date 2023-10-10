@@ -1,11 +1,10 @@
 package net.yakavenka.trialsscore
 
-import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.view.inputmethod.InputMethodManager
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -15,6 +14,8 @@ import net.yakavenka.trialsscore.components.EditRiderScreen
 import net.yakavenka.trialsscore.databinding.FragmentEditRiderBinding
 import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
+
+private const val TAG = "EditRiderFragment"
 
 /**
  * [Fragment] to Add/Edit rider info
@@ -44,8 +45,7 @@ class EditRiderFragment : Fragment() {
                         viewModel = viewModel,
                         onSave = {
                             viewModel.saveRider()
-                            val action = EditRiderFragmentDirections.actionEditRiderFragmentToEventScoreFragment()
-                            findNavController().navigate(action)
+                            findNavController().popBackStack()
                         }
                     )
                 }
@@ -54,12 +54,13 @@ class EditRiderFragment : Fragment() {
         return binding.root
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // Hide keyboard.
-        val inputMethodManager = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as
-                InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(requireActivity().currentFocus?.windowToken, 0)
-        _binding = null
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val id = navigationArgs.riderId
+        Log.d(TAG, "Edit Rider id: $id")
+        if (id > 0) {
+            viewModel.loadRider(id)
+        }
     }
 }

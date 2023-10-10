@@ -3,7 +3,6 @@ package net.yakavenka.trialsscore.viewmodel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
@@ -28,6 +27,7 @@ class EditRiderViewModel(
         private set
     var riderName by mutableStateOf("")
         private set
+    private var riderId: Int = 0
 
     fun addRider(name: String, riderClass: String) {
         viewModelScope.launch {
@@ -35,8 +35,15 @@ class EditRiderViewModel(
         }
     }
 
-    fun loadRider(id: Int): LiveData<RiderScore> {
-        return riderScoreDao.getRider(id).asLiveData()
+    fun loadRider(id: Int) {
+        viewModelScope.launch {
+            riderScoreDao.getRider(id)
+                .collect { riderScore ->
+                    riderId = id
+                    riderName = riderScore.name
+                    riderClass = riderScore.riderClass
+            }
+        }
     }
 
     fun updateRider(id: Int, name: String, riderClass: String) {
@@ -59,7 +66,12 @@ class EditRiderViewModel(
     }
 
     fun saveRider() {
-        addRider(riderName, riderClass)
+        if (riderId > 0) {
+            updateRider(riderId, riderName, riderClass)
+            return
+        } else {
+            addRider(riderName, riderClass)
+        }
     }
 
     // Define ViewModel factory in a companion object
