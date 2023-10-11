@@ -1,4 +1,3 @@
-*.iml
 .gradle
 /local.properties
 /.idea/caches
@@ -13,3 +12,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Android Studio/IDEA
+*.iml
+.idea
