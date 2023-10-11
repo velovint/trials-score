@@ -1,16 +1,27 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.content.ContentResolver
-import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.*
+import net.yakavenka.trialsscore.TrialsScoreApplication
+import net.yakavenka.trialsscore.data.RiderScoreSummary
+import net.yakavenka.trialsscore.data.ScoreSummaryRepository
+import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
-import java.io.*
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
 
 private const val TAG = "EventScoreViewModel"
 
@@ -95,21 +106,18 @@ class EventScoreViewModel(
         }
     }
 
-    class Factory(
-        private val riderScoreDao: RiderScoreDao,
-        private val sharedPreferences: SharedPreferences
-    ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return EventScoreViewModel(
+    // Define ViewModel factory in a companion object
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
+                val sharedPreferences = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                EventScoreViewModel(
                     ScoreSummaryRepository(riderScoreDao),
                     SectionScoreRepository(riderScoreDao),
                     CsvExchangeRepository(),
-                    UserPreferencesRepository(sharedPreferences)
-                ) as T
+                    UserPreferencesRepository(sharedPreferences))
             }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

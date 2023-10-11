@@ -14,7 +14,7 @@ import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -29,12 +29,7 @@ class LeaderboardFragment : Fragment() {
     private var _binding: FragmentLeaderboardBinding? = null
     private val binding get() = _binding!!
 
-    private val eventScores: EventScoreViewModel by activityViewModels {
-        EventScoreViewModel.Factory(
-            (activity?.application as TrialsScoreApplication).database.riderScoreDao(),
-            (activity?.application as TrialsScoreApplication).sharedPreferences
-        )
-    }
+    private val eventScores: EventScoreViewModel by viewModels { EventScoreViewModel.Factory }
 
     private val exportPrompt: ActivityResultLauncher<String> = registerExportPrompt()
 
