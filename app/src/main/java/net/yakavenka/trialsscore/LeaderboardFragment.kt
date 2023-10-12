@@ -13,13 +13,15 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.onNavDestinationSelected
-import androidx.recyclerview.widget.LinearLayoutManager
+import net.yakavenka.trialsscore.components.LeaderboardScreen
 import net.yakavenka.trialsscore.databinding.FragmentLeaderboardBinding
 import net.yakavenka.trialsscore.model.RiderScoreAdapter
+import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
 
 private const val TAG = "LeaderboardFragment"
@@ -51,6 +53,26 @@ class LeaderboardFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentLeaderboardBinding.inflate(inflater, container, false)
+        binding.composeView.apply {
+            // Dispose of the Composition when the view's LifecycleOwner
+            // is destroyed
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
+            setContent {
+                // In Compose world
+                AppTheme {
+                    LeaderboardScreen(
+                        onRiderSelect = { rider ->
+                            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToPointsEntryFragment(rider.riderId, rider.riderName, 1)
+                            findNavController().navigate(action)
+                        },
+                        onAdd = {
+                            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment(
+                                title = getString(R.string.add_new_rider))
+                            findNavController().navigate(action)
+                        })
+                }
+            }
+        }
         return binding.root
     }
 
@@ -90,19 +112,19 @@ class LeaderboardFragment : Fragment() {
                 .actionEventScoreFragmentToPointsEntryFragment(it.riderId, it.riderName)
             findNavController().navigate(action)
         }
-        binding.recyclerView.adapter = adapter
-        binding.recyclerView.layoutManager = LinearLayoutManager(this.context)
+//        binding.recyclerView.adapter = adapter
+//        binding.recyclerView.layoutManager = LinearLayoutManager(this.context)
 
         eventScores.allScores.observe(viewLifecycleOwner) { scores ->
 //            Log.d("EventScoreFragment", "Got scores " + scores)
             scores.let { adapter.submitList(scores) }
         }
 
-        binding.floatingActionButton.setOnClickListener {
-            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment(
-                title = getString(R.string.add_new_rider))
-            findNavController().navigate(action)
-        }
+//        binding.floatingActionButton.setOnClickListener {
+//            val action = LeaderboardFragmentDirections.actionEventScoreFragmentToEditRiderFragment(
+//                title = getString(R.string.add_new_rider))
+//            findNavController().navigate(action)
+//        }
     }
 
     private fun registerExportPrompt(): ActivityResultLauncher<String> {
