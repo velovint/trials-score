@@ -7,13 +7,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
@@ -26,27 +34,64 @@ import androidx.compose.ui.unit.dp
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (Int) -> Unit) {
-    val sectionScores = scoreCardViewModel.sectionScores.observeAsState()
+    val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
     val userPreference = scoreCardViewModel.userPreference.observeAsState()
-    val selectedLoop by scoreCardViewModel.selectedLoop.collectAsState()
+    val selectedLoop = scoreCardViewModel.selectedLoop
 
-    Column(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        LoopSelectionBar(
-            currentLoop = selectedLoop,
-            totalLoops = userPreference.value?.numLoops ?: 1,
-            onUpdate = { loop -> onNavigate(loop) }
-        )
-        sectionScores.value?.let { scoreSet ->
-            Column(modifier = Modifier.padding(16.dp)) {
-                LapScoreCard(
-                    scoreSet = scoreSet,
-                    modifier = Modifier.weight(1f),
-                    onUpdate = { sectionScore -> scoreCardViewModel.updateSectionScore(sectionScore) })
-                LapScoreTotal(sectionScores = scoreSet)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(scoreCardViewModel.selectedRiderName) },
+                navigationIcon = {
+                    IconButton(onClick = { /* doSomething() */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowBack,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { /* doSomething() */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                    IconButton(onClick = { /* doSomething() */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            LoopSelectionBar(
+                currentLoop = selectedLoop,
+                totalLoops = userPreference.value?.numLoops ?: 1,
+                onUpdate = { loop -> onNavigate(loop) }
+            )
+            sectionScores?.let { scoreSet ->
+                Column(modifier = Modifier.padding(16.dp)) {
+                    LapScoreCard(
+                        scoreSet = scoreSet,
+                        modifier = Modifier.weight(1f),
+                        onUpdate = { sectionScore ->
+                            scoreCardViewModel.updateSectionScore(
+                                sectionScore
+                            )
+                        })
+                    LapScoreTotal(sectionScores = scoreSet)
+                }
             }
         }
     }

@@ -8,7 +8,6 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -104,7 +103,7 @@ class PointsEntryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        scoreCardViewModel.fetchScores(navigationArgs.riderId, navigationArgs.loop)
+//        scoreCardViewModel.fetchScores(navigationArgs.riderId, navigationArgs.loop)
     }
 
     private fun clearResults() {

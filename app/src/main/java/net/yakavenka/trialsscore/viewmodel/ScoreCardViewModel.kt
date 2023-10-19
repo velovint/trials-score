@@ -1,13 +1,11 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.TrialsScoreApplication
@@ -24,10 +22,18 @@ class ScoreCardViewModel(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _sectionScores =
+        userPreferencesRepository.userPreferencesFlow.flatMapLatest { prefs ->
+            sectionScoreRepository.fetchOrInitRiderScore(
+                riderId = selectedRiderId,
+                loopNumber = selectedLoop,
+                numSections = prefs.numSections,
+                numLoops = prefs.numLoops
+            )
+        }
 
-    val sectionScores: LiveData<SectionScore.Set>
-        get() = _sectionScores
+    val sectionScores = _sectionScores.asLiveData()
 
     private val _riderInfo: MutableLiveData<RiderScore> = MutableLiveData()
 
@@ -36,24 +42,11 @@ class ScoreCardViewModel(
 
     val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
 
-    val selectedRiderId = mutableStateOf(-1)
+    val selectedRiderId: Int = checkNotNull(savedStateHandle["riderId"]) as Int
 
-    val selectedLoop: StateFlow<Int> = savedStateHandle.getStateFlow("loop", 1)
+    val selectedLoop: Int = checkNotNull(savedStateHandle["loop"]) as Int
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    fun fetchScores(riderId: Int, loopNumber: Int = 1) {
-        viewModelScope.launch {
-            userPreferencesRepository.userPreferencesFlow.flatMapLatest { prefs ->
-                sectionScoreRepository.fetchOrInitRiderScore(
-                    riderId = riderId,
-                    loopNumber = loopNumber,
-                    numSections = prefs.numSections,
-                    numLoops = prefs.numLoops
-                )
-            }
-                .collect { scores -> _sectionScores.postValue(scores) }
-        }
-    }
+    val selectedRiderName: String = checkNotNull(savedStateHandle["riderName"])
 
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")
@@ -79,9 +72,15 @@ class ScoreCardViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val savedStateHandle = createSavedStateHandle()
-                val riderScoreDao = (this[APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val sharedPreferences = (this[APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
-                ScoreCardViewModel(SectionScoreRepository(riderScoreDao), UserPreferencesRepository(sharedPreferences), savedStateHandle)
+                val riderScoreDao =
+                    (this[APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
+                val sharedPreferences =
+                    (this[APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                ScoreCardViewModel(
+                    SectionScoreRepository(riderScoreDao),
+                    UserPreferencesRepository(sharedPreferences),
+                    savedStateHandle
+                )
             }
         }
     }
