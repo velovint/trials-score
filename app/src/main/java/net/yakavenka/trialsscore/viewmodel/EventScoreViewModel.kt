@@ -3,6 +3,7 @@ package net.yakavenka.trialsscore.viewmodel
 import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -60,6 +61,9 @@ class EventScoreViewModel(
     private val importExportService: CsvExchangeRepository,
     preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
+    val importContract = ActivityResultContracts.GetContent()
+    val exportContract = ActivityResultContracts.CreateDocument("text/csv")
+
     val allScores: LiveData<List<RiderStanding>> =
         scoreSummaryRepository.fetchSummary()
             .map { summary -> RiderStandingTransformation().invoke(summary, preferencesRepository.fetchPreferences()) }

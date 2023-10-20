@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore.components
 
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -14,7 +13,6 @@ import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrialsScoreApplicationComponent() {
     val navController = rememberNavController()
