@@ -48,7 +48,8 @@ fun LeaderboardScreen(
     modifier: Modifier = Modifier,
     viewModel: EventScoreViewModel = viewModel(),
     onAdd: () -> Unit = {},
-    onRiderSelect: (RiderStanding) -> Unit = {}
+    onRiderSelect: (RiderStanding) -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     val scores = viewModel.allScores.observeAsState()
     val context = LocalContext.current
@@ -64,7 +65,8 @@ fun LeaderboardScreen(
             LeaderboardTopBar(
                 onPurge = viewModel::clearAll,
                 onImport = { importPicker.launch("text/*") },
-                onExport = { exportPicker.launch("report.csv" ) }
+                onExport = { exportPicker.launch("report.csv" ) },
+                onSettings = onSettings
             )
         },
         floatingActionButton = {
@@ -89,7 +91,8 @@ fun LeaderboardScreen(
 fun LeaderboardTopBar(
     onPurge: () -> Unit = {},
     onImport: () -> Unit = {},
-    onExport: () -> Unit = {}
+    onExport: () -> Unit = {},
+    onSettings: () -> Unit = {}
 ) {
     TopAppBar(title = { Text("Trials Score") },
         actions = {
@@ -111,7 +114,7 @@ fun LeaderboardTopBar(
                     contentDescription = "Localized description"
                 )
             }
-            IconButton(onClick = { /* doSomething() */ }) {
+            IconButton(onClick = onSettings) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
                     contentDescription = "Localized description"

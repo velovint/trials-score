@@ -30,6 +30,9 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                 },
                 onAdd = {
                     navController.navigate("add_rider")
+                },
+                onSettings = {
+                    navController.navigate("settings")
                 })
         }
         composable(
@@ -54,6 +57,9 @@ fun TrialsScoreNavHost(navController: NavHostController) {
             EditRiderScreen(
                 viewModel = viewModel(factory = EditRiderViewModel.Factory)
             )
+        }
+        composable("settings") {
+            EventSettingsScreen()
         }
     }
 
