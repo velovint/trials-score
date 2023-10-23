@@ -44,18 +44,28 @@ fun TrialsScoreNavHost(navController: NavHostController) {
         ) { backStackEntry ->
             LoopScoreEntryScreen(
                 viewModel(factory = ScoreCardViewModel.Factory),
-                onNavigate = { loopNum ->
+                onLoopSelect = { loopNum ->
                     val riderId = backStackEntry.arguments?.getInt("riderId")
                     val riderName = backStackEntry.arguments?.getString("riderName")
                     navController.navigate(
                         "points_entry/${riderId}/${riderName}/${loopNum}",
                         navOptions = NavOptions.Builder().setPopUpTo("leaderboard", false).build()
                     )
-                })
+                },
+                onEditRider = { riderId -> navController.navigate("edit_rider/${riderId}")})
         }
         composable("add_rider") {
             EditRiderScreen(
-                viewModel = viewModel(factory = EditRiderViewModel.Factory)
+                viewModel = viewModel(factory = EditRiderViewModel.Factory),
+                navigateBack = { navController.navigateUp() }
+            )
+        }
+        composable("edit_rider/{riderId}",
+            arguments = listOf(navArgument("riderId") { type = NavType.IntType })
+        ) { _ ->
+            EditRiderScreen(
+                viewModel = viewModel(factory = EditRiderViewModel.Factory),
+                navigateBack = { navController.navigateUp() }
             )
         }
         composable("settings") {

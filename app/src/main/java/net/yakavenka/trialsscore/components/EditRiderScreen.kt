@@ -13,11 +13,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
@@ -31,14 +33,19 @@ import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 fun EditRiderScreen(
     viewModel: EditRiderViewModel,
     modifier: Modifier = Modifier,
-    onSave: () -> Unit = {viewModel.saveRider(); }) {
+    navigateBack: () -> Unit = {}
+) {
 
     val userPreference by viewModel.userPreference.observeAsState()
 
     Column(modifier = modifier.padding(8.dp)) {
+        val riderEntry = viewModel.riderInfoState.entry
+        val isClassExpanded = viewModel.riderInfoState.riderClassExpanded
+        val coroutineScope = rememberCoroutineScope()
+
         TextField(
-            value = viewModel.riderName,
-            onValueChange = viewModel::updateRiderName,
+            value = riderEntry.name,
+            onValueChange = { viewModel.updateUiState(riderEntry.copy(name = it)) },
             label = { Text(stringResource(id = R.string.rider_name_req)) },
             singleLine = true,
             modifier = Modifier
@@ -48,7 +55,7 @@ fun EditRiderScreen(
 
         // We want to react on tap/press on TextField to show menu
         ExposedDropdownMenuBox(
-            expanded = viewModel.riderClassExpanded,
+            expanded = isClassExpanded,
             onExpandedChange = viewModel::toggleRiderClassExpanded,
             modifier = Modifier.padding(8.dp)
         ) {
@@ -58,21 +65,22 @@ fun EditRiderScreen(
                     .menuAnchor()
                     .fillMaxWidth(),
                 readOnly = true,
-                value = viewModel.riderClass,
+                value = riderEntry.riderClass,
                 onValueChange = {},
                 label = { Text(stringResource(id = R.string.rider_class_req)) },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = viewModel.riderClassExpanded) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isClassExpanded) },
                 colors = ExposedDropdownMenuDefaults.textFieldColors(),
             )
             ExposedDropdownMenu(
-                expanded = viewModel.riderClassExpanded,
+                expanded = isClassExpanded,
                 onDismissRequest = { viewModel.toggleRiderClassExpanded(false) },
             ) {
                 userPreference?.riderClasses?.forEach { riderClass ->
                     DropdownMenuItem(
                         text = { Text(riderClass) },
                         onClick = {
-                            viewModel.updateRiderClass(riderClass)
+                            viewModel.updateUiState(riderEntry.copy(riderClass = riderClass))
+                            viewModel.toggleRiderClassExpanded(false)
                         },
                         contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
@@ -81,7 +89,12 @@ fun EditRiderScreen(
         }
 
         Button(
-            onClick = onSave,
+            onClick = {
+                coroutineScope.launch {
+                    viewModel.saveRider()
+                    navigateBack()
+                }
+            },
             modifier = Modifier
                 .padding(vertical = 16.dp, horizontal = 8.dp)
                 .fillMaxWidth()

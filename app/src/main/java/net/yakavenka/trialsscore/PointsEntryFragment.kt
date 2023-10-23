@@ -59,7 +59,7 @@ class PointsEntryFragment : Fragment() {
                 AppTheme {
                     LoopScoreEntryScreen(
                         scoreCardViewModel,
-                        onNavigate = { loopNum ->
+                        onLoopSelect = { loopNum ->
                             val action = PointsEntryFragmentDirections.actionPointsEntryFragmentSelf(
                                 riderId = navigationArgs.riderId,
                                 loop = loopNum,

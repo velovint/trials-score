@@ -8,9 +8,7 @@ import android.view.ViewGroup
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
-import net.yakavenka.trialsscore.components.EditRiderScreen
 import net.yakavenka.trialsscore.databinding.FragmentEditRiderBinding
 import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
@@ -41,13 +39,13 @@ class EditRiderFragment : Fragment() {
             setContent {
                 // In Compose world
                 AppTheme {
-                    EditRiderScreen(
-                        viewModel = viewModel,
-                        onSave = {
-                            viewModel.saveRider()
-                            findNavController().popBackStack()
-                        }
-                    )
+//                    EditRiderScreen(
+//                        viewModel = viewModel,
+//                        onSave = {
+//                            viewModel.saveRider()
+//                            findNavController().popBackStack()
+//                        }
+//                    )
                 }
             }
         }
@@ -60,7 +58,7 @@ class EditRiderFragment : Fragment() {
         val id = navigationArgs.riderId
         Log.d(TAG, "Edit Rider id: $id")
         if (id > 0) {
-            viewModel.loadRider(id)
+//            viewModel.loadRider(id)
         }
     }
 }

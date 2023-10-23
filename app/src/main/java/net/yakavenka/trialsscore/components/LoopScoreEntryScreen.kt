@@ -9,8 +9,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,7 +36,12 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (Int) -> Unit) {
+fun LoopScoreEntryScreen(
+    scoreCardViewModel: ScoreCardViewModel,
+    onLoopSelect: (Int) -> Unit = {},
+    onEditRider: (Int) -> Unit = {},
+    onDeleteScore: () -> Unit = {}
+) {
     val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
     val userPreference = scoreCardViewModel.userPreference.observeAsState()
     val selectedLoop = scoreCardViewModel.selectedLoop
@@ -54,15 +59,15 @@ fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (In
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* doSomething() */ }) {
+                    IconButton(onClick = { onEditRider(scoreCardViewModel.selectedRiderId) }) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Localized description"
                         )
                     }
-                    IconButton(onClick = { /* doSomething() */ }) {
+                    IconButton(onClick = onDeleteScore) {
                         Icon(
-                            imageVector = Icons.Filled.MoreVert,
+                            imageVector = Icons.Filled.Delete,
                             contentDescription = "Localized description"
                         )
                     }
@@ -78,7 +83,7 @@ fun LoopScoreEntryScreen(scoreCardViewModel: ScoreCardViewModel, onNavigate: (In
             LoopSelectionBar(
                 currentLoop = selectedLoop,
                 totalLoops = userPreference.value?.numLoops ?: 1,
-                onUpdate = { loop -> onNavigate(loop) }
+                onUpdate = { loop -> onLoopSelect(loop) }
             )
             sectionScores?.let { scoreSet ->
                 Column(modifier = Modifier.padding(16.dp)) {
