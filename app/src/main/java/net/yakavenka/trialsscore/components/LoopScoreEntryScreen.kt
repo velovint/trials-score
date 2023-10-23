@@ -38,20 +38,21 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 @Composable
 fun LoopScoreEntryScreen(
     scoreCardViewModel: ScoreCardViewModel,
+    onBack: () -> Unit = {},
     onLoopSelect: (Int) -> Unit = {},
-    onEditRider: (Int) -> Unit = {},
-    onDeleteScore: () -> Unit = {}
+    onEditRider: (Int) -> Unit = {}
 ) {
     val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
     val userPreference = scoreCardViewModel.userPreference.observeAsState()
     val selectedLoop = scoreCardViewModel.selectedLoop
+    val riderInfo by scoreCardViewModel.riderInfo.observeAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(scoreCardViewModel.selectedRiderName) },
+                title = { Text(riderInfo?.name ?: "") },
                 navigationIcon = {
-                    IconButton(onClick = { /* doSomething() */ }) {
+                    IconButton(onClick = onBack ) {
                         Icon(
                             imageVector = Icons.Filled.ArrowBack,
                             contentDescription = "Localized description"
@@ -59,13 +60,19 @@ fun LoopScoreEntryScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onEditRider(scoreCardViewModel.selectedRiderId) }) {
+                    IconButton(onClick = { riderInfo?.let{ onEditRider(it.id) }}) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
                             contentDescription = "Localized description"
                         )
                     }
-                    IconButton(onClick = onDeleteScore) {
+                    IconButton(
+                        onClick = {
+                            riderInfo?.let {
+                                scoreCardViewModel.clearScores(it.id)
+                                onBack()
+                            }
+                        }) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
                             contentDescription = "Localized description"
@@ -172,8 +179,5 @@ fun ScoreCardPreview() {
             LoopSelectionBar(currentLoop = 1, totalLoops = 3)
             LapScoreCard(scoreSet = SectionScore.Set.createForRider(1, 3, 3))
         }
-//        var state by remember { mutableStateOf(0) }
-//        val titles = listOf("Tab 1", "Tab 2", "Tab 3")
-
     }
 }

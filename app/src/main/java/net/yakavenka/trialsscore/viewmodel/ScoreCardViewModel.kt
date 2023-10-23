@@ -9,7 +9,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.TrialsScoreApplication
-import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
@@ -18,9 +17,11 @@ private const val TAG = "ScoreCardViewModel"
 
 class ScoreCardViewModel(
     private val sectionScoreRepository: SectionScoreRepository,
-    private val userPreferencesRepository: UserPreferencesRepository,
+    userPreferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    private val selectedRiderId: Int = checkNotNull(savedStateHandle["riderId"]) as Int
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _sectionScores =
@@ -35,18 +36,11 @@ class ScoreCardViewModel(
 
     val sectionScores = _sectionScores.asLiveData()
 
-    private val _riderInfo: MutableLiveData<RiderScore> = MutableLiveData()
-
-    val riderInfo: LiveData<RiderScore>
-        get() = _riderInfo
-
     val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
 
-    val selectedRiderId: Int = checkNotNull(savedStateHandle["riderId"]) as Int
+    val riderInfo = sectionScoreRepository.getRiderInfo(selectedRiderId).asLiveData()
 
     val selectedLoop: Int = checkNotNull(savedStateHandle["loop"]) as Int
-
-    val selectedRiderName: String = checkNotNull(savedStateHandle["riderName"])
 
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")
@@ -58,12 +52,6 @@ class ScoreCardViewModel(
     fun clearScores(riderId: Int) {
         viewModelScope.launch {
             sectionScoreRepository.deleteRiderScores(riderId)
-        }
-    }
-
-    fun loadRiderInfo(riderId: Int) {
-        viewModelScope.launch {
-            sectionScoreRepository.getRiderInfo(riderId).collect(_riderInfo::postValue)
         }
     }
 

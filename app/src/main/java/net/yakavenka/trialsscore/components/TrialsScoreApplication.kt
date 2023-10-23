@@ -52,12 +52,15 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                         navOptions = NavOptions.Builder().setPopUpTo("leaderboard", false).build()
                     )
                 },
-                onEditRider = { riderId -> navController.navigate("edit_rider/${riderId}")})
+                onEditRider = { riderId -> navController.navigate("edit_rider/${riderId}")},
+                onBack = navController::navigateUp
+            )
+
         }
         composable("add_rider") {
             EditRiderScreen(
                 viewModel = viewModel(factory = EditRiderViewModel.Factory),
-                navigateBack = { navController.navigateUp() }
+                navigateBack = navController::navigateUp
             )
         }
         composable("edit_rider/{riderId}",
@@ -65,7 +68,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
         ) { _ ->
             EditRiderScreen(
                 viewModel = viewModel(factory = EditRiderViewModel.Factory),
-                navigateBack = { navController.navigateUp() }
+                navigateBack = navController::navigateUp
             )
         }
         composable("settings") {
