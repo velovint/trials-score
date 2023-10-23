@@ -26,7 +26,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
             LeaderboardScreen(
                 viewModel = viewModel(factory = EventScoreViewModel.Factory),
                 onRiderSelect = { rider ->
-                    navController.navigate("points_entry/${rider.riderId}/${rider.riderName}/1")
+                    navController.navigate("points_entry/${rider.riderId}/1")
                 },
                 onAdd = {
                     navController.navigate("add_rider")
@@ -36,19 +36,17 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                 })
         }
         composable(
-            "points_entry/{riderId}/{riderName}/{loop}",
+            "points_entry/{riderId}/{loop}",
             arguments = listOf(
                 navArgument("riderId") { type = NavType.IntType },
-                navArgument("riderName") { type = NavType.StringType },
                 navArgument("loop") { type = NavType.IntType })
         ) { backStackEntry ->
             LoopScoreEntryScreen(
                 viewModel(factory = ScoreCardViewModel.Factory),
                 onLoopSelect = { loopNum ->
                     val riderId = backStackEntry.arguments?.getInt("riderId")
-                    val riderName = backStackEntry.arguments?.getString("riderName")
                     navController.navigate(
-                        "points_entry/${riderId}/${riderName}/${loopNum}",
+                        "points_entry/${riderId}/${loopNum}",
                         navOptions = NavOptions.Builder().setPopUpTo("leaderboard", false).build()
                     )
                 },

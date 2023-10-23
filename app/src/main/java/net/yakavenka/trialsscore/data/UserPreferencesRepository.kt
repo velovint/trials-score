@@ -17,12 +17,13 @@ class UserPreferencesRepository(private val sharedPreferences: SharedPreferences
             .split(",")
             .map { it.trim() }
             .toSet()
-        return UserPreferences(numSections, 3, riderClasses)
+        return UserPreferences(numSections, DEFAULT_NUM_LOOPS, riderClasses)
     }
 
     companion object {
         const val NUM_SECTIONS_KEY = "num_sections"
-        const val DEFAULT_NUM_SECTIONS = 30
+        const val DEFAULT_NUM_SECTIONS = 10
+        const val DEFAULT_NUM_LOOPS = 3
         const val RIDER_CLASSES_KEY = "rider_classes"
         val DEFAULT_RIDER_CLASSES: Set<String> = setOf(
             "Champ",
