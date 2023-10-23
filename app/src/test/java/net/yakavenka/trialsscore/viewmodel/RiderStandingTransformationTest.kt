@@ -96,7 +96,15 @@ class RiderStandingTransformationTest {
 
     @Test
     fun generateTestData() {
-        val classes = UserPreferencesRepository.DEFAULT_RIDER_CLASSES.toMutableList()
+        val classes: MutableList<String> = setOf(
+            "Champ",
+            "Expert",
+            "Advanced",
+            "Intermediate",
+            "Novice",
+            "Vintage A",
+            "Vintage B",
+            "Exhibition").toMutableList()
         classes.addAll(classes.takeLast(3))
         classes.addAll(classes.takeLast(3))
         repeat(100) {

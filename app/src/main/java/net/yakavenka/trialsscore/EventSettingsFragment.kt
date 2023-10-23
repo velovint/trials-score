@@ -10,11 +10,11 @@ class EventSettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        val numSections: EditTextPreference? = findPreference(UserPreferencesRepository.NUM_SECTIONS_KEY)
-        numSections?.setOnBindEditTextListener { editText ->
-            // no idea why values from preferences.xml don't work
-            editText.inputType = InputType.TYPE_CLASS_NUMBER
-            editText.selectAll()
-        }
+//        val numSections: EditTextPreference? = findPreference(UserPreferencesRepository.NUM_SECTIONS_KEY)
+//        numSections?.setOnBindEditTextListener { editText ->
+//            // no idea why values from preferences.xml don't work
+//            editText.inputType = InputType.TYPE_CLASS_NUMBER
+//            editText.selectAll()
+//        }
     }
 }

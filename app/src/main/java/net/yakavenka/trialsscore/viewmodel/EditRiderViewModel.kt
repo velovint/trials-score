@@ -73,9 +73,9 @@ class EditRiderViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val sharedPreferences = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                val prefsDatastore = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
                 val savedStateHandle = createSavedStateHandle()
-                EditRiderViewModel(riderScoreDao, UserPreferencesRepository(sharedPreferences), savedStateHandle)
+                EditRiderViewModel(riderScoreDao, UserPreferencesRepository(prefsDatastore), savedStateHandle)
             }
         }
     }

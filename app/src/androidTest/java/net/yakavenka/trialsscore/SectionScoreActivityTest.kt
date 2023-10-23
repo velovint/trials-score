@@ -109,7 +109,7 @@ class SectionScoreActivityTest {
 
     private fun enterRiderDetails(): RiderScore {
         val riderName = "${faker.name().firstName()} ${faker.name().lastName()}"
-        val riderClass = UserPreferencesRepository.DEFAULT_RIDER_CLASSES.random()
+        val riderClass = setOf("Expert", "Advanced", "Intermediate").random()
 //        onView(withId(R.id.rider_name)).perform(clearText(), typeText(riderName), closeSoftKeyboard())
 //        onView(withId(R.id.rider_class_label)).perform(click())
 //        onView(withText(riderClass))

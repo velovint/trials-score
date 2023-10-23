@@ -75,6 +75,10 @@ dependencies {
     // Room
     implementation "androidx.room:room-runtime:$room_version"
     implementation "androidx.compose.runtime:runtime-livedata"
+
+    // Preferences
+    implementation "androidx.datastore:datastore-preferences:1.0.0"
+
     // To use Kotlin annotation processing tool (kapt)
     kapt "androidx.room:room-compiler:$room_version"
     // optional - Kotlin Extensions and Coroutines support for Room

@@ -12,6 +12,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.TrialsScoreApplication
@@ -64,10 +65,11 @@ class EventScoreViewModel(
     val importContract = ActivityResultContracts.GetContent()
     val exportContract = ActivityResultContracts.CreateDocument("text/csv")
 
-    val allScores: LiveData<List<RiderStanding>> =
-        scoreSummaryRepository.fetchSummary()
-            .map { summary -> RiderStandingTransformation().invoke(summary, preferencesRepository.fetchPreferences()) }
-            .asLiveData()
+    val allScores: LiveData<List<RiderStanding>> = combine(
+            scoreSummaryRepository.fetchSummary(), preferencesRepository.userPreferencesFlow
+        ) { summary, prefs ->
+            return@combine RiderStandingTransformation().invoke(summary, prefs)
+        }.asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
         try {
@@ -115,12 +117,13 @@ class EventScoreViewModel(
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val sharedPreferences = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                val preferencesDataStore = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
+
                 EventScoreViewModel(
                     ScoreSummaryRepository(riderScoreDao),
                     SectionScoreRepository(riderScoreDao),
                     CsvExchangeRepository(),
-                    UserPreferencesRepository(sharedPreferences))
+                    UserPreferencesRepository(preferencesDataStore))
             }
         }
     }

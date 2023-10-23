@@ -62,11 +62,11 @@ class ScoreCardViewModel(
                 val savedStateHandle = createSavedStateHandle()
                 val riderScoreDao =
                     (this[APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val sharedPreferences =
-                    (this[APPLICATION_KEY] as TrialsScoreApplication).sharedPreferences
+                val preferencesDataStore =
+                    (this[APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
                 ScoreCardViewModel(
                     SectionScoreRepository(riderScoreDao),
-                    UserPreferencesRepository(sharedPreferences),
+                    UserPreferencesRepository(preferencesDataStore),
                     savedStateHandle
                 )
             }
