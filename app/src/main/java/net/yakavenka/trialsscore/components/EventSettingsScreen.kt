@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterial3Api::class)
-
 package net.yakavenka.trialsscore.components
 
 import androidx.compose.foundation.clickable
@@ -38,7 +36,8 @@ import net.yakavenka.trialsscore.viewmodel.EventSettingsViewModel
 @Composable
 fun EventSettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: EventSettingsViewModel = viewModel(factory = EventSettingsViewModel.Factory)
+    viewModel: EventSettingsViewModel = viewModel(factory = EventSettingsViewModel.Factory),
+    navigateBack: () -> Unit = {}
 ) {
     val settings: UserPreferences? by viewModel.userPreferences.observeAsState()
 
@@ -49,7 +48,7 @@ fun EventSettingsScreen(
                 title = { Text("Edit event settings") },
                 navigationIcon = {
                     IconButton(
-                        onClick = { /* "Open nav drawer" */ }
+                        onClick = navigateBack
                     ) {
                         Icon(Icons.Filled.ArrowBack, contentDescription = "Localized description")
                     }
@@ -132,6 +131,7 @@ fun TextPreference(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TextPreferenceEditForm(
     label: String,

@@ -5,7 +5,6 @@ buildscript {
         room_version = "2.5.2"
         lifecycle_version = '2.4.0'
         kotlin_version = '1.6.21'
-        preference_version = "1.2.0"
     }
     repositories {
         google()

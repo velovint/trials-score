@@ -70,7 +70,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
             )
         }
         composable("settings") {
-            EventSettingsScreen()
+            EventSettingsScreen(navigateBack = navController::navigateUp)
         }
     }
 

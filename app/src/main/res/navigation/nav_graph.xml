@@ -69,10 +69,5 @@
             app:popUpTo="@id/pointsEntryFragment"
             app:popUpToInclusive="true" />
     </fragment>
-    <fragment
-        android:id="@+id/eventSettingsFragment"
-        android:name="net.yakavenka.trialsscore.EventSettingsFragment"
-        android:label="Edit event settings">
-    </fragment>
 
 </navigation>
