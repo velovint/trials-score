@@ -69,8 +69,8 @@ fun LoopScoreEntryScreen(
                     IconButton(
                         onClick = {
                             riderInfo?.let {
-                                scoreCardViewModel.clearScores(it.id)
                                 onBack()
+                                scoreCardViewModel.clearScores(it.id)
                             }
                         }) {
                         Icon(
