@@ -1,5 +1,6 @@
 package net.yakavenka.trialsscore.data
 
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -24,6 +25,7 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
 
         }
         .map { preferences ->
+            Log.d("UserPreferencesRepository", "Fetching UserPreferencesRepository.userPreferencesFlow")
             val riderClasses: Set<String> =
                 (preferences[PreferencesKeys.RIDER_CLASSES] ?: DEFAULT_RIDER_CLASSES_STRING)
                     .split(",")

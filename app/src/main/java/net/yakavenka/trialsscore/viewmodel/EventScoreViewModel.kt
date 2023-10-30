@@ -13,7 +13,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.RiderScoreSummary
@@ -68,6 +67,7 @@ class EventScoreViewModel(
     val allScores: LiveData<List<RiderStanding>> = combine(
             scoreSummaryRepository.fetchSummary(), preferencesRepository.userPreferencesFlow
         ) { summary, prefs ->
+            Log.d(TAG, "Fetching allScores")
             return@combine RiderStandingTransformation().invoke(summary, prefs)
         }.asLiveData()
 

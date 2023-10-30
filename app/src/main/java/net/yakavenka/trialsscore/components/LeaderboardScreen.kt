@@ -28,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,7 +52,7 @@ fun LeaderboardScreen(
     onRiderSelect: (RiderStanding) -> Unit = {},
     onSettings: () -> Unit = {}
 ) {
-    val scores = viewModel.allScores.observeAsState()
+    val scores by viewModel.allScores.observeAsState(initial = emptyList())
     val context = LocalContext.current
     val importPicker = rememberLauncherForActivityResult(
         contract = viewModel.importContract,
@@ -78,7 +79,7 @@ fun LeaderboardScreen(
         }
     ) { innerPadding ->
         Leaderboard(
-            scores.value?.groupBy { score -> score.riderClass }.orEmpty(),
+            scores.groupBy { score -> score.riderClass },
             modifier = modifier.padding(innerPadding),
             onRiderSelect = onRiderSelect
         )
