@@ -52,7 +52,7 @@ fun LeaderboardScreen(
     onRiderSelect: (RiderStanding) -> Unit = {},
     onSettings: () -> Unit = {}
 ) {
-    val scores by viewModel.allScores.observeAsState(initial = emptyList())
+    val scores by viewModel.allScores.observeAsState(initial = emptyMap())
     val context = LocalContext.current
     val importPicker = rememberLauncherForActivityResult(
         contract = viewModel.importContract,
@@ -79,7 +79,7 @@ fun LeaderboardScreen(
         }
     ) { innerPadding ->
         Leaderboard(
-            scores.groupBy { score -> score.riderClass },
+            scores,
             modifier = modifier.padding(innerPadding),
             onRiderSelect = onRiderSelect
         )
@@ -135,7 +135,7 @@ fun Leaderboard(
         groupedScores.forEach { (riderClass, classScores) ->
             stickyHeader { ClassHeader(riderClass) }
             items(classScores) { score ->
-                RiderScoreSummaryComponent(score, onSelect = { onRiderSelect(score) })
+                RiderScoreSummaryComponent(score, onSelect = onRiderSelect)
             }
             item { Spacer(modifier = Modifier.height(16.dp)) }
         }
@@ -143,12 +143,12 @@ fun Leaderboard(
 }
 
 @Composable
-fun RiderScoreSummaryComponent(score: RiderStanding, onSelect: () -> Unit = {}) {
+fun RiderScoreSummaryComponent(score: RiderStanding, onSelect: (RiderStanding) -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp, horizontal = 8.dp)
-            .clickable(onClick = onSelect)
+            .clickable(onClick = { onSelect(score) })
     ) {
         Text(text = score.standing.toString(), modifier = Modifier.weight(0.25f))
         Text(text = score.riderName, modifier = Modifier.weight(2f))

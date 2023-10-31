@@ -7,9 +7,9 @@ import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
 import org.hamcrest.MatcherAssert.assertThat
-import org.hamcrest.Matchers.*
-import org.junit.Before
-import org.junit.Ignore
+import org.hamcrest.Matchers.containsString
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasSize
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -88,7 +88,7 @@ class CsvExchangeRepositoryTest {
     }
 
     private fun sampleSectionScore(): RiderScoreAggregate {
-        val sections = SectionScore.Set.createForRider(1, 30).sectionScores.toMutableList()
+        val sections = SectionScore.Set.createForRider(1, 30, 1).sectionScores.toMutableList()
         sections[0] = sections[0].copy(points = 0)
         sections[1] = sections[1].copy(points = 0)
         sections[2] = sections[2].copy(points = 5)

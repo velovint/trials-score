@@ -43,7 +43,7 @@ fun LoopScoreEntryScreen(
     onEditRider: (Int) -> Unit = {}
 ) {
     val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
-    val userPreference = scoreCardViewModel.userPreference.observeAsState()
+    val userPreference by scoreCardViewModel.userPreference.observeAsState()
     val selectedLoop = scoreCardViewModel.selectedLoop
     val riderInfo by scoreCardViewModel.riderInfo.observeAsState()
 
@@ -89,19 +89,15 @@ fun LoopScoreEntryScreen(
         ) {
             LoopSelectionBar(
                 currentLoop = selectedLoop,
-                totalLoops = userPreference.value?.numLoops ?: 1,
-                onUpdate = { loop -> onLoopSelect(loop) }
+                totalLoops = userPreference?.numLoops ?: 1,
+                onUpdate = onLoopSelect
             )
             sectionScores?.let { scoreSet ->
                 Column(modifier = Modifier.padding(16.dp)) {
                     LapScoreCard(
                         scoreSet = scoreSet,
                         modifier = Modifier.weight(1f),
-                        onUpdate = { sectionScore ->
-                            scoreCardViewModel.updateSectionScore(
-                                sectionScore
-                            )
-                        })
+                        onUpdate = scoreCardViewModel::updateSectionScore)
                     LapScoreTotal(sectionScores = scoreSet)
                 }
             }
@@ -134,7 +130,8 @@ fun LapScoreCard(
     onUpdate: (SectionScore) -> Unit = {}
 ) {
     LazyColumn(modifier = modifier.fillMaxWidth()) {
-        items(items = scoreSet.sectionScores) { sectionScore ->
+        items(items = scoreSet.sectionScores,
+            key = { it.sectionNumber }) { sectionScore ->
             ScoreEntryItem(
                 sectionScore = sectionScore,
 //                modifier = Modifier.padding(8.dp).fillMaxSize(),

@@ -64,11 +64,13 @@ class EventScoreViewModel(
     val importContract = ActivityResultContracts.GetContent()
     val exportContract = ActivityResultContracts.CreateDocument("text/csv")
 
-    val allScores: LiveData<List<RiderStanding>> = combine(
+    val allScores: LiveData<Map<String, List<RiderStanding>>> = combine(
             scoreSummaryRepository.fetchSummary(), preferencesRepository.userPreferencesFlow
         ) { summary, prefs ->
             Log.d(TAG, "Fetching allScores")
-            return@combine RiderStandingTransformation().invoke(summary, prefs)
+            return@combine RiderStandingTransformation()
+                .invoke(summary, prefs)
+                .groupBy { score -> score.riderClass }
         }.asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
