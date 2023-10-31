@@ -74,23 +74,24 @@ class EventScoreViewModel(
         }.asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
-        try {
-            val descriptor = contentResolver.openFileDescriptor(uri, "w")
-            if (descriptor == null) {
-                Log.e("EventScoreViewModel", "Couldn't open $uri")
-                return
-            }
-
-            viewModelScope.launch(Dispatchers.IO) {
+        // more about coroutines https://developer.android.com/kotlin/coroutines
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("EventScoreViewModel", "Exporting results to $uri")
+            try {
+                val descriptor = contentResolver.openFileDescriptor(uri, "w")
+                if (descriptor == null) {
+                    Log.e("EventScoreViewModel", "Couldn't open $uri")
+                    return@launch
+                }
                 sectionScoreRepository.fetchFullResults().collect { result ->
                     importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
                 }
                 descriptor.close()
+            } catch (e: FileNotFoundException) {
+                Log.e(TAG, "Failed to open file for export", e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to open file for export", e)
             }
-        } catch (e: FileNotFoundException) {
-            Log.e(TAG, "Failed to open file for export", e)
-        } catch (e: IOException) {
-            Log.e(TAG, "Failed to open file for export", e)
         }
     }
 
