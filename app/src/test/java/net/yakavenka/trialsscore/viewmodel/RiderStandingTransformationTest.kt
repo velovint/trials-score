@@ -3,7 +3,6 @@ package net.yakavenka.trialsscore.viewmodel
 import com.github.javafaker.Faker
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.UserPreferences
-import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import org.hamcrest.CoreMatchers.equalTo
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Test
@@ -40,8 +39,8 @@ class RiderStandingTransformationTest {
         val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).filter { it.riderClass == "Novice" }
 
         assertThat("Top novice", actual[0].riderName, equalTo("Novice Winner"))
-        assertThat("Top place", actual[0].standing, equalTo(1))
-        assertThat("Second novice", actual[1].standing, equalTo(2))
+        assertThat("Top place", actual[0].standing, equalTo("1"))
+        assertThat("Second novice", actual[1].standing, equalTo("2"))
     }
 
     @Test

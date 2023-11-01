@@ -28,8 +28,9 @@ private const val TAG = "EventScoreViewModel"
 
 data class RiderStanding(
     val scoreSummary: RiderScoreSummary,
-    val standing: Int,
-    val totalSections: Int
+    private val _standing: Int,
+    val numSections: Int,
+    val numLoops: Int
 ) {
     val riderClass: String
         get() = scoreSummary.riderClass
@@ -46,13 +47,21 @@ data class RiderStanding(
     val numCleans: Int
         get() = scoreSummary.numCleans
 
-    fun isFinished(): Boolean {
-        return scoreSummary.sectionsRidden == totalSections
-    }
+    val standing: String
+        get() {
+            val symbolMap = mapOf(
+                1 to "⠂",
+                2 to "⠅",
+                3 to "⠇",
+                4 to "⠭"
+            )
+            if (loopsComplete == numLoops) return _standing.toString()
+            if (symbolMap.containsKey(loopsComplete)) return symbolMap[loopsComplete]!!
+            return "*"
+        }
 
-    fun getProgress(): Int {
-        return scoreSummary.sectionsRidden * 100 / totalSections
-    }
+    val loopsComplete: Int
+        get() = scoreSummary.sectionsRidden.floorDiv(numSections)
 }
 
 class EventScoreViewModel(

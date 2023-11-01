@@ -150,7 +150,7 @@ fun RiderScoreSummaryComponent(score: RiderStanding, onSelect: (RiderStanding) -
             .padding(vertical = 4.dp, horizontal = 8.dp)
             .clickable(onClick = { onSelect(score) })
     ) {
-        Text(text = score.standing.toString(), modifier = Modifier.weight(0.25f))
+        Text(text =  score.standing, modifier = Modifier.weight(0.25f))
         Text(text = score.riderName, modifier = Modifier.weight(2f))
         Text(
             text = stringResource(id = R.string.lap_score, score.points, score.numCleans),
@@ -203,15 +203,15 @@ fun LeaderboardScreenPreview() {
 }
 
 val scores: List<RiderStanding> = listOf(
-    RiderStanding(RiderScoreSummary(1, "Rider 4", "A", 1, 1, 1), 1, 1),
-    RiderStanding(RiderScoreSummary(2, "Rider 1", "B", 1, 1, 1), 1, 1),
-    RiderStanding(RiderScoreSummary(3, "Rider 2", "B", 1, 1, 1), 2, 1),
-    RiderStanding(RiderScoreSummary(4, "Rider 3", "B", 1, 1, 1), 3, 1),
-    RiderStanding(RiderScoreSummary(5, "Rider 5", "B", 1, 1, 1), 5, 1),
-    RiderStanding(RiderScoreSummary(6, "Rider 6", "B", 1, 1, 1), 6, 1),
-    RiderStanding(RiderScoreSummary(7, "Rider 7", "B", 1, 1, 1), 7, 1),
-    RiderStanding(RiderScoreSummary(8, "Rider 8", "B", 1, 1, 1), 8, 1),
-    RiderStanding(RiderScoreSummary(9, "Rider 9", "B", 1, 1, 1), 9, 1),
-    RiderStanding(RiderScoreSummary(10, "Rider 8", "A", 1, 1, 1), 2, 1)
+    RiderStanding(RiderScoreSummary(1, "Rider 4", "A", 1, 1, 1), 1, 1, 2),
+    RiderStanding(RiderScoreSummary(2, "Rider 1", "B", 0, 0, 0), 1, 1, 2),
+    RiderStanding(RiderScoreSummary(3, "Rider 2", "B", 1, 1, 1), 2, 1, 2),
+    RiderStanding(RiderScoreSummary(4, "Rider 3", "B", 1, 1, 1), 3, 1, 2),
+    RiderStanding(RiderScoreSummary(5, "Rider 5", "B", 1, 1, 1), 5, 1, 2),
+    RiderStanding(RiderScoreSummary(6, "Rider 6", "B", 1, 1, 1), 6, 1, 2),
+    RiderStanding(RiderScoreSummary(7, "Rider 7", "B", 1, 1, 1), 7, 1, 2),
+    RiderStanding(RiderScoreSummary(8, "Rider 8", "B", 1, 1, 1), 8, 1, 2),
+    RiderStanding(RiderScoreSummary(9, "Rider 9", "B", 1, 1, 1), 9, 1, 2),
+    RiderStanding(RiderScoreSummary(10, "Rider 8", "A", 1, 1, 1), 2, 1, 2)
 )
 val groupedScores = scores.groupBy { it.riderClass }
