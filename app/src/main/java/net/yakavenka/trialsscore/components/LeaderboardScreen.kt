@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -26,10 +27,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -95,6 +100,8 @@ fun LeaderboardTopBar(
     onExport: () -> Unit = {},
     onSettings: () -> Unit = {}
 ) {
+    var  displayConfirmation by remember { mutableStateOf(false) }
+
     TopAppBar(title = { Text("Trials Score") },
         actions = {
             IconButton(onClick = onExport) {
@@ -109,7 +116,7 @@ fun LeaderboardTopBar(
                     contentDescription = "Localized description"
                 )
             }
-            IconButton(onClick = onPurge) {
+            IconButton(onClick = {displayConfirmation = true}) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Localized description"
@@ -122,6 +129,35 @@ fun LeaderboardTopBar(
                 )
             }
         })
+
+    if (displayConfirmation) {
+        AlertDialog(
+            title = {
+                Text(text = "Delete ALL event data?")
+            },
+            text = {
+                Text(text = "This will delete all rider scores and rider information. This action can't be undone. Make sure you have exported results before proceeding.")
+            },
+            onDismissRequest = { displayConfirmation = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onPurge()
+                        displayConfirmation = false
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { displayConfirmation = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
