@@ -13,9 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
@@ -40,6 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -95,7 +94,7 @@ fun LeaderboardScreen(
 
 }
 
-@Preview
+@Preview(widthDp = 400, heightDp = 200)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardTopBar(
@@ -109,18 +108,6 @@ fun LeaderboardTopBar(
 
     TopAppBar(title = { Text("Trials Score") },
         actions = {
-            IconButton(onClick = onExport) {
-                Icon(
-                    imageVector = Icons.Default.Send,
-                    contentDescription = "Localized description"
-                )
-            }
-            IconButton(onClick = onImport) {
-                Icon(
-                    imageVector = Icons.Default.AddCircle,
-                    contentDescription = "Localized description"
-                )
-            }
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
@@ -132,6 +119,33 @@ fun LeaderboardTopBar(
                 onDismissRequest = { menuExpanded = false }
             ) {
                 DropdownMenuItem(
+                    text = { Text("Import riders") },
+                    onClick = onImport,
+                    leadingIcon = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_import_riders),
+                            contentDescription = "Import riders"
+                        )
+                    })
+                DropdownMenuItem(
+                    text = { Text("Export results") },
+                    onClick = onExport,
+                    leadingIcon = {
+                        Icon(
+                            painterResource(id = R.drawable.ic_export_results),
+                            contentDescription = "Export results"
+                        )
+                    })
+                DropdownMenuItem(
+                    text = { Text("Clear Data") },
+                    onClick = { displayConfirmation = true },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Localized description"
+                        )
+                    })
+                DropdownMenuItem(
                     text = { Text("Settings") },
                     onClick = onSettings,
                     leadingIcon = {
@@ -140,18 +154,7 @@ fun LeaderboardTopBar(
                             contentDescription = "Localized description"
                         )
                     })
-                DropdownMenuItem(
-                    text = { Text("Clear Data") },
-                    onClick = {displayConfirmation = true},
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = "Localized description"
-                        )
-                    })
             }
-
-//
         })
 
     if (displayConfirmation) {
