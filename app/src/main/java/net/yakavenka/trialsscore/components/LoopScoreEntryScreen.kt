@@ -11,6 +11,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,10 +21,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -31,16 +36,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoopScoreEntryScreen(
     scoreCardViewModel: ScoreCardViewModel,
     onBack: () -> Unit = {},
     onLoopSelect: (Int) -> Unit = {},
-    onEditRider: (Int) -> Unit = {}
+    onEditRider: (RiderScore) -> Unit = {}
 ) {
     val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
     val userPreference by scoreCardViewModel.userPreference.observeAsState()
@@ -49,37 +54,11 @@ fun LoopScoreEntryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(riderInfo?.name ?: "") },
-                navigationIcon = {
-                    IconButton(onClick = onBack ) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowBack,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { riderInfo?.let{ onEditRider(it.id) }}) {
-                        Icon(
-                            imageVector = Icons.Filled.Edit,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                    IconButton(
-                        onClick = {
-                            riderInfo?.let {
-                                onBack()
-                                scoreCardViewModel.clearScores(it.id)
-                            }
-                        }) {
-                        Icon(
-                            imageVector = Icons.Filled.Delete,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                }
-            )
+            ScoreEntryNavigationBar(
+                riderInfo,
+                onBack,
+                onEditRider,
+                onClearScores = { scoreCardViewModel.clearScores(it.id) })
         }
     ) { padding ->
         Column(
@@ -102,6 +81,73 @@ fun LoopScoreEntryScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun ScoreEntryNavigationBar(
+    riderInfo: RiderScore?,
+    onBack: () -> Unit,
+    onEditRider: (RiderScore) -> Unit,
+    onClearScores: (RiderScore) -> Unit = {}
+) {
+    var  displayConfirmation by remember {mutableStateOf(false)}
+
+    TopAppBar(
+        title = { Text(riderInfo?.name ?: "") },
+        navigationIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    imageVector = Icons.Filled.ArrowBack,
+                    contentDescription = "Localized description"
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = { riderInfo?.let { onEditRider(it) }}) {
+                Icon(
+                    imageVector = Icons.Filled.Edit,
+                    contentDescription = "Localized description"
+                )
+            }
+            IconButton(
+                onClick = {displayConfirmation = true}
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Localized description"
+                )
+            }
+
+        }
+    )
+    if (displayConfirmation) {
+        AlertDialog(
+            title = {
+                Text(text = "Delete rider scores?")
+            },
+            onDismissRequest = { displayConfirmation = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        riderInfo?.let {
+                            onBack()
+                            onClearScores(riderInfo)
+                        }
+                    }
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { displayConfirmation = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

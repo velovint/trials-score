@@ -50,7 +50,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                         navOptions = NavOptions.Builder().setPopUpTo("leaderboard", false).build()
                     )
                 },
-                onEditRider = { riderId -> navController.navigate("edit_rider/${riderId}")},
+                onEditRider = { riderInfo -> navController.navigate("edit_rider/${riderInfo.id}")},
                 onBack = navController::navigateUp
             )
 
