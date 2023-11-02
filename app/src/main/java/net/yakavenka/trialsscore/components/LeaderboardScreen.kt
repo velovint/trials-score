@@ -14,11 +14,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Send
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -92,6 +95,7 @@ fun LeaderboardScreen(
 
 }
 
+@Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardTopBar(
@@ -100,34 +104,54 @@ fun LeaderboardTopBar(
     onExport: () -> Unit = {},
     onSettings: () -> Unit = {}
 ) {
-    var  displayConfirmation by remember { mutableStateOf(false) }
+    var displayConfirmation by remember { mutableStateOf(false) }
+    var menuExpanded by remember { mutableStateOf(false) }
 
     TopAppBar(title = { Text("Trials Score") },
         actions = {
             IconButton(onClick = onExport) {
                 Icon(
-                    imageVector = Icons.Filled.Send,
+                    imageVector = Icons.Default.Send,
                     contentDescription = "Localized description"
                 )
             }
             IconButton(onClick = onImport) {
                 Icon(
-                    imageVector = Icons.Filled.AddCircle,
+                    imageVector = Icons.Default.AddCircle,
                     contentDescription = "Localized description"
                 )
             }
-            IconButton(onClick = {displayConfirmation = true}) {
+            IconButton(onClick = { menuExpanded = true }) {
                 Icon(
-                    imageVector = Icons.Filled.Delete,
-                    contentDescription = "Localized description"
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More actions"
                 )
             }
-            IconButton(onClick = onSettings) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Localized description"
-                )
+            DropdownMenu(
+                expanded = menuExpanded,
+                onDismissRequest = { menuExpanded = false }
+            ) {
+                DropdownMenuItem(
+                    text = { Text("Settings") },
+                    onClick = onSettings,
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = "Localized description"
+                        )
+                    })
+                DropdownMenuItem(
+                    text = { Text("Clear Data") },
+                    onClick = {displayConfirmation = true},
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Localized description"
+                        )
+                    })
             }
+
+//
         })
 
     if (displayConfirmation) {
