@@ -3,6 +3,7 @@ package net.yakavenka.trialsscore.components
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -194,7 +196,12 @@ fun Leaderboard(
     modifier: Modifier = Modifier,
     onRiderSelect: (RiderStanding) -> Unit = {}
 ) {
-    LazyColumn(modifier = modifier) {
+    val listState = rememberLazyListState()
+    LazyColumn(
+        modifier = modifier,
+        state = listState,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
         groupedScores.forEach { (riderClass, classScores) ->
             stickyHeader { ClassHeader(riderClass) }
             items(classScores) { score ->
@@ -210,7 +217,7 @@ fun RiderScoreSummaryComponent(score: RiderStanding, onSelect: (RiderStanding) -
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp)
+            .padding(horizontal = 8.dp)
             .clickable(onClick = { onSelect(score) })
     ) {
         Text(text =  score.standing, modifier = Modifier.weight(0.25f))
