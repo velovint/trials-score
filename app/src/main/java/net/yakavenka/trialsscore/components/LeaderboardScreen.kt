@@ -52,14 +52,14 @@ import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
 import net.yakavenka.trialsscore.viewmodel.RiderStanding
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
     viewModel: EventScoreViewModel = viewModel(),
     onAdd: () -> Unit = {},
     onRiderSelect: (RiderStanding) -> Unit = {},
-    onSettings: () -> Unit = {}
+    onSettings: () -> Unit = {},
+    onShowFullList: () -> Unit = {}
 ) {
     val scores by viewModel.allScores.observeAsState(initial = emptyMap())
     val context = LocalContext.current
@@ -76,7 +76,8 @@ fun LeaderboardScreen(
                 onPurge = viewModel::clearAll,
                 onImport = { importPicker.launch("text/*") },
                 onExport = { exportPicker.launch("report.csv" ) },
-                onSettings = onSettings
+                onSettings = onSettings,
+                onShowFullList = onShowFullList
             )
         },
         floatingActionButton = {
@@ -103,7 +104,8 @@ fun LeaderboardTopBar(
     onPurge: () -> Unit = {},
     onImport: () -> Unit = {},
     onExport: () -> Unit = {},
-    onSettings: () -> Unit = {}
+    onSettings: () -> Unit = {},
+    onShowFullList: () -> Unit = {}
 ) {
     var displayConfirmation by remember { mutableStateOf(false) }
     var menuExpanded by remember { mutableStateOf(false) }
@@ -139,12 +141,21 @@ fun LeaderboardTopBar(
                         )
                     })
                 DropdownMenuItem(
-                    text = { Text("Clear Data") },
+                    text = { Text("Screenshot view") },
+                    onClick = onShowFullList,
+                    leadingIcon = {
+                        Icon(
+                            painterResource(id = R.drawable.baseline_screenshot_24),
+                            contentDescription = "Localized description"
+                        )
+                    })
+                DropdownMenuItem(
+                    text = { Text("Clear data") },
                     onClick = { displayConfirmation = true },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
-                            contentDescription = "Localized description"
+                            contentDescription = "Screenshot friendly view"
                         )
                     })
                 DropdownMenuItem(

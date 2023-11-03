@@ -33,7 +33,17 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                 },
                 onSettings = {
                     navController.navigate("settings")
-                })
+                },
+                onShowFullList = {
+                    navController.navigate("screenshot_view")
+                }
+            )
+        }
+        composable("screenshot_view") {
+            ScreenshotLeaderboardScreen(
+                viewModel = viewModel(factory = EventScoreViewModel.Factory),
+                onBack = navController::navigateUp
+            )
         }
         composable(
             "points_entry/{riderId}/{loop}",
@@ -75,3 +85,4 @@ fun TrialsScoreNavHost(navController: NavHostController) {
     }
 
 }
+
