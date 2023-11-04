@@ -44,7 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.ui.theme.AppTheme
@@ -55,7 +55,7 @@ import net.yakavenka.trialsscore.viewmodel.RiderStanding
 @Composable
 fun LeaderboardScreen(
     modifier: Modifier = Modifier,
-    viewModel: EventScoreViewModel = viewModel(),
+    viewModel: EventScoreViewModel = hiltViewModel(),
     onAdd: () -> Unit = {},
     onRiderSelect: (RiderStanding) -> Unit = {},
     onSettings: () -> Unit = {},

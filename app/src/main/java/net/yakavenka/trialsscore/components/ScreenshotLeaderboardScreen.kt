@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Scaffold
@@ -23,19 +21,17 @@ import net.yakavenka.trialsscore.viewmodel.RiderStanding
 @Composable
 fun ScreenshotLeaderboardScreen(
     modifier: Modifier = Modifier,
-    viewModel: EventScoreViewModel = viewModel(),
-    onBack: () -> Unit = {}
+    viewModel: EventScoreViewModel = viewModel()
 ) {
     val scores: Map<String, List<RiderStanding>> by viewModel.allScores.observeAsState(initial = emptyMap())
 
-    ScreenshotLeaderboardScreen(scores, modifier, onBack)
+    ScreenshotLeaderboardScreen(scores, modifier)
 }
 
 @Composable
 fun ScreenshotLeaderboardScreen(
     scores: Map<String, List<RiderStanding>>,
-    modifier: Modifier = Modifier,
-    onBack: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
     val scroll = rememberScrollState()
     Scaffold { innerPadding ->

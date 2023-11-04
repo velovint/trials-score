@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import net.yakavenka.trialsscore.data.UserPreferences
 import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.EventSettingsViewModel
@@ -36,7 +36,7 @@ import net.yakavenka.trialsscore.viewmodel.EventSettingsViewModel
 @Composable
 fun EventSettingsScreen(
     modifier: Modifier = Modifier,
-    viewModel: EventSettingsViewModel = viewModel(factory = EventSettingsViewModel.Factory),
+    viewModel: EventSettingsViewModel = hiltViewModel(),
     navigateBack: () -> Unit = {}
 ) {
     val settings: UserPreferences? by viewModel.userPreferences.observeAsState()

@@ -6,15 +6,12 @@ import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
 import net.yakavenka.trialsscore.data.SectionScoreRepository
@@ -23,6 +20,7 @@ import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
+import javax.inject.Inject
 
 private const val TAG = "EventScoreViewModel"
 
@@ -64,7 +62,8 @@ data class RiderStanding(
         get() = scoreSummary.sectionsRidden.floorDiv(numSections)
 }
 
-class EventScoreViewModel(
+@HiltViewModel
+class EventScoreViewModel @Inject constructor(
     scoreSummaryRepository: ScoreSummaryRepository,
     private val sectionScoreRepository: SectionScoreRepository,
     private val importExportService: CsvExchangeRepository,
@@ -121,22 +120,6 @@ class EventScoreViewModel(
     fun clearAll() {
         viewModelScope.launch(Dispatchers.IO) {
             sectionScoreRepository.purge()
-        }
-    }
-
-    // Define ViewModel factory in a companion object
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val preferencesDataStore = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
-
-                EventScoreViewModel(
-                    ScoreSummaryRepository(riderScoreDao),
-                    SectionScoreRepository(riderScoreDao),
-                    CsvExchangeRepository(),
-                    UserPreferencesRepository(preferencesDataStore))
-            }
         }
     }
 }

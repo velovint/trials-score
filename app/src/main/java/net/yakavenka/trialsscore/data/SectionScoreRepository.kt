@@ -2,9 +2,12 @@ package net.yakavenka.trialsscore.data
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
 
-class SectionScoreRepository(
+@Singleton
+class SectionScoreRepository @Inject constructor(
     private val dao: RiderScoreDao
 ) {
     fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int, numLoops: Int): Flow<SectionScore.Set> {

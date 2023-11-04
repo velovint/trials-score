@@ -43,15 +43,15 @@ import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 @Composable
 fun LoopScoreEntryScreen(
-    scoreCardViewModel: ScoreCardViewModel,
+    viewModel: ScoreCardViewModel,
     onBack: () -> Unit = {},
     onLoopSelect: (Int) -> Unit = {},
     onEditRider: (RiderScore) -> Unit = {}
 ) {
-    val sectionScores by scoreCardViewModel.sectionScores.observeAsState()
-    val userPreference by scoreCardViewModel.userPreference.observeAsState()
-    val selectedLoop = scoreCardViewModel.selectedLoop
-    val riderInfo by scoreCardViewModel.riderInfo.observeAsState()
+    val sectionScores by viewModel.sectionScores.observeAsState()
+    val userPreference by viewModel.userPreference.observeAsState()
+    val selectedLoop = viewModel.selectedLoop
+    val riderInfo by viewModel.riderInfo.observeAsState()
 
     Scaffold(
         topBar = {
@@ -59,7 +59,7 @@ fun LoopScoreEntryScreen(
                 riderInfo,
                 onBack,
                 onEditRider,
-                onClearScores = { scoreCardViewModel.clearScores(it.id) })
+                onClearScores = { viewModel.clearScores(it.id) })
         }
     ) { padding ->
         Column(
@@ -77,7 +77,7 @@ fun LoopScoreEntryScreen(
                     LapScoreCard(
                         scoreSet = scoreSet,
                         modifier = Modifier.weight(1f),
-                        onUpdate = scoreCardViewModel::updateSectionScore)
+                        onUpdate = viewModel::updateSectionScore)
                     LapScoreTotal(sectionScores = scoreSet)
                 }
             }

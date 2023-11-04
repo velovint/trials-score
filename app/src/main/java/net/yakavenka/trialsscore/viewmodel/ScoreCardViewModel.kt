@@ -2,20 +2,19 @@ package net.yakavenka.trialsscore.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.*
-import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
+import javax.inject.Inject
 
 private const val TAG = "ScoreCardViewModel"
 
-class ScoreCardViewModel(
+@HiltViewModel
+class ScoreCardViewModel @Inject constructor(
     private val sectionScoreRepository: SectionScoreRepository,
     userPreferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
@@ -54,23 +53,4 @@ class ScoreCardViewModel(
             sectionScoreRepository.deleteRiderScores(riderId)
         }
     }
-
-    // Define ViewModel factory in a companion object
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                val riderScoreDao =
-                    (this[APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val preferencesDataStore =
-                    (this[APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
-                ScoreCardViewModel(
-                    SectionScoreRepository(riderScoreDao),
-                    UserPreferencesRepository(preferencesDataStore),
-                    savedStateHandle
-                )
-            }
-        }
-    }
-
 }

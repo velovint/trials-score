@@ -5,21 +5,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.TrialsScoreApplication
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
+import javax.inject.Inject
 
-class EditRiderViewModel(
+@HiltViewModel
+class EditRiderViewModel @Inject constructor(
     private val riderScoreDao: RiderScoreDao,
     userPreferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
@@ -66,18 +64,6 @@ class EditRiderViewModel(
 
     fun updateUiState(riderScore: RiderScore) {
         riderInfoState = riderInfoState.copy(entry = riderScore)
-    }
-
-    // Define ViewModel factory in a companion object
-    companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val riderScoreDao = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).database.riderScoreDao()
-                val prefsDatastore = (this[ViewModelProvider.AndroidViewModelFactory.APPLICATION_KEY] as TrialsScoreApplication).preferencesDataStore
-                val savedStateHandle = createSavedStateHandle()
-                EditRiderViewModel(riderScoreDao, UserPreferencesRepository(prefsDatastore), savedStateHandle)
-            }
-        }
     }
 }
 

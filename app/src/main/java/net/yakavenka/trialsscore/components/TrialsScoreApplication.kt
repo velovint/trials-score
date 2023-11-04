@@ -1,7 +1,7 @@
 package net.yakavenka.trialsscore.components
 
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavOptions
 import androidx.navigation.NavType
@@ -9,9 +9,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
-import net.yakavenka.trialsscore.viewmodel.EventScoreViewModel
-import net.yakavenka.trialsscore.viewmodel.ScoreCardViewModel
 
 @Composable
 fun TrialsScoreApplicationComponent() {
@@ -24,7 +21,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
     NavHost(navController = navController, startDestination = "leaderboard") {
         composable("leaderboard") {
             LeaderboardScreen(
-                viewModel = viewModel(factory = EventScoreViewModel.Factory),
+                viewModel = hiltViewModel(),
                 onRiderSelect = { rider ->
                     navController.navigate("points_entry/${rider.riderId}/1")
                 },
@@ -41,8 +38,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
         }
         composable("screenshot_view") {
             ScreenshotLeaderboardScreen(
-                viewModel = viewModel(factory = EventScoreViewModel.Factory),
-                onBack = navController::navigateUp
+                viewModel = hiltViewModel()
             )
         }
         composable(
@@ -52,7 +48,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                 navArgument("loop") { type = NavType.IntType })
         ) { backStackEntry ->
             LoopScoreEntryScreen(
-                viewModel(factory = ScoreCardViewModel.Factory),
+                viewModel = hiltViewModel(),
                 onLoopSelect = { loopNum ->
                     val riderId = backStackEntry.arguments?.getInt("riderId")
                     navController.navigate(
@@ -67,7 +63,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
         }
         composable("add_rider") {
             EditRiderScreen(
-                viewModel = viewModel(factory = EditRiderViewModel.Factory),
+                viewModel = hiltViewModel(),
                 navigateBack = navController::navigateUp
             )
         }
@@ -75,7 +71,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
             arguments = listOf(navArgument("riderId") { type = NavType.IntType })
         ) { _ ->
             EditRiderScreen(
-                viewModel = viewModel(factory = EditRiderViewModel.Factory),
+                viewModel = hiltViewModel(),
                 navigateBack = navController::navigateUp
             )
         }
