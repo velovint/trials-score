@@ -4,26 +4,14 @@ buildscript {
         nav_version = '2.6.0'
         room_version = "2.5.2"
         lifecycle_version = '2.4.0'
-        kotlin_version = '1.6.21'
-        hilt_version = '2.48'
-    }
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.1'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$nav_version"
-        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
 plugins {
-    id "com.google.devtools.ksp" version "1.8.20-1.0.11" apply false
+    alias libs.plugins.android.app apply false
+    alias libs.plugins.kotlin.android apply false
+    alias libs.plugins.ksp apply false
+    alias libs.plugins.hilt apply false
 }
 
 task clean(type: Delete) {
