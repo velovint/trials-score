@@ -1,4 +1,5 @@
 [versions]
+# jetpack releases https://developer.android.com/jetpack/androidx/versions
 androidx-junit = "1.1.5"
 compose-compiler = "1.5.3"
 compose-runtime = "1.5.4"
