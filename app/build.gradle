@@ -35,7 +35,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.4.6"
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
@@ -75,16 +75,16 @@ dependencies {
     implementation libs.androidx.activity.compose
     implementation libs.androidx.lifecycle.viewmodel.compose
     implementation libs.androidx.core.ktx
-    implementation libs.androidx.material3
+    implementation libs.compose.material3
     implementation libs.androidx.lifecycle.runtime.ktx
     implementation libs.androidx.navigation.compose
 
     // Room
-    implementation libs.androidx.room.runtime
+    implementation libs.room.runtime
     implementation libs.androidx.runtime.livedata
     implementation libs.androidx.lifecycle.livedata.ktx
     // optional - Kotlin Extensions and Coroutines support for Room
-    implementation libs.androidx.room.ktx
+    implementation libs.room.ktx
     ksp libs.room.compiler
 
     // Preferences
