@@ -84,7 +84,7 @@ fun LeaderboardScreen(
             ExtendedFloatingActionButton(
                 onClick = onAdd
             ) {
-                Icon(Icons.Filled.Add, contentDescription = "Localized description")
+                Icon(Icons.Filled.Add, contentDescription = "Add rider")
             }
         }
     ) { innerPadding ->

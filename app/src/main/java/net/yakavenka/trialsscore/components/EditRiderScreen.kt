@@ -18,14 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.R
-import net.yakavenka.trialsscore.data.RiderScore
-import net.yakavenka.trialsscore.data.RiderScoreAggregate
-import net.yakavenka.trialsscore.data.RiderScoreDao
-import net.yakavenka.trialsscore.data.RiderScoreSummary
-import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.viewmodel.EditRiderViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -92,8 +86,8 @@ fun EditRiderScreen(
             onClick = {
                 coroutineScope.launch {
                     viewModel.saveRider()
-                    navigateBack()
                 }
+                navigateBack()
             },
             modifier = Modifier
                 .padding(vertical = 16.dp, horizontal = 8.dp)
@@ -108,58 +102,4 @@ fun EditRiderScreen(
 
 @Preview(widthDp = 400, heightDp = 600)
 @Composable
-fun EditRiderScreenPreview() {
-//    val riderScoreDao = RiderScoreDaoStub()
-//    val viewModel = EditRiderViewModel(riderScoreDao, UserPreferencesRepository(SharedPreferences { }))
-//
-//    AppTheme {
-//        EditRiderScreen(viewModel)
-//    }
-}
-
-class RiderScoreDaoStub : RiderScoreDao {
-
-    override fun getAll(): Flow<List<RiderScoreAggregate>> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getRider(riderId: Int): Flow<RiderScore> {
-        TODO("Not yet implemented")
-    }
-
-    override fun sectionScores(riderId: Int, loopNumber: Int): Flow<List<SectionScore>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun updateSectionScore(sectionScore: SectionScore) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun deleteAllRiders() {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun deleteAllScores() {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun deleteRiderScores(riderId: Int) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun insertAll(sectionScores: List<SectionScore>) {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun addRider(riderScore: RiderScore) {
-        TODO("Not yet implemented")
-    }
-
-    override fun fetchSummary(): Flow<List<RiderScoreSummary>> {
-        TODO("Not yet implemented")
-    }
-
-    override suspend fun updateRider(riderScore: RiderScore) {
-        TODO("Not yet implemented")
-    }
-}
+fun EditRiderScreenPreview() {}

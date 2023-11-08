@@ -64,7 +64,7 @@ fun TrialsScoreNavHost(navController: NavHostController) {
         composable("add_rider") {
             EditRiderScreen(
                 viewModel = hiltViewModel(),
-                navigateBack = navController::navigateUp
+                navigateBack = navController::popBackStack
             )
         }
         composable("edit_rider/{riderId}",

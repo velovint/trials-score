@@ -101,7 +101,7 @@ private fun ScoreEntryNavigationBar(
             IconButton(onClick = onBack) {
                 Icon(
                     imageVector = Icons.Filled.ArrowBack,
-                    contentDescription = "Localized description"
+                    contentDescription = "Back"
                 )
             }
         },
@@ -209,9 +209,18 @@ fun ScoreEntryItem(
             selected = sectionScore.points == 1,
             onClick = { onPunch(1) },
             modifier = Modifier.semantics { contentDescription = "1" })
-        RadioButton(selected = sectionScore.points == 2, onClick = { onPunch(2) })
-        RadioButton(selected = sectionScore.points == 3, onClick = { onPunch(3) })
-        RadioButton(selected = sectionScore.points == 5, onClick = { onPunch(5) })
+        RadioButton(
+            selected = sectionScore.points == 2,
+            onClick = { onPunch(2) },
+            modifier = Modifier.semantics { contentDescription = "2" })
+        RadioButton(
+            selected = sectionScore.points == 3,
+            onClick = { onPunch(3) },
+            modifier = Modifier.semantics { contentDescription = "3" })
+        RadioButton(
+            selected = sectionScore.points == 5,
+            onClick = { onPunch(5) },
+            modifier = Modifier.semantics { contentDescription = "5" })
     }
 }
 

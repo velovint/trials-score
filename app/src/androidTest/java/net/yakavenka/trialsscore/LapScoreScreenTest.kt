@@ -37,6 +37,7 @@ class LapScoreScreenTest {
         )
             .performClick()
             .assertIsSelected()
+        Thread.sleep(5000)
     }
 
     @Test
