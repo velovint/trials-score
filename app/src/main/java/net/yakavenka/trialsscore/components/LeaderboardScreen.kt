@@ -122,7 +122,7 @@ fun LeaderboardTopBar(
             ) {
                 DropdownMenuItem(
                     text = { Text("Import riders") },
-                    onClick = onImport,
+                    onClick =  { onImport(); menuExpanded = false },
                     leadingIcon = {
                         Icon(
                             painterResource(id = R.drawable.ic_import_riders),
@@ -131,7 +131,7 @@ fun LeaderboardTopBar(
                     })
                 DropdownMenuItem(
                     text = { Text("Export results") },
-                    onClick = onExport,
+                    onClick = { onExport(); menuExpanded = false },
                     leadingIcon = {
                         Icon(
                             painterResource(id = R.drawable.ic_export_results),
@@ -149,7 +149,7 @@ fun LeaderboardTopBar(
                     })
                 DropdownMenuItem(
                     text = { Text("Clear data") },
-                    onClick = { displayConfirmation = true },
+                    onClick = { menuExpanded = false; displayConfirmation = true },
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Delete,

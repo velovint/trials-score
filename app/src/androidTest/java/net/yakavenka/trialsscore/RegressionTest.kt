@@ -56,7 +56,6 @@ class RegressionTest {
         val editRiderLabel = compose.activity.getString(R.string.edit_rider_info)
         compose.onNodeWithContentDescription(editRiderLabel).performClick()
         fillEditRiderForm(riderName, riderClass)
-
     }
 
     private fun addRider(riderName: String, riderClass: String) {
