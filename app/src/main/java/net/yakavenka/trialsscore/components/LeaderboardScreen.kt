@@ -3,7 +3,7 @@ package net.yakavenka.trialsscore.components
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -81,10 +81,8 @@ fun LeaderboardScreen(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = onAdd
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "Add rider")
+            ExtendedFloatingActionButton(onClick = onAdd) {
+                Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.add_new_rider))
             }
         }
     ) { innerPadding ->
@@ -208,36 +206,44 @@ fun Leaderboard(
     onRiderSelect: (RiderStanding) -> Unit = {}
 ) {
     val listState = rememberLazyListState()
-    LazyColumn(
-        modifier = modifier,
-        state = listState,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        groupedScores.forEach { (riderClass, classScores) ->
-            stickyHeader { ClassHeader(riderClass) }
-            items(classScores) { score ->
-                RiderScoreSummaryComponent(score, onSelect = onRiderSelect)
+    Surface {
+        LazyColumn(
+            modifier = modifier,
+            state = listState
+        ) {
+            groupedScores.forEach { (riderClass, classScores) ->
+                stickyHeader { ClassHeader(riderClass) }
+                items(classScores) { score ->
+                    RiderScoreSummaryComponent(score, onSelect = onRiderSelect)
+                }
+                item { Spacer(modifier = Modifier.height(16.dp)) }
             }
-            item { Spacer(modifier = Modifier.height(16.dp)) }
         }
     }
 }
 
 @Composable
-fun RiderScoreSummaryComponent(score: RiderStanding, onSelect: (RiderStanding) -> Unit = {}) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 8.dp)
-            .clickable(onClick = { onSelect(score) })
-    ) {
-        Text(text =  score.standing, modifier = Modifier.weight(0.25f))
-        Text(text = score.riderName, modifier = Modifier.weight(2f))
-        Text(
-            text = stringResource(id = R.string.lap_score, score.points, score.numCleans),
-            modifier = Modifier.weight(1f)
-        )
+fun RiderScoreSummaryComponent(
+    score: RiderStanding,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    onSelect: (RiderStanding) -> Unit = {}
+) {
+    Box(modifier.clickable { onSelect(score) }) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(if (compact) 4.dp else 8.dp)
+        ) {
+            Text(text = score.standing, modifier = Modifier.weight(0.25f))
+            Text(text = score.riderName, modifier = Modifier.weight(2f))
+            Text(
+                text = stringResource(id = R.string.lap_score, score.points, score.numCleans),
+                modifier = Modifier.weight(1f)
+            )
+        }
     }
+
 }
 
 @Composable

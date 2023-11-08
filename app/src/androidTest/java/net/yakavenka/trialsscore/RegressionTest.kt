@@ -60,7 +60,8 @@ class RegressionTest {
     }
 
     private fun addRider(riderName: String, riderClass: String) {
-        compose.onNodeWithContentDescription("Add rider").performClick()
+        val addRiderLabel = compose.activity.getString(R.string.add_new_rider)
+        compose.onNodeWithContentDescription(addRiderLabel).performClick()
 //        compose.onRoot().printToLog("currentLabelExists")
         fillEditRiderForm(riderName, riderClass)
 

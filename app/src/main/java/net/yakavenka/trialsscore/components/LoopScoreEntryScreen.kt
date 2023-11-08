@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -200,7 +201,7 @@ fun ScoreEntryItem(
     })) {
         Text(
             text = sectionScore.sectionNumber.toString(),
-            modifier = Modifier.align(Alignment.CenterVertically)
+            modifier = Modifier.align(Alignment.CenterVertically).width(32.dp)
         )
         RadioButton(
             selected = sectionScore.points == 0,
@@ -231,7 +232,7 @@ fun ScoreCardPreview() {
     MaterialTheme {
         Column {
             LoopSelectionBar(currentLoop = 1, totalLoops = 3)
-            LapScoreCard(scoreSet = SectionScore.Set.createForRider(1, 3, 3))
+            LapScoreCard(scoreSet = SectionScore.Set.createForRider(1, 10, 1))
         }
     }
 }

@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore.components
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -36,13 +35,12 @@ fun ScreenshotLeaderboardScreen(
     val scroll = rememberScrollState()
     Scaffold { innerPadding ->
         Column(
-            modifier = modifier.padding(innerPadding).verticalScroll(scroll),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            modifier = modifier.padding(innerPadding).verticalScroll(scroll)
         ) {
             scores.forEach { (riderClass, classScores) ->
                 ClassHeader(riderClass)
                 classScores.forEach { score ->
-                    RiderScoreSummaryComponent(score)
+                    RiderScoreSummaryComponent(score, compact = true)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
