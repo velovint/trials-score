@@ -65,10 +65,10 @@ fun LeaderboardScreen(
     val context = LocalContext.current
     val importPicker = rememberLauncherForActivityResult(
         contract = viewModel.importContract,
-        onResult = { uri -> viewModel.importRiders(uri!!, context.contentResolver) })
+        onResult = { uri -> uri?.let { viewModel.importRiders(it, context.contentResolver) }})
     val exportPicker = rememberLauncherForActivityResult(
         contract = viewModel.exportContract,
-        onResult = { uri -> viewModel.exportReport(uri!!, context.contentResolver) })
+        onResult = { uri -> uri?.let { viewModel.exportReport(it, context.contentResolver) }})
 
     Scaffold(
         topBar = {
