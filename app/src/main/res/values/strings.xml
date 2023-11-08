@@ -16,4 +16,5 @@
     <string name="clear_rider_scores">Clear rider scores</string>
     <string name="edit_rider_info">Edit rider info</string>
     <string name="standing_label">#</string>
+    <string name="back_action">Back</string>
 </resources>

@@ -9,7 +9,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import com.github.javafaker.Faker
 import org.junit.Rule
 import org.junit.Test
@@ -21,37 +21,63 @@ class RegressionTest {
     private val numSections = 10
 
     @Test
-    fun screenLoads() {
+    fun basicScoreEntry() {
         val riderName = faker.name().fullName()
         addRider(riderName, "Advanced")
 
         val scores = List(numSections) { setOf(0, 1, 2, 3, 5).random()}
-        repeat(3) {idx ->
+        repeat(3) { idx ->
             openScoreEntry(riderName, idx + 1)
             enterScores(scores.shuffled())
         }
 
-        compose.onNodeWithContentDescription("Back").performClick()
-        compose.onNodeWithText("Trials Score").assertIsDisplayed()
+        backToLeaderboard()
+    }
 
-//        Thread.sleep(5000)
+    @Test
+    fun editRider() {
+        var riderName = faker.name().fullName()
+        addRider(riderName, "Expert")
+        openScoreEntry(riderName, 1)
+        riderName = faker.name().fullName()
+        performEditRider(riderName, "Novice")
+        backToLeaderboard()
+
+        compose.onNodeWithText(riderName).assertExists()
+    }
+
+    private fun backToLeaderboard() {
+        compose.onNodeWithContentDescription(compose.activity.getString(R.string.back_action))
+            .performClick()
+        compose.onNodeWithText("Trials Score").assertIsDisplayed()
+    }
+
+    private fun performEditRider(riderName: String, riderClass: String) {
+        val editRiderLabel = compose.activity.getString(R.string.edit_rider_info)
+        compose.onNodeWithContentDescription(editRiderLabel).performClick()
+        fillEditRiderForm(riderName, riderClass)
+
     }
 
     private fun addRider(riderName: String, riderClass: String) {
         compose.onNodeWithContentDescription("Add rider").performClick()
 //        compose.onRoot().printToLog("currentLabelExists")
+        fillEditRiderForm(riderName, riderClass)
+
+        compose.onNodeWithText("Trials Score").assertIsDisplayed()
+        compose.onNodeWithText(riderName).assertIsDisplayed()
+    }
+
+    private fun fillEditRiderForm(riderName: String, riderClass: String) {
         val riderNameLabel = compose.activity.getString(R.string.rider_name_req)
         compose.onNodeWithText(riderNameLabel)
             .assertIsDisplayed()
-            .performTextInput(riderName)
+            .performTextReplacement(riderName)
         val riderClassLabel = compose.activity.getString(R.string.rider_class_req)
         compose.onNodeWithText(riderClassLabel).assertIsDisplayed().performClick()
         compose.onNodeWithText(riderClass).assertIsDisplayed().performClick()
         val saveLabel = compose.activity.getString(R.string.save_action)
         compose.onNodeWithText(saveLabel).assertIsDisplayed().performClick()
-
-        compose.onNodeWithText("Trials Score").assertIsDisplayed()
-        compose.onNodeWithText(riderName).assertIsDisplayed()
     }
 
     private fun openScoreEntry(riderName: String, loopNumber: Int) {
