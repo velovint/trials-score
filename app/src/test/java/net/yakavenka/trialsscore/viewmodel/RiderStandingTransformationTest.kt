@@ -14,7 +14,10 @@ class RiderStandingTransformationTest {
     private val faker = Faker()
     private val classes = setOf("Advanced", "Intermediate", "Novice")
     private val numSections = 5
+    private val numLoops = 3
+    private val totalSections = numSections * numLoops
     private val sut = RiderStandingTransformation()
+    private val defaultPreferences = UserPreferences(numSections, numLoops, classes)
 
     @Test
     fun transformationSortsResultByClass() {
@@ -23,7 +26,7 @@ class RiderStandingTransformationTest {
             createScore(riderClass = "Advanced"),
             createScore(riderClass = "Novice"))
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).map { it.riderClass }
+        val actual = sut.invoke(summary, defaultPreferences).map { it.riderClass }
 
         assertThat("Rider classes", actual, equalTo(listOf("Advanced", "Novice", "Novice")))
     }
@@ -31,12 +34,12 @@ class RiderStandingTransformationTest {
     @Test
     fun transformationSetsStandingsWithinAClass() {
         val summary = listOf(
-            RiderScoreSummary(1, "Novice Second", "Novice", numSections, 5, 8),
-            RiderScoreSummary(2, "Rider2", "Advanced", numSections, 5, 8),
-            RiderScoreSummary(3, "Novice Winner", "Novice", numSections, 2, 8)
+            RiderScoreSummary(1, "Novice Second", "Novice", totalSections, 5, 8),
+            RiderScoreSummary(2, "Rider2", "Advanced", totalSections, 5, 8),
+            RiderScoreSummary(3, "Novice Winner", "Novice", totalSections, 2, 8)
         )
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).filter { it.riderClass == "Novice" }
+        val actual = sut.invoke(summary, defaultPreferences).filter { it.riderClass == "Novice" }
 
         assertThat("Top novice", actual[0].riderName, equalTo("Novice Winner"))
         assertThat("Top place", actual[0].standing, equalTo("1"))
@@ -50,18 +53,18 @@ class RiderStandingTransformationTest {
         val differentClass = createScore(riderName = "Different Class", points = classWinner.points + 1, riderClass = "Advanced")
         val summary = listOf(classSecond, differentClass, classWinner)
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).map(RiderStanding::riderName)
+        val actual = sut.invoke(summary, defaultPreferences).map(RiderStanding::riderName)
 
         assertThat("Order", actual, equalTo(listOf("Different Class", "Class Winner", "Class Second")))
     }
 
     @Test
     fun transformationSortsFinishedRiderFirst() {
-        val finishedRider = createScore(riderName = "Finished Rider", sectionsRidden = numSections, points = 1000)
+        val finishedRider = createScore(riderName = "Finished Rider", sectionsRidden = totalSections, points = 1000)
         val notFinishedRider = createScore(riderName = "1Not Finished", sectionsRidden = 0, points = 0)
         val summary = listOf(notFinishedRider, finishedRider)
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes))
+        val actual = sut.invoke(summary, defaultPreferences)
 
         assertThat("Finished rider first", actual[0].riderName, equalTo(finishedRider.riderName))
         assertThat("Not finished at the end", actual[1].riderName, equalTo(notFinishedRider.riderName))
@@ -71,10 +74,10 @@ class RiderStandingTransformationTest {
     fun transformationSortsByNameWithinNotFinished() {
         val rider1 = createScore(riderName = "A", sectionsRidden = 0)
         val rider2 = createScore(riderName = "B",  sectionsRidden = 0)
-        val finishedRider = createScore(riderName="A finished", sectionsRidden = numSections)
+        val finishedRider = createScore(riderName="A finished", sectionsRidden = totalSections)
         val summary = listOf(rider2, rider1, finishedRider)
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).map { it.riderName }
+        val actual = sut.invoke(summary, defaultPreferences).map { it.riderName }
 
         assertThat("Name sort", actual, equalTo(listOf("A finished", "A", "B")))
     }
@@ -88,7 +91,7 @@ class RiderStandingTransformationTest {
             riderClass = first.riderClass)
         val summary = listOf(second, first)
 
-        val actual = sut.invoke(summary, UserPreferences(numSections, 3, classes)).map { it.riderName }
+        val actual = sut.invoke(summary, defaultPreferences).map { it.riderName }
 
         assertThat("More cleans in better", actual, equalTo(listOf("More cleans", "Less cleans")))
     }
@@ -115,7 +118,7 @@ class RiderStandingTransformationTest {
     private fun createScore(
         riderName: String = faker.name().firstName(),
         riderClass: String = "Novice",
-        sectionsRidden: Int = numSections,
+        sectionsRidden: Int = totalSections,
         points: Int = faker.number().numberBetween(1, 50), // exclude min/max so that we can inc/dec both,
         numCleans: Int  = faker.number().numberBetween(1, 10)
     ): RiderScoreSummary {
