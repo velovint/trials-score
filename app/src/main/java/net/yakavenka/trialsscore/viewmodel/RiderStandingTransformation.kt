@@ -12,21 +12,23 @@ class RiderStandingTransformation : (List<RiderScoreSummary>, UserPreferences) -
         summary: List<RiderScoreSummary>,
         prefs: UserPreferences
     ): List<RiderStanding> {
+        val totalSections = prefs.numSections * prefs.numLoops
         val result =
-            summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, prefs.numSections))
-        return applyStandings(result, prefs.numSections)
+            summary.sortedWith(LeaderboardScoreSortOrder(prefs.riderClasses, totalSections))
+        return applyStandings(result, prefs.numSections, prefs.numLoops)
     }
 
     private fun applyStandings(
         scores: List<RiderScoreSummary>,
-        totalSections: Int
+        numSections: Int,
+        numLoops: Int
     ): List<RiderStanding> {
         val result = mutableListOf<RiderStanding>()
         var prevClass = ""
         var standing = 1
         for (entry: RiderScoreSummary in scores) {
             if (prevClass != entry.riderClass) standing = 1
-            result.add(RiderStanding(entry, standing, totalSections))
+            result.add(RiderStanding(entry, standing, numSections, numLoops))
             prevClass = entry.riderClass
             standing++
         }

@@ -1,0 +1,52 @@
+[versions]
+# jetpack releases https://developer.android.com/jetpack/androidx/versions
+androidx-junit = "1.1.5"
+compose-compiler = "1.5.3"
+compose-runtime = "1.5.4"
+compose-ui = "1.4.3"
+datastore = "1.0.0"
+espresso-contrib = "3.0.2"
+espresso-core = "3.5.1"
+hamcrest = "2.2"
+hilt-core = "2.48"
+hilt-android = "1.0.0"
+junit = "4.13.2"
+lifecycle = "2.6.2"
+material3 = "1.1.2"
+navigation = "2.6.0"
+opencsv = "4.1"
+room = "2.5.2"
+
+[libraries]
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.2" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.10.1" }
+androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-android" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-junit" }
+androidx-lifecycle-livedata-ktx = { module = "androidx.lifecycle:lifecycle-livedata-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
+androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "compose-runtime" }
+androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "compose-ui" }
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose-ui" }
+androidx-ui-tooling-core = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
+androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
+compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
+espresso-contrib = { module = "com.android.support.test.espresso:espresso-contrib", version.ref = "espresso-contrib" }
+hamcrest-library = { module = "org.hamcrest:hamcrest-library", version = "2.2" }
+hilt-android-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-core" }
+hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-core" }
+javafaker = { module = "com.github.javafaker:javafaker", version = "0.15" }
+junit = { module = "junit:junit", version.ref = "junit" }
+opencsv = { module = "com.opencsv:opencsv", version = "4.1" }
+room-compiler = { module = "androidx.room:room-compiler", version.ref="room"}
+room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+
+[plugins]
+android-app = { id = 'com.android.application', version = "8.1.1" }
+hilt = { id = "com.google.dagger.hilt.android", version = "2.48.1" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version = '1.9.10' }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.10-1.0.13" }

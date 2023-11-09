@@ -1,23 +1,34 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.content.ContentResolver
-import android.content.SharedPreferences
 import android.net.Uri
 import android.util.Log
-import androidx.lifecycle.*
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.*
+import net.yakavenka.trialsscore.data.RiderScoreSummary
+import net.yakavenka.trialsscore.data.ScoreSummaryRepository
+import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
-import java.io.*
+import java.io.FileNotFoundException
+import java.io.FileOutputStream
+import java.io.IOException
+import javax.inject.Inject
 
 private const val TAG = "EventScoreViewModel"
 
 data class RiderStanding(
     val scoreSummary: RiderScoreSummary,
-    val standing: Int,
-    val totalSections: Int
+    private val _standing: Int,
+    val numSections: Int,
+    val numLoops: Int
 ) {
     val riderClass: String
         get() = scoreSummary.riderClass
@@ -34,44 +45,61 @@ data class RiderStanding(
     val numCleans: Int
         get() = scoreSummary.numCleans
 
-    fun isFinished(): Boolean {
-        return scoreSummary.sectionsRidden == totalSections
-    }
+    val standing: String
+        get() {
+            val symbolMap = mapOf(
+                1 to "⠂",
+                2 to "⠅",
+                3 to "⠇",
+                4 to "⠭"
+            )
+            if (loopsComplete == numLoops) return _standing.toString()
+            if (symbolMap.containsKey(loopsComplete)) return symbolMap[loopsComplete]!!
+            return "*"
+        }
 
-    fun getProgress(): Int {
-        return scoreSummary.sectionsRidden * 100 / totalSections
-    }
+    val loopsComplete: Int
+        get() = scoreSummary.sectionsRidden.floorDiv(numSections)
 }
 
-class EventScoreViewModel(
+@HiltViewModel
+class EventScoreViewModel @Inject constructor(
     scoreSummaryRepository: ScoreSummaryRepository,
     private val sectionScoreRepository: SectionScoreRepository,
     private val importExportService: CsvExchangeRepository,
     preferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
-    val allScores: LiveData<List<RiderStanding>> =
-        scoreSummaryRepository.fetchSummary()
-            .map { summary -> RiderStandingTransformation().invoke(summary, preferencesRepository.fetchPreferences()) }
-            .asLiveData()
+    val importContract = ActivityResultContracts.GetContent()
+    val exportContract = ActivityResultContracts.CreateDocument("text/csv")
+
+    val allScores: LiveData<Map<String, List<RiderStanding>>> = combine(
+            scoreSummaryRepository.fetchSummary(), preferencesRepository.userPreferencesFlow
+        ) { summary, prefs ->
+            Log.d(TAG, "Fetching allScores")
+            return@combine RiderStandingTransformation()
+                .invoke(summary, prefs)
+                .groupBy { score -> score.riderClass }
+        }.asLiveData()
 
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
-        try {
-            val descriptor = contentResolver.openFileDescriptor(uri, "w")
-            if (descriptor == null) {
-                Log.e("EventScoreViewModel", "Couldn't open $uri")
-                return
-            }
-
-            viewModelScope.launch(Dispatchers.IO) {
+        // more about coroutines https://developer.android.com/kotlin/coroutines
+        viewModelScope.launch(Dispatchers.IO) {
+            Log.d("EventScoreViewModel", "Exporting results to $uri")
+            try {
+                val descriptor = contentResolver.openFileDescriptor(uri, "w")
+                if (descriptor == null) {
+                    Log.e("EventScoreViewModel", "Couldn't open $uri")
+                    return@launch
+                }
                 sectionScoreRepository.fetchFullResults().collect { result ->
                     importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
                 }
                 descriptor.close()
+            } catch (e: FileNotFoundException) {
+                Log.e(TAG, "Failed to open file for export", e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to open file for export", e)
             }
-        } catch (e: FileNotFoundException) {
-            Log.e(TAG, "Failed to open file for export", e)
-        } catch (e: IOException) {
-            Log.e(TAG, "Failed to open file for export", e)
         }
     }
 
@@ -92,24 +120,6 @@ class EventScoreViewModel(
     fun clearAll() {
         viewModelScope.launch(Dispatchers.IO) {
             sectionScoreRepository.purge()
-        }
-    }
-
-    class Factory(
-        private val riderScoreDao: RiderScoreDao,
-        private val sharedPreferences: SharedPreferences
-    ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(EventScoreViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return EventScoreViewModel(
-                    ScoreSummaryRepository(riderScoreDao),
-                    SectionScoreRepository(riderScoreDao),
-                    CsvExchangeRepository(),
-                    UserPreferencesRepository(sharedPreferences)
-                ) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

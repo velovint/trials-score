@@ -1,37 +1,70 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import androidx.lifecycle.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreDao
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
+import javax.inject.Inject
 
-class EditRiderViewModel(
-    val riderScoreDao: RiderScoreDao
+@HiltViewModel
+class EditRiderViewModel @Inject constructor(
+    private val riderScoreDao: RiderScoreDao,
+    userPreferencesRepository: UserPreferencesRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    fun addRider(name: String, riderClass: String) {
-        viewModelScope.launch {
-            riderScoreDao.addRider(RiderScore(name = name, riderClass = riderClass))
-        }
-    }
+    val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
 
-    fun loadRider(id: Int): LiveData<RiderScore> {
-        return riderScoreDao.getRider(id).asLiveData()
-    }
+    private val riderId: Int = savedStateHandle["riderId"] ?: 0
+    var riderInfoState by mutableStateOf(RiderDetailsUiState(RiderScore(0, "", ""), false))
+        private set
 
-    fun updateRider(id: Int, name: String, riderClass: String) {
-        viewModelScope.launch {
-            riderScoreDao.updateRider(RiderScore(id = id, name = name, riderClass = riderClass))
-        }
-    }
-
-    class Factory(private val riderScoreDao: RiderScoreDao) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(EditRiderViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return EditRiderViewModel(riderScoreDao) as T
+    init {
+        if (riderId != 0) {
+            viewModelScope.launch {
+                riderInfoState = riderScoreDao.getRider(riderId)
+                    .map { RiderDetailsUiState(it, false) }
+                    .first()
             }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
+    }
+
+    fun toggleRiderClassExpanded(expanded: Boolean) {
+        riderInfoState = riderInfoState.copy(riderClassExpanded = expanded)
+    }
+
+    suspend fun saveRider() {
+        if (riderId > 0) {
+            riderScoreDao.updateRider(
+                RiderScore(
+                    id = riderId,
+                    name = riderInfoState.entry.name,
+                    riderClass = riderInfoState.entry.riderClass
+                )
+            )
+        } else {
+            riderScoreDao.addRider(
+                RiderScore(
+                    name = riderInfoState.entry.name,
+                    riderClass = riderInfoState.entry.riderClass
+                )
+            )
+        }
+    }
+
+    fun updateUiState(riderScore: RiderScore) {
+        riderInfoState = riderInfoState.copy(entry = riderScore)
     }
 }
+
+data class RiderDetailsUiState(val entry: RiderScore, val riderClassExpanded: Boolean = false )

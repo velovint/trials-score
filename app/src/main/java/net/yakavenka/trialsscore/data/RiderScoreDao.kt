@@ -12,8 +12,8 @@ interface RiderScoreDao {
     @Query("SELECT * FROM rider_score WHERE id = :riderId")
     fun getRider(riderId: Int): Flow<RiderScore>
 
-    @Query("SELECT * FROM section_score WHERE riderId = :riderId")
-    fun sectionScores(riderId: Int): Flow<List<SectionScore>>
+    @Query("SELECT * FROM section_score WHERE riderId = :riderId AND loopNumber = :loopNumber ORDER BY sectionNumber ASC")
+    fun sectionScores(riderId: Int, loopNumber: Int = 1): Flow<List<SectionScore>>
 
     @Update
     suspend fun updateSectionScore(sectionScore: SectionScore)

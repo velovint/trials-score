@@ -33,7 +33,7 @@ class ScoreSummaryRepositoryTest {
             TODO("Not yet implemented")
         }
 
-        override fun sectionScores(riderId: Int): Flow<List<SectionScore>> {
+        override fun sectionScores(riderId: Int, loopNumber: Int): Flow<List<SectionScore>> {
             TODO("Not yet implemented")
         }
 

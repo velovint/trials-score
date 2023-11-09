@@ -1,7 +1,7 @@
 <resources>
-    <string name="app_name">TrialsScore</string>
+    <string name="app_name">Trials Scorekeeper</string>
     <string name="lap_score">%1$d / %2$d</string>
-    <string name="lap_score_label">Lap score:</string>
+    <string name="lap_score_label">Lap score: %1$d / %2$d</string>
     <string name="rider_label">Rider</string>
     <string name="scores_label">Scores</string>
     <string name="add_new_rider">Add new rider</string>
@@ -16,4 +16,5 @@
     <string name="clear_rider_scores">Clear rider scores</string>
     <string name="edit_rider_info">Edit rider info</string>
     <string name="standing_label">#</string>
+    <string name="back_action">Back</string>
 </resources>

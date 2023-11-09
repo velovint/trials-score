@@ -13,11 +13,12 @@ import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.OutputStreamWriter
 import java.util.stream.IntStream.range
+import javax.inject.Inject
 import kotlin.streams.toList
 
 private const val TAG = "CsvExchangeRepository"
 
-class CsvExchangeRepository {
+class CsvExchangeRepository @Inject constructor(){
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 

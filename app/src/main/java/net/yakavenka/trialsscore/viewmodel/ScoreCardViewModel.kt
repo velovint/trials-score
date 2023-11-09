@@ -1,39 +1,45 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import android.content.SharedPreferences
 import android.util.Log
 import androidx.lifecycle.*
-import kotlinx.coroutines.flow.collect
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.data.RiderScore
-import net.yakavenka.trialsscore.data.RiderScoreDao
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
+import javax.inject.Inject
 
 private const val TAG = "ScoreCardViewModel"
 
-class ScoreCardViewModel(
+@HiltViewModel
+class ScoreCardViewModel @Inject constructor(
     private val sectionScoreRepository: SectionScoreRepository,
-    private val userPreferencesRepository: UserPreferencesRepository
+    userPreferencesRepository: UserPreferencesRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val _sectionScores: MutableLiveData<SectionScore.Set> = MutableLiveData()
+    private val selectedRiderId: Int = checkNotNull(savedStateHandle["riderId"]) as Int
 
-    val sectionScores: LiveData<SectionScore.Set>
-        get() = _sectionScores
-
-    private val _riderInfo: MutableLiveData<RiderScore> = MutableLiveData()
-
-    val riderInfo: LiveData<RiderScore>
-        get() = _riderInfo
-
-    fun fetchScores(riderId: Int) {
-        viewModelScope.launch {
-            sectionScoreRepository.fetchOrInitRiderScore(riderId, userPreferencesRepository.fetchPreferences().numSections)
-                .collect { scores -> _sectionScores.postValue(scores) }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val _sectionScores =
+        userPreferencesRepository.userPreferencesFlow.flatMapLatest { prefs ->
+            sectionScoreRepository.fetchOrInitRiderScore(
+                riderId = selectedRiderId,
+                loopNumber = selectedLoop,
+                numSections = prefs.numSections,
+                numLoops = prefs.numLoops
+            )
         }
-    }
+
+    val sectionScores = _sectionScores.asLiveData()
+
+    val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
+
+    val riderInfo = sectionScoreRepository.getRiderInfo(selectedRiderId).asLiveData()
+
+    val selectedLoop: Int = checkNotNull(savedStateHandle["loop"]) as Int
 
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")
@@ -45,25 +51,6 @@ class ScoreCardViewModel(
     fun clearScores(riderId: Int) {
         viewModelScope.launch {
             sectionScoreRepository.deleteRiderScores(riderId)
-        }
-    }
-
-    fun loadRiderInfo(riderId: Int) {
-        viewModelScope.launch {
-            sectionScoreRepository.getRiderInfo(riderId).collect(_riderInfo::postValue)
-        }
-    }
-
-    class Factory(
-        private val riderScoreDao: RiderScoreDao,
-        private val sharedPreferences: SharedPreferences
-    ) : ViewModelProvider.Factory {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            if (modelClass.isAssignableFrom(ScoreCardViewModel::class.java)) {
-                @Suppress("UNCHECKED_CAST")
-                return ScoreCardViewModel(SectionScoreRepository(riderScoreDao), UserPreferencesRepository(sharedPreferences)) as T
-            }
-            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

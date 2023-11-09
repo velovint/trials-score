@@ -1,8 +1,8 @@
 plugins {
-    id 'com.android.application'
-    id 'kotlin-android'
-    id 'kotlin-kapt'
-    id 'androidx.navigation.safeargs.kotlin'
+    alias libs.plugins.android.app
+    alias libs.plugins.kotlin.android
+    alias libs.plugins.ksp
+    alias libs.plugins.hilt
 }
 
 android {
@@ -12,13 +12,16 @@ android {
         applicationId "net.yakavenka.trialsscore"
         minSdk 26
         targetSdk 33
-        versionCode 9
-        versionName "1.1.1"
+        versionCode 10
+        versionName "1.2.0"
+
+        ksp {
+            arg("room.schemaLocation", "$projectDir/schemas".toString())
+        }
 
         javaCompileOptions {
             annotationProcessorOptions {
-                arguments += ["room.schemaLocation":
-                                      "$projectDir/schemas".toString()]
+                arguments["dagger.hilt.disableModulesHaveInstallInCheck"] = "true"
             }
         }
 
@@ -28,11 +31,27 @@ android {
 
     buildFeatures {
         viewBinding true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
         release {
-            minifyEnabled false
+            // Enables code shrinking, obfuscation, and optimization for only
+            // your project's release build type. Make sure to use a build
+            // variant with `isDebuggable=false`.
+            minifyEnabled = true
+
+            // Enables resource shrinking, which is performed by the
+            // Android Gradle plugin.
+            shrinkResources = true
+
+            // Includes the default ProGuard rules files that are packaged with
+            // the Android Gradle plugin. To learn more, go to the section about
+            // R8 configuration files.
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -51,35 +70,47 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.10.1'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.9.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-
-    implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
-    implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
-    implementation "androidx.preference:preference-ktx:$preference_version"
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.core.ktx
+    implementation libs.compose.material3
+    implementation libs.androidx.lifecycle.runtime.ktx
+    implementation libs.androidx.navigation.compose
 
     // Room
-    implementation "androidx.room:room-runtime:$room_version"
-    // To use Kotlin annotation processing tool (kapt)
-    kapt "androidx.room:room-compiler:$room_version"
+    implementation libs.room.runtime
+    implementation libs.androidx.runtime.livedata
+    implementation libs.androidx.lifecycle.livedata.ktx
     // optional - Kotlin Extensions and Coroutines support for Room
-    implementation("androidx.room:room-ktx:$room_version")
+    implementation libs.room.ktx
+    ksp libs.room.compiler
 
-    // Lifecycle libraries
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
-    implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+    // Preferences
+    implementation libs.androidx.datastore.preferences
+
+    // Hilt
+    implementation libs.androidx.hilt.navigation.compose
+    implementation libs.hilt.android.core
+    ksp libs.hilt.android.compiler
 
     // CSV
-    implementation "com.opencsv:opencsv:4.1"
+    implementation libs.opencsv
 
-    testImplementation 'junit:junit:4.13.2'
-    testImplementation 'org.hamcrest:hamcrest-library:1.3'
-    testImplementation 'com.github.javafaker:javafaker:0.15'
+    // Android Studio Preview support
+    implementation libs.androidx.ui.tooling.preview
+    debugImplementation libs.androidx.ui.tooling.core
 
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
-    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.2'
-    androidTestImplementation 'com.github.javafaker:javafaker:0.15'
+    testImplementation libs.junit
+    testImplementation libs.hamcrest.library
+    testImplementation libs.javafaker
+
+    androidTestImplementation libs.androidx.junit
+    androidTestImplementation libs.androidx.espresso.core
+    androidTestImplementation libs.espresso.contrib
+    androidTestImplementation libs.javafaker
+
+    // UI Tests
+    androidTestImplementation libs.androidx.ui.test.junit4
+    debugImplementation libs.androidx.ui.test.manifest
+
 }
