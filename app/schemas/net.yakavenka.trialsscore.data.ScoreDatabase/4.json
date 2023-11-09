@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 4,
-    "identityHash": "76cb76047d42b2b68125d6c4a1c1555f",
+    "identityHash": "7f88ac5e625978d685194345527d2bb0",
     "entities": [
       {
         "tableName": "rider_score",
@@ -28,27 +28,21 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": true,
           "columnNames": [
             "id"
-          ]
+          ],
+          "autoGenerate": true
         },
         "indices": [],
         "foreignKeys": []
       },
       {
         "tableName": "section_score",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`riderId` INTEGER NOT NULL, `loopNumber` INTEGER NOT NULL, `sectionNumber` INTEGER NOT NULL, `points` INTEGER NOT NULL, PRIMARY KEY(`riderId`, `sectionNumber`))",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`riderId` INTEGER NOT NULL, `sectionNumber` INTEGER NOT NULL, `points` INTEGER NOT NULL, PRIMARY KEY(`riderId`, `sectionNumber`))",
         "fields": [
           {
             "fieldPath": "riderId",
             "columnName": "riderId",
-            "affinity": "INTEGER",
-            "notNull": true
-          },
-          {
-            "fieldPath": "loopNumber",
-            "columnName": "loopNumber",
             "affinity": "INTEGER",
             "notNull": true
           },
@@ -66,11 +60,11 @@
           }
         ],
         "primaryKey": {
-          "autoGenerate": false,
           "columnNames": [
             "riderId",
             "sectionNumber"
-          ]
+          ],
+          "autoGenerate": false
         },
         "indices": [],
         "foreignKeys": []
@@ -79,7 +73,7 @@
     "views": [],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '76cb76047d42b2b68125d6c4a1c1555f')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '7f88ac5e625978d685194345527d2bb0')"
     ]
   }
 }
