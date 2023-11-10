@@ -180,7 +180,7 @@ fun LapScoreCard(
 ) {
     LazyColumn(modifier = modifier.fillMaxWidth()) {
         items(items = scoreSet.sectionScores,
-            key = { it.sectionNumber }) { sectionScore ->
+            key = { it.loopNumber * it.sectionNumber }) { sectionScore ->
             ScoreEntryItem(
                 sectionScore = sectionScore,
 //                modifier = Modifier.padding(8.dp).fillMaxSize(),
