@@ -113,7 +113,7 @@ fun LeaderboardTopBar(
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More actions"
+                    contentDescription = stringResource(R.string.more_actions)
                 )
             }
             DropdownMenu(
@@ -135,7 +135,7 @@ fun LeaderboardTopBar(
                     leadingIcon = {
                         Icon(
                             painterResource(id = R.drawable.ic_export_results),
-                            contentDescription = "Export results"
+                            contentDescription = stringResource(R.string.export_results)
                         )
                     })
                 DropdownMenuItem(
