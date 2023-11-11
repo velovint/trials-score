@@ -52,10 +52,6 @@ class RegressionTest {
         compose.onNode(leaderboardTitle()).assertIsDisplayed()
     }
 
-    private fun leaderboardTitle(): SemanticsMatcher {
-        return hasText("Trials Score")
-    }
-
     @Test
     fun editRider() {
         var riderName = faker.name().fullName()
@@ -68,15 +64,17 @@ class RegressionTest {
         compose.onNodeWithText(riderName).assertExists()
     }
 
-    @Test
     @Ignore("Run manually for verification")
+    @Test
     fun simulateEvent() {
         repeat(10) { basicScoreEntry() }
 
         Thread.sleep(10000)
     }
 
-
+    private fun leaderboardTitle(): SemanticsMatcher {
+        return hasText("Trials Score")
+    }
 
     private fun backToLeaderboard() {
         compose.onNodeWithContentDescription(compose.activity.getString(R.string.back_action))
