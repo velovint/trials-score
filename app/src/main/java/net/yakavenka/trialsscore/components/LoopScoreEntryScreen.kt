@@ -95,7 +95,7 @@ private fun ScoreEntryNavigationBar(
     onEditRider: (RiderScore) -> Unit,
     onClearScores: (RiderScore) -> Unit = {}
 ) {
-    var  displayConfirmation by remember {mutableStateOf(false)}
+    var displayConfirmation by remember {mutableStateOf(false)}
 
     TopAppBar(
         title = { Text(riderInfo?.name ?: "") },
@@ -115,11 +115,11 @@ private fun ScoreEntryNavigationBar(
                 )
             }
             IconButton(
-                onClick = {displayConfirmation = true}
+                onClick = { displayConfirmation = true }
             ) {
                 Icon(
                     painterResource(id = R.drawable.ic_remove_rider_scores),
-                    contentDescription = "Localized description"
+                    contentDescription = stringResource(id = R.string.clear_rider_scores)
                 )
             }
 
@@ -140,7 +140,7 @@ private fun ScoreEntryNavigationBar(
                         }
                     }
                 ) {
-                    Text("Delete")
+                    Text(stringResource(R.string.delete_confirm))
                 }
             },
             dismissButton = {
@@ -180,7 +180,7 @@ fun LapScoreCard(
 ) {
     LazyColumn(modifier = modifier.fillMaxWidth()) {
         items(items = scoreSet.sectionScores,
-            key = { it.sectionNumber }) { sectionScore ->
+            key = { it.loopNumber * it.sectionNumber }) { sectionScore ->
             ScoreEntryItem(
                 sectionScore = sectionScore,
 //                modifier = Modifier.padding(8.dp).fillMaxSize(),

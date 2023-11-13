@@ -1,10 +1,11 @@
 <resources>
+    <string name="add_new_rider">Add new rider</string>
     <string name="app_name">Trials Scorekeeper</string>
+    <string name="enter_value_prompt">Enter a value</string>
     <string name="lap_score">%1$d / %2$d</string>
     <string name="lap_score_label">Lap score: %1$d / %2$d</string>
     <string name="rider_label">Rider</string>
     <string name="scores_label">Scores</string>
-    <string name="add_new_rider">Add new rider</string>
     <string name="clear_button">Clear</string>
     <string name="rider_name_req">Rider Name *</string>
     <string name="save_action">Save</string>
@@ -17,4 +18,7 @@
     <string name="edit_rider_info">Edit rider info</string>
     <string name="standing_label">#</string>
     <string name="back_action">Back</string>
+    <string name="more_actions">More actions</string>
+    <string name="export_results">Export results</string>
+    <string name="delete_confirm">Delete</string>
 </resources>

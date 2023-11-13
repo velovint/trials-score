@@ -5,12 +5,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
 import com.github.javafaker.Faker
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
@@ -19,13 +21,14 @@ class RegressionTest {
     val compose = createAndroidComposeRule(MainActivity::class.java)
     private val faker = Faker()
     private val numSections = 10
+    private val basicClasses = setOf("Expert", "Advanced", "Intermediate")
+    private val allowedScores = setOf(0, 1, 2, 3, 5)
 
     @Test
     fun basicScoreEntry() {
-        val riderName = faker.name().fullName()
-        addRider(riderName, "Advanced")
+        val riderName = addRider()
 
-        val scores = List(numSections) { setOf(0, 1, 2, 3, 5).random()}
+        val scores = List(numSections) { allowedScores.random()}
         repeat(3) { idx ->
             openScoreEntry(riderName, idx + 1)
             enterScores(scores.shuffled())
@@ -35,21 +38,48 @@ class RegressionTest {
     }
 
     @Test
+    fun clearRiderScores() {
+        val scores = List(numSections) { allowedScores.random()}
+        val clearRiderScoresLabel = compose.activity.getString(R.string.clear_rider_scores)
+        val riderName = addRider()
+
+        openScoreEntry(riderName, 1)
+        enterScores(scores.shuffled())
+
+        compose.onNodeWithContentDescription(clearRiderScoresLabel).performClick()
+        compose.onNodeWithText(compose.activity.getString(R.string.delete_confirm)).performClick()
+
+        compose.onNode(leaderboardTitle()).assertIsDisplayed()
+    }
+
+    @Test
     fun editRider() {
         var riderName = faker.name().fullName()
-        addRider(riderName, "Expert")
+        addRider(riderName, basicClasses.random())
         openScoreEntry(riderName, 1)
         riderName = faker.name().fullName()
-        performEditRider(riderName, "Novice")
+        performEditRider(riderName, basicClasses.random())
         backToLeaderboard()
 
         compose.onNodeWithText(riderName).assertExists()
     }
 
+    @Ignore("Run manually for verification")
+    @Test
+    fun simulateEvent() {
+        repeat(10) { basicScoreEntry() }
+
+        Thread.sleep(10000)
+    }
+
+    private fun leaderboardTitle(): SemanticsMatcher {
+        return hasText("Trials Score")
+    }
+
     private fun backToLeaderboard() {
         compose.onNodeWithContentDescription(compose.activity.getString(R.string.back_action))
             .performClick()
-        compose.onNodeWithText("Trials Score").assertIsDisplayed()
+        compose.onNode(leaderboardTitle()).assertIsDisplayed()
     }
 
     private fun performEditRider(riderName: String, riderClass: String) {
@@ -66,6 +96,21 @@ class RegressionTest {
 
         compose.onNodeWithText("Trials Score").assertIsDisplayed()
         compose.onNodeWithText(riderName).assertIsDisplayed()
+    }
+
+    private fun addRider(): String {
+        val riderName = faker.name().fullName()
+        val riderClass = basicClasses.random()
+        addRider(riderName, riderClass)
+        return riderName
+    }
+
+    private fun enterScores(scores: List<Int>) {
+        scores.forEachIndexed { idx, score ->
+            compose.onNode(sectionScoreNode(idx + 1, score))
+                .performClick()
+//                .assertIsSelected()
+        }
     }
 
     private fun fillEditRiderForm(riderName: String, riderClass: String) {
@@ -86,14 +131,6 @@ class RegressionTest {
             .assertIsDisplayed()
             .performClick()
             .assertIsSelected()
-    }
-
-    private fun enterScores(scores: List<Int>) {
-        scores.forEachIndexed { idx, score ->
-            compose.onNode(sectionScoreNode(idx + 1, score))
-                .performClick()
-                .assertIsSelected()
-        }
     }
 
     private fun sectionScoreNode(section: Int, score: Int): SemanticsMatcher {

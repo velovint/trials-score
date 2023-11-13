@@ -27,10 +27,12 @@ interface RiderScoreDao {
     @Query("DELETE FROM section_score WHERE riderId = :riderId")
     suspend fun deleteRiderScores(riderId: Int)
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(sectionScores: List<SectionScore>)
+
     @Insert
     suspend fun addRider(riderScore: RiderScore)
+
     @Query("SELECT rs.id, rs.name, rs.class,\n" +
             "        COUNT(CASE WHEN ss.points >= 0 THEN 1 ELSE NULL END) as sections_ridden,\n" +
             "        SUM(CASE WHEN ss.points >= 0 THEN ss.points ELSE 0 END) as points,\n" +
@@ -40,6 +42,7 @@ interface RiderScoreDao {
             "      GROUP BY rs.id\n" +
             "      ORDER BY class, sections_ridden DESC, points ASC, cleans DESC")
     fun fetchSummary(): Flow<List<RiderScoreSummary>>
+
     @Update
     suspend fun updateRider(riderScore: RiderScore)
 }

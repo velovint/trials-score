@@ -3,12 +3,12 @@ package net.yakavenka.trialsscore.components
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -43,6 +43,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import net.yakavenka.trialsscore.R
@@ -113,7 +114,7 @@ fun LeaderboardTopBar(
             IconButton(onClick = { menuExpanded = true }) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
-                    contentDescription = "More actions"
+                    contentDescription = stringResource(R.string.more_actions)
                 )
             }
             DropdownMenu(
@@ -135,7 +136,7 @@ fun LeaderboardTopBar(
                     leadingIcon = {
                         Icon(
                             painterResource(id = R.drawable.ic_export_results),
-                            contentDescription = "Export results"
+                            contentDescription = stringResource(R.string.export_results)
                         )
                     })
                 DropdownMenuItem(
@@ -229,20 +230,26 @@ fun RiderScoreSummaryComponent(
     compact: Boolean = false,
     onSelect: (RiderStanding) -> Unit = {}
 ) {
-    Box(modifier.clickable { onSelect(score) }) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(if (compact) 4.dp else 8.dp)
-        ) {
-            Text(text = score.standing, modifier = Modifier.weight(0.25f))
-            Text(text = score.riderName, modifier = Modifier.weight(2f))
-            Text(
-                text = stringResource(id = R.string.lap_score, score.points, score.numCleans),
-                modifier = Modifier.weight(1f)
-            )
-        }
+    val textStyle = MaterialTheme.typography.bodyLarge
+    val minHeigh = if (compact) Dp.Unspecified else 48.dp
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(4.dp)
+            .heightIn(min = minHeigh)
+            .clickable { onSelect(score) },
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
+        Text(text = score.standing, modifier = Modifier.weight(0.25f), style = textStyle)
+        Text(text = score.riderName, modifier = Modifier.weight(2f), style = textStyle)
+        Text(
+            text = stringResource(id = R.string.lap_score, score.points, score.numCleans),
+            modifier = Modifier.weight(1f),
+            style = textStyle
+        )
     }
+
 
 }
 

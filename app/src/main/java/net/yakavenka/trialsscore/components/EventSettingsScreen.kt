@@ -12,10 +12,10 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,13 +24,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import net.yakavenka.trialsscore.R
 import net.yakavenka.trialsscore.data.UserPreferences
 import net.yakavenka.trialsscore.ui.theme.AppTheme
 import net.yakavenka.trialsscore.viewmodel.EventSettingsViewModel
+import org.apache.commons.lang3.StringUtils.isNumeric
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -98,7 +103,7 @@ fun NumericPreference(
         label = label,
         value = value,
         modifier = modifier,
-        onUpdate = { onUpdate(it.toInt()) },
+        onUpdate = { if (isNumeric(it)) { onUpdate(it.toInt()) }},
         keyboardType = KeyboardType.Number
     )
 }
@@ -131,7 +136,6 @@ fun TextPreference(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TextPreferenceEditForm(
     label: String,
@@ -141,14 +145,16 @@ fun TextPreferenceEditForm(
     onUpdate: (String) -> Unit = {}
 ) {
     var valueState by remember { mutableStateOf(value) }
+    val promptLabel = stringResource(R.string.enter_value_prompt)
 
     AlertDialog(
         title = { Text(label) },
         text = {
-            TextField(
+            OutlinedTextField(
                 value = valueState,
                 onValueChange = { valueState = it },
-                keyboardOptions = KeyboardOptions(keyboardType = keyboardType)
+                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                modifier = Modifier.semantics { contentDescription = promptLabel }
             )
         },
         onDismissRequest = onDismissRequest,
@@ -172,5 +178,15 @@ fun TextPreferenceEditForm(
 fun EventSettingsScreenPreview() {
     AppTheme {
         EventSettingsScreen()
+    }
+}
+
+@Preview(widthDp = 400, heightDp = 600)
+@Composable
+fun TextPreferencePreview() {
+    var value = 1
+
+    AppTheme {
+        NumericPreference(label = "Label", value = value.toString(), onUpdate = { value = it })
     }
 }
