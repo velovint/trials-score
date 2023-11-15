@@ -122,22 +122,22 @@ Sample output, once imported, look like this.
 
 I'll soon share a template that COTA uses to generate reports like one below.
 
-<img src="img/rnd12-results-1.png" width="300" alt="Excel Report Sample" />
+<img src="img/rnd12-results-1.png" width="600" alt="Excel Report Sample" />
 
 ## How to get access and start using it
 
 As of November 2023 this application is still in Closed testing.
-I'm actively working to promote this application to open beta testing and make it publicly available.
+I'm actively working to promote it to open beta testing and make it publicly available.
 At this moment it was in use at every event by COTA club in Oregon for 2 years and worked without any issues.
 
 As mentioned earlier this application requires Android device to run. 
-It doesn't work with Apple devices, but I'm open for contributions if someone willing to port it.
+It doesn't work with Apple devices, but I'm open for contributions if someone is willing to port it.
 Android device options are vast and vary in price.
-I'm personally using Samsung Galaxy Tab A7 Lite that got used for $40 and it works just fine.
-There is also Lenovo Tab M9 that is much newer and only is available for $113 new.
+I'm personally using Samsung Galaxy Tab A7 Lite that I got used for $40 and it works just fine.
+There is also Lenovo Tab M9 that is much newer and is available for $113 new.
 Or you can get Galaxy Tab Active3 that is weather resistant and costs $500 new.
-Just look for Android 8+ device with 8"-9" screen from a major brand so that it's supported by several years.
-In our experience this works best. 
+Just look for Android 8+ device with 8"-9" screen from a major brand so that it's supported for several years.
+In our experience this works best.
 
 Try simulating score entry before the event.
 Event pressure doesn't help when you try to figure out why something doesn't work.
