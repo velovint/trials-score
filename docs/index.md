@@ -120,9 +120,13 @@ Sample output, once imported, look like this.
 | Cecilia Collier | Expert | 5   | 26 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 
 | Dorothy Rogahn | Expert | 76   |  0 | 1 | 2 | 1 | 1 | 3 | 2 | 5 | 3 | 2 | 3 | 2 | 1 | 2 |
 
-I'll soon share a template that COTA uses to generate reports like one below.
+Optionally, you can use COTA's [Template in Google Sheets](https://docs.google.com/spreadsheets/d/1aMZEi1WcBQEfJGOWEU7NInSvvOIgonkkfros3nR7968/edit?usp=sharing) 
+as a starting point.
+Make a copy and modify to your taste (mostly classes).
 
 <img src="img/rnd12-results-1.png" width="600" alt="Excel Report Sample" />
+
+Sorry, no detailed guide for this part yet.
 
 ## How to get access and start using it
 
@@ -144,8 +148,9 @@ Event pressure doesn't help when you try to figure out why something doesn't wor
 Consider using the app as a cross-check for your first event.
 Or, use it only for some of the classes you have at the event.
 
-Ready to give it a try? 
-Get in touch with me on [facebook](https://www.facebook.com/vitali.yakavenka/) and I'll add you to the list of testers.
+Ready to give it a try?
+[Join open testing](https://play.google.com/store/apps/details?id=net.yakavenka.trialsscore) from your Android device.
+Get in touch with me on [facebook](https://www.facebook.com/vitali.yakavenka/) if you have iny questions.
 
 ## Roadmap
 See [issues on GitHub](https://github.com/velovint/trials-score/issues) for future ideas and their status.
