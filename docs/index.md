@@ -130,9 +130,10 @@ Sorry, no detailed guide for this part yet.
 
 ## How to get access and start using it
 
-As of November 2023 this application is still in Closed testing.
-I'm actively working to promote it to open beta testing and make it publicly available.
-At this moment it was in use at every event by COTA club in Oregon for 2 years and worked without any issues.
+As of November 2023 this application is in open testing and is available to everyone by
+[joining the early preview](https://play.google.com/store/apps/details?id=net.yakavenka.trialsscore).
+It was in use at every event by COTA club in Oregon since the beginning of 2022 season and worked without any issues.
+It is not fully polished and there is a lot todo, but it is fairly stable.
 
 As mentioned earlier this application requires Android device to run. 
 It doesn't work with Apple devices, but I'm open for contributions if someone is willing to port it.
@@ -140,10 +141,10 @@ Android device options are vast and vary in price.
 I'm personally using Samsung Galaxy Tab A7 Lite that I got used for $40 and it works just fine.
 There is also Lenovo Tab M9 that is much newer and is available for $113 new.
 Or you can get Galaxy Tab Active3 that is weather resistant and costs $500 new.
-Just look for Android 8+ device with 8"-9" screen from a major brand so that it's supported for several years.
-In our experience this works best.
+Just look for Android version 8 or newer device with 8"-9" screen from a major brand so that it's supported for several years.
+In our experience this works best, but your milage may vary.
 
-Try simulating score entry before the event.
+Before using it at the real event try simulating score entry.
 Event pressure doesn't help when you try to figure out why something doesn't work.
 Consider using the app as a cross-check for your first event.
 Or, use it only for some of the classes you have at the event.
