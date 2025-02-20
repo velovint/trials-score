@@ -6,14 +6,14 @@ plugins {
 }
 
 android {
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "net.yakavenka.trialsscore"
         minSdk 26
-        targetSdk 33
-        versionCode 11
-        versionName "1.2.1"
+        targetSdk 34
+        versionCode 12
+        versionName "1.2.2"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas".toString())
@@ -26,7 +26,7 @@ android {
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        testInstrumentationRunnerArguments clearPackageData: "true"
+        testInstrumentationRunnerArguments clearPackageData: "true"
     }
 
     buildFeatures {
