@@ -1,7 +1,7 @@
 [versions]
 # jetpack releases https://developer.android.com/jetpack/androidx/versions
 androidx-junit = "1.1.5"
-compose-compiler = "1.5.3"
+compose-compiler = "1.5.14"
 compose-runtime = "1.5.4"
 compose-ui = "1.4.3"
 datastore = "1.0.0"
@@ -48,5 +48,5 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 [plugins]
 android-app = { id = 'com.android.application', version = "8.8.1" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.48.1" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version = '1.9.10' }
-ksp = { id = "com.google.devtools.ksp", version = "1.9.10-1.0.13" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version = '1.9.24' }
+ksp = { id = "com.google.devtools.ksp", version = "1.9.24-1.0.20" }
