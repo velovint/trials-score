@@ -1,7 +1,6 @@
 [versions]
 # jetpack releases https://developer.android.com/jetpack/androidx/versions
 androidx-junit = "1.1.5"
-compose-compiler = "1.5.14"
 compose-runtime = "1.5.4"
 compose-ui = "1.4.3"
 datastore = "1.0.0"
@@ -11,6 +10,7 @@ hamcrest = "2.2"
 hilt-core = "2.48"
 hilt-android = "1.0.0"
 junit = "4.13.2"
+kotlin = "2.0.0"
 lifecycle = "2.6.2"
 material3 = "1.1.2"
 navigation = "2.6.0"
@@ -47,6 +47,8 @@ room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 
 [plugins]
 android-app = { id = 'com.android.application', version = "8.8.1" }
+# Add the Compose Compiler Gradle plugin, the version matches the Kotlin plugin
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version = "2.48.1" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version = '1.9.24' }
-ksp = { id = "com.google.devtools.ksp", version = "1.9.24-1.0.20" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version = "2.0.0-1.0.24" }
