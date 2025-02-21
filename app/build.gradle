@@ -7,12 +7,12 @@ plugins {
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "net.yakavenka.trialsscore"
         minSdk 26
-        targetSdk 34
+        targetSdk 35
         versionCode 12
         versionName "1.2.2"
 
