@@ -1,26 +1,26 @@
 [versions]
 # jetpack releases https://developer.android.com/jetpack/androidx/versions
-androidx-junit = "1.1.5"
-compose-runtime = "1.5.4"
-compose-ui = "1.4.3"
+androidx-junit = "1.2.1"
+compose-runtime = "1.7.8"
+compose-ui = "1.7.8"
 datastore = "1.0.0"
 espresso-contrib = "3.0.2"
-espresso-core = "3.5.1"
+espresso-core = "3.6.1"
 hamcrest = "2.2"
 hilt-core = "2.51.1"
-hilt-android = "1.0.0"
+hilt-android = "1.2.0"
 junit = "4.13.2"
 kotlin = "2.0.21"
 kotlin-ksp = "2.0.21-1.0.28"
-lifecycle = "2.6.2"
+lifecycle = "2.8.7"
 material3 = "1.1.2"
-navigation = "2.6.0"
+navigation = "2.8.7"
 opencsv = "4.1"
 room = "2.6.1"
 
 [libraries]
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.2" }
-androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.13.1" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.0" }
+androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.15.0" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastore" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso-core" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hilt-android" }
@@ -36,12 +36,12 @@ androidx-ui-tooling-core = { module = "androidx.compose.ui:ui-tooling", version.
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 espresso-contrib = { module = "com.android.support.test.espresso:espresso-contrib", version.ref = "espresso-contrib" }
-hamcrest-library = { module = "org.hamcrest:hamcrest-library", version = "2.2" }
+hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
 hilt-android-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-core" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-core" }
 javafaker = { module = "com.github.javafaker:javafaker", version = "0.15" }
 junit = { module = "junit:junit", version.ref = "junit" }
-opencsv = { module = "com.opencsv:opencsv", version = "4.1" }
+opencsv = { module = "com.opencsv:opencsv", version.ref = "opencsv" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref="room"}
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
