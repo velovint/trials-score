@@ -226,7 +226,7 @@ fun PunchBox(
 ) {
     val selected = currentScore.points == newScore
     val bgFontStyle = MaterialTheme.typography.bodyLarge.copy(color = Color.LightGray, fontWeight = FontWeight.ExtraBold)
-    Box {
+    Box(modifier) {
         Text(text = newScore.toString(), style = bgFontStyle, modifier = Modifier.align(Alignment.Center))
         RadioButton(
             selected = selected,
