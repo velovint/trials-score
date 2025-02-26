@@ -1,19 +1,20 @@
 plugins {
     alias libs.plugins.android.app
+    alias libs.plugins.compose.compiler
     alias libs.plugins.kotlin.android
     alias libs.plugins.ksp
     alias libs.plugins.hilt
 }
 
 android {
-    compileSdk 33
+    compileSdk 35
 
     defaultConfig {
         applicationId "net.yakavenka.trialsscore"
         minSdk 26
-        targetSdk 33
-        versionCode 11
-        versionName "1.2.1"
+        targetSdk 35
+        versionCode 12
+        versionName "1.2.2"
 
         ksp {
             arg("room.schemaLocation", "$projectDir/schemas".toString())
@@ -26,16 +27,12 @@ android {
         }
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-//        testInstrumentationRunnerArguments clearPackageData: "true"
+        testInstrumentationRunnerArguments clearPackageData: "true"
     }
 
     buildFeatures {
         viewBinding true
         compose true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 
     buildTypes {
