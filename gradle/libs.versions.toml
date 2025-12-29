@@ -43,7 +43,7 @@ room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 
 [plugins]
-android-app = { id = 'com.android.application', version = "8.8.1" }
+android-app = { id = 'com.android.application', version = "8.13.2" }
 # Add the Compose Compiler Gradle plugin, the version matches the Kotlin plugin
 compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt-core" }

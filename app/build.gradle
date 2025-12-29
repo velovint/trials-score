@@ -31,8 +31,8 @@ android {
     }
 
     buildFeatures {
-        viewBinding true
-        compose true
+        viewBinding = true
+        compose = true
     }
 
     buildTypes {
@@ -63,7 +63,7 @@ android {
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
-    namespace 'net.yakavenka.trialsscore'
+    namespace = 'net.yakavenka.trialsscore'
 }
 
 dependencies {
