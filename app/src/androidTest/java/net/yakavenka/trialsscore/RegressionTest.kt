@@ -67,7 +67,7 @@ class RegressionTest {
     @Test
     fun openScoreEntryForMultipleNewRiders() {
         // Generate multiple riders
-        val riders = List(5) { addRider() }
+        val riders = List(10) { addRider() }
 
         // For each rider, open score entry page and return to leaderboard
         riders.forEach { riderName ->
