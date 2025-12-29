@@ -22,6 +22,8 @@ class ScoreCardViewModel @Inject constructor(
 
     private val selectedRiderId: Int = checkNotNull(savedStateHandle["riderId"]) as Int
 
+    val selectedLoop: Int = checkNotNull(savedStateHandle["loop"]) as Int
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private val _sectionScores =
         userPreferencesRepository.userPreferencesFlow.flatMapLatest { prefs ->
@@ -38,8 +40,6 @@ class ScoreCardViewModel @Inject constructor(
     val userPreference = userPreferencesRepository.userPreferencesFlow.asLiveData()
 
     val riderInfo = sectionScoreRepository.getRiderInfo(selectedRiderId).asLiveData()
-
-    val selectedLoop: Int = checkNotNull(savedStateHandle["loop"]) as Int
 
     fun updateSectionScore(updatedRecord: SectionScore) {
         Log.d(TAG, "Updating section score $updatedRecord")

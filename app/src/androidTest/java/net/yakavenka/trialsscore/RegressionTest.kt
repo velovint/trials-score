@@ -64,6 +64,18 @@ class RegressionTest {
         compose.onNodeWithText(riderName).assertExists()
     }
 
+    @Test
+    fun openScoreEntryForMultipleNewRiders() {
+        // Generate multiple riders
+        val riders = List(5) { addRider() }
+
+        // For each rider, open score entry page and return to leaderboard
+        riders.forEach { riderName ->
+            openScoreEntry(riderName, loopNumber = 1)
+            backToLeaderboard()
+        }
+    }
+
     @Ignore("Run manually for verification")
     @Test
     fun simulateEvent() {
