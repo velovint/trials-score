@@ -12,6 +12,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.io.OutputStream
 import java.io.OutputStreamWriter
+import java.util.stream.Collectors
 import java.util.stream.IntStream.range
 import javax.inject.Inject
 import kotlin.streams.toList
@@ -47,7 +48,7 @@ class CsvExchangeRepository @Inject constructor(){
         val numSections = result.map { it.sections.size }.firstOrNull() ?: 30
         val sectionsHeader = range(1, numSections + 1)
             .mapToObj {"S${it}" }
-            .toList()
+            .collect(Collectors.toList())
         return arrayOf("Name", "Class", "Points", "Cleans").plus(sectionsHeader)
     }
 
