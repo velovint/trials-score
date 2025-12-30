@@ -12,7 +12,7 @@ class SectionScoreTest {
     }
 
     @Test
-    fun blankScoreSet() {
+    fun createForRider_returnsBlankScores_whenCreatingNewSet() {
         val sut = SectionScore.Set.createForRider(TEST_RIDER_ID, 30, 1)
 
         assertThat("Points", sut.getPoints(), equalTo(0))

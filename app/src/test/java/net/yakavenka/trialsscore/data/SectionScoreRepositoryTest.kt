@@ -26,7 +26,7 @@ class SectionScoreRepositoryTest {
         val sut = SectionScoreRepository(dao)
 
         // When: Fetching scores for loop 2
-        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections, numLoops).first()
+        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections).first()
 
         // Then: Should return only loop 2 scores (10 sections)
         assertThat(result.sectionScores, hasSize(numSections))
@@ -38,7 +38,6 @@ class SectionScoreRepositoryTest {
         // Given: Rider has scored only sections 1-5 in loop 1
         val riderId = 1
         val numSections = 10
-        val numLoops = 3
         val requestedLoop = 1
 
         val dao = RiderScoreDaoFake()
@@ -51,7 +50,7 @@ class SectionScoreRepositoryTest {
         val sut = SectionScoreRepository(dao)
 
         // When: Fetching scores for loop 1
-        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections, numLoops).first()
+        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections).first()
 
         // Then: Should return ALL 10 sections (not just the 5 scored)
         assertThat(result.sectionScores, hasSize(numSections))
@@ -70,17 +69,15 @@ class SectionScoreRepositoryTest {
         // Given: No existing scores for rider
         val riderId = 1
         val numSections = 10
-        val numLoops = 3
         val requestedLoop = 2
 
         val dao = RiderScoreDaoFake()
         val sut = SectionScoreRepository(dao)
 
         // When: Fetching scores for loop 2 (will trigger initialization)
-        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections, numLoops).first()
+        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections).first()
 
         // Then: Should return only loop 2 scores (10 sections), not all loops
-        // BUG: Currently returns ALL loops (30 scores instead of 10)
         assertThat(result.sectionScores, hasSize(numSections))
         assertThat(result.getLoopNumber(), equalTo(requestedLoop))
     }

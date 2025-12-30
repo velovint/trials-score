@@ -28,8 +28,7 @@ class ScoreCardViewModel @Inject constructor(
             sectionScoreRepository.fetchOrInitRiderScore(
                 riderId = selectedRiderId,
                 loopNumber = selectedLoop,
-                numSections = prefs.numSections,
-                numLoops = prefs.numLoops
+                numSections = prefs.numSections
             )
         }
 

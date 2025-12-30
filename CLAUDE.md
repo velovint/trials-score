@@ -115,7 +115,7 @@ UI observes LiveData with `observeAsState()`. Write operations launch in ViewMod
 
 ## Testing
 Use the following convention for all test method names
-<method that is tested>_<expectation>_<conditions>
+<method that is tested>_<expectation>_<optionally conditions>
 
 **Unit Tests** (`/test/`):
 - Pure JUnit tests with Hamcrest assertions
@@ -131,6 +131,7 @@ Use the following convention for all test method names
 ### Score Entry
 - Score radio buttons display score value as background overlay
 - Points entry screen uses tabs for loop navigation
+- Scores are lazily initialized: blank sections are created in-memory when viewing a loop, and persisted to the database only when scored
 - Real-time calculation of totals displayed in UI
 
 ### CSV Import/Export

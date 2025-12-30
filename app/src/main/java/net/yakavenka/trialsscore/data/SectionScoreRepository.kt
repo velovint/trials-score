@@ -10,7 +10,7 @@ import javax.inject.Singleton
 class SectionScoreRepository @Inject constructor(
     private val dao: RiderScoreDao
 ) {
-    fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int, numLoops: Int): Flow<SectionScore.Set> {
+    fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int): Flow<SectionScore.Set> {
         return dao.sectionScores(riderId, loopNumber)
             .map { existingScores ->
                 SectionScore.Set.createForLoop(
