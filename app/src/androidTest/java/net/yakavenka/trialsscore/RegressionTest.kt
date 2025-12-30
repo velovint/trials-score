@@ -7,6 +7,8 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -132,7 +134,7 @@ class RegressionTest {
             .performTextReplacement(riderName)
         val riderClassLabel = compose.activity.getString(R.string.rider_class_req)
         compose.onNodeWithText(riderClassLabel).assertIsDisplayed().performClick()
-        compose.onNodeWithText(riderClass).assertIsDisplayed().performClick()
+        compose.onAllNodesWithText(riderClass).onLast().performClick()
         val saveLabel = compose.activity.getString(R.string.save_action)
         compose.onNodeWithText(saveLabel).assertIsDisplayed().performClick()
     }
