@@ -34,6 +34,38 @@ class SectionScoreRepositoryTest {
     }
 
     @Test
+    fun `fetchOrInitRiderScore returns complete set when partially scored`() = runBlocking {
+        // Given: Rider has scored only sections 1-5 in loop 1
+        val riderId = 1
+        val numSections = 10
+        val numLoops = 3
+        val requestedLoop = 1
+
+        val dao = RiderScoreDaoFake()
+        // Add only sections 1-5 with actual scores
+        val partialScores = (1..5).map { sectionNum ->
+            SectionScore(riderId, requestedLoop, sectionNum, sectionNum % 6)
+        }
+        dao.existingScores.addAll(partialScores)
+
+        val sut = SectionScoreRepository(dao)
+
+        // When: Fetching scores for loop 1
+        val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections, numLoops).first()
+
+        // Then: Should return ALL 10 sections (not just the 5 scored)
+        assertThat(result.sectionScores, hasSize(numSections))
+
+        // Sections 1-5 should have actual scores
+        assertThat(result.sectionScores[0].points, equalTo(1))
+        assertThat(result.sectionScores[4].points, equalTo(5))
+
+        // Sections 6-10 should be unscored (-1)
+        assertThat(result.sectionScores[5].points, equalTo(-1))
+        assertThat(result.sectionScores[9].points, equalTo(-1))
+    }
+
+    @Test
     fun `fetchOrInitRiderScore returns only requested loop when initializing new scores`() = runBlocking {
         // Given: No existing scores for rider
         val riderId = 1
@@ -55,7 +87,6 @@ class SectionScoreRepositoryTest {
 
     class RiderScoreDaoFake : RiderScoreDao {
         val existingScores = mutableListOf<SectionScore>()
-        val insertedScores = mutableListOf<SectionScore>()
 
         override fun getAll(): Flow<List<RiderScoreAggregate>> {
             TODO("Not yet implemented")
@@ -88,7 +119,6 @@ class SectionScoreRepositoryTest {
         }
 
         override suspend fun insertAll(sectionScores: List<SectionScore>) {
-            insertedScores.addAll(sectionScores)
             existingScores.addAll(sectionScores)
         }
 
