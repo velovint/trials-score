@@ -13,9 +13,12 @@ class SectionScoreRepository @Inject constructor(
     fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int, numLoops: Int): Flow<SectionScore.Set> {
         return dao.sectionScores(riderId, loopNumber)
             .map { scores ->
-                if (scores.isEmpty())
-                    initRiderScoreSet(riderId, numSections, numLoops)
-                else SectionScore.Set(scores)
+                if (scores.isEmpty()) {
+                    val allScores = initRiderScoreSet(riderId, numSections, numLoops)
+                    SectionScore.Set(allScores.sectionScores.filter { it.loopNumber == loopNumber })
+                } else {
+                    SectionScore.Set(scores)
+                }
             }
 //            .onEmpty { emit(initRiderScoreSet(riderId, numSections)) }
 //            .transform {

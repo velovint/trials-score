@@ -7,6 +7,8 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -62,6 +64,18 @@ class RegressionTest {
         backToLeaderboard()
 
         compose.onNodeWithText(riderName).assertExists()
+    }
+
+    @Test
+    fun openScoreEntryForMultipleNewRiders() {
+        // Generate multiple riders
+        val riders = List(10) { addRider() }
+
+        // For each rider, open score entry page and return to leaderboard
+        riders.forEach { riderName ->
+            openScoreEntry(riderName, loopNumber = 1)
+            backToLeaderboard()
+        }
     }
 
     @Ignore("Run manually for verification")
@@ -120,7 +134,7 @@ class RegressionTest {
             .performTextReplacement(riderName)
         val riderClassLabel = compose.activity.getString(R.string.rider_class_req)
         compose.onNodeWithText(riderClassLabel).assertIsDisplayed().performClick()
-        compose.onNodeWithText(riderClass).assertIsDisplayed().performClick()
+        compose.onAllNodesWithText(riderClass).onLast().performClick()
         val saveLabel = compose.activity.getString(R.string.save_action)
         compose.onNodeWithText(saveLabel).assertIsDisplayed().performClick()
     }
