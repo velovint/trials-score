@@ -13,20 +13,12 @@ class SectionScoreRepository @Inject constructor(
     fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int, numLoops: Int): Flow<SectionScore.Set> {
         return dao.sectionScores(riderId, loopNumber)
             .map { existingScores ->
-                // Map existing scores by section number for O(1) lookup
-                val existingBySection = existingScores.associateBy { it.sectionNumber }
-
-                // Create complete set of sections, using existing scores where available
-                val completeScores = (1..numSections).map { sectionNum ->
-                    existingBySection[sectionNum] ?: SectionScore(
-                        riderId = riderId,
-                        loopNumber = loopNumber,
-                        sectionNumber = sectionNum,
-                        points = -1
-                    )
-                }
-
-                SectionScore.Set(completeScores)
+                SectionScore.Set.createForLoop(
+                    riderId = riderId,
+                    loopNumber = loopNumber,
+                    numSections = numSections,
+                    existingScores = existingScores
+                )
             }
     }
 

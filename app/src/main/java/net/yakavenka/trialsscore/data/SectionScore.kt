@@ -22,6 +22,28 @@ data class SectionScore(
                 }
                 return Set(sectionScores)
             }
+
+            fun createForLoop(
+                riderId: Int,
+                loopNumber: Int,
+                numSections: Int,
+                existingScores: List<SectionScore>
+            ): Set {
+                // Map existing scores by section number for O(1) lookup
+                val existingBySection = existingScores.associateBy { it.sectionNumber }
+
+                // Create complete set of sections, using existing scores where available
+                val completeScores = (1..numSections).map { sectionNum ->
+                    existingBySection[sectionNum] ?: SectionScore(
+                        riderId = riderId,
+                        loopNumber = loopNumber,
+                        sectionNumber = sectionNum,
+                        points = -1
+                    )
+                }
+
+                return Set(completeScores)
+            }
         }
 
         fun getCleans(): Int {
