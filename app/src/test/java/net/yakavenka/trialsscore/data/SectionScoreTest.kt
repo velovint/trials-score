@@ -1,6 +1,8 @@
 package net.yakavenka.trialsscore.data
 
-import org.junit.Assert.assertEquals
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.hasSize
 import org.junit.Test
 
 class SectionScoreTest {
@@ -13,8 +15,8 @@ class SectionScoreTest {
     fun blankScoreSet() {
         val sut = SectionScore.Set.createForRider(TEST_RIDER_ID, 30, 1)
 
-        assertEquals("Points", 0, sut.getPoints())
-        assertEquals("Cleans", 0, sut.getCleans())
+        assertThat("Points", sut.getPoints(), equalTo(0))
+        assertThat("Cleans", sut.getCleans(), equalTo(0))
     }
 
     @Test
@@ -28,13 +30,13 @@ class SectionScoreTest {
         val result = SectionScore.Set.createForLoop(TEST_RIDER_ID, loopNumber, numSections, existingScores)
 
         // Then: Should return all sections with points = -1
-        assertEquals("Size", numSections, result.sectionScores.size)
-        assertEquals("First section number", 1, result.sectionScores[0].sectionNumber)
-        assertEquals("Last section number", numSections, result.sectionScores[numSections - 1].sectionNumber)
-        assertEquals("Loop number", loopNumber, result.getLoopNumber())
+        assertThat("Size", result.sectionScores, hasSize(numSections))
+        assertThat("First section number", result.sectionScores[0].sectionNumber, equalTo(1))
+        assertThat("Last section number", result.sectionScores[numSections - 1].sectionNumber, equalTo(numSections))
+        assertThat("Loop number", result.getLoopNumber(), equalTo(loopNumber))
         // All should be unscored
         result.sectionScores.forEach { score ->
-            assertEquals("Points for section ${score.sectionNumber}", -1, score.points)
+            assertThat("Points for section ${score.sectionNumber}", score.points, equalTo(-1))
         }
     }
 
@@ -51,18 +53,18 @@ class SectionScoreTest {
         val result = SectionScore.Set.createForLoop(TEST_RIDER_ID, loopNumber, numSections, existingScores)
 
         // Then: Should return all 3 sections
-        assertEquals("Size", numSections, result.sectionScores.size)
+        assertThat("Size", result.sectionScores, hasSize(numSections))
 
         // Missing sections should be blank
-        assertEquals("Section 1 points", -1, result.sectionScores[0].points)
-        assertEquals("Section 3 points", -1, result.sectionScores[2].points)
+        assertThat("Section 1 points", result.sectionScores[0].points, equalTo(-1))
+        assertThat("Section 3 points", result.sectionScores[2].points, equalTo(-1))
 
         // Existing score should be preserved
-        assertEquals("Section 2 points", 3, result.sectionScores[1].points)
+        assertThat("Section 2 points", result.sectionScores[1].points, equalTo(3))
 
         // Verify correct metadata
-        assertEquals("Loop number", loopNumber, result.getLoopNumber())
-        assertEquals("Rider ID", TEST_RIDER_ID, result.sectionScores[0].riderId)
+        assertThat("Loop number", result.getLoopNumber(), equalTo(loopNumber))
+        assertThat("Rider ID", result.sectionScores[0].riderId, equalTo(TEST_RIDER_ID))
     }
 
     @Test
@@ -78,9 +80,9 @@ class SectionScoreTest {
         val result = SectionScore.Set.createForLoop(TEST_RIDER_ID, loopNumber, numSections, existingScores)
 
         // Then: Should return all existing scores unchanged
-        assertEquals("Size", numSections, result.sectionScores.size)
+        assertThat("Size", result.sectionScores, hasSize(numSections))
         result.sectionScores.forEachIndexed { index, score ->
-            assertEquals("Section ${index + 1} points", index + 1, score.points)
+            assertThat("Section ${index + 1} points", score.points, equalTo(index + 1))
         }
     }
 

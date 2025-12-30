@@ -12,7 +12,7 @@ import org.junit.Test
 class SectionScoreRepositoryTest {
 
     @Test
-    fun `fetchOrInitRiderScore returns only requested loop when scores exist`() = runBlocking {
+    fun fetchOrInitRiderScore_returnsOnlyRequestedLoop_whenScoresExist() = runBlocking {
         // Given: Rider with scores for multiple loops already in database
         val riderId = 1
         val numSections = 10
@@ -34,7 +34,7 @@ class SectionScoreRepositoryTest {
     }
 
     @Test
-    fun `fetchOrInitRiderScore returns complete set when partially scored`() = runBlocking {
+    fun fetchOrInitRiderScore_returnsCompleteSet_whenPartiallyScored() = runBlocking {
         // Given: Rider has scored only sections 1-5 in loop 1
         val riderId = 1
         val numSections = 10
@@ -66,7 +66,7 @@ class SectionScoreRepositoryTest {
     }
 
     @Test
-    fun `fetchOrInitRiderScore returns only requested loop when initializing new scores`() = runBlocking {
+    fun fetchOrInitRiderScore_returnsOnlyRequestedLoop_whenInitializingNewScores() = runBlocking {
         // Given: No existing scores for rider
         val riderId = 1
         val numSections = 10

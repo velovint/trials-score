@@ -23,7 +23,7 @@ Lower total score wins.
 
 ### Run a specific test class
 ```bash
-./gradlew test --tests "net.yakavenka.trialsscore.viewmodel.RiderStandingTransformationTest"
+./gradlew testDebugUnitTest --tests "net.yakavenka.trialsscore.viewmodel.RiderStandingTransformationTest"
 ```
 
 ### Run instrumented tests (requires emulator/device)
@@ -31,21 +31,14 @@ Lower total score wins.
 ./gradlew connectedAndroidTest
 ```
 
-### Clean build
-```bash
-./gradlew clean
-```
-
-### Install debug build to device
-```bash
-./gradlew installDebug
-```
+### Commit messages
+Use concise commit messages and include only a summary for simple changes.
 
 ## Architecture
 
 ### Layer Structure
 
-The app follows MVVM architecture with three main layers:
+The application code is located in `app` module and follows MVVM architecture with three main layers:
 
 **Data Layer** (`/data/`):
 - Room database with `ScoreDatabase` as single source of truth
@@ -121,31 +114,23 @@ Room DB → Repository (Flow) → ViewModel (LiveData) → UI (Compose State)
 UI observes LiveData with `observeAsState()`. Write operations launch in ViewModel coroutine scope. Updates propagate automatically via Flow streams.
 
 ## Testing
+Use the following convention for all test method names
+<method that is tested>_<expectation>_<conditions>
 
 **Unit Tests** (`/test/`):
 - Pure JUnit tests with Hamcrest assertions
 - Uses JavaFaker for test data generation
-- Key tests:
-  - `RiderStandingTransformationTest` - Leaderboard sorting logic
-  - `SectionScoreTest` - Business logic for score sets
-  - `ScoreSummaryRepositoryTest` - Repository layer
-  - `CsvExchangeRepositoryTest` - Import/export functionality
 
 **Instrumented Tests** (`/androidTest/`):
 - UI tests using Compose testing framework
 - Runs with `ANDROIDX_TEST_ORCHESTRATOR` for test isolation
 - Tests run with `clearPackageData: true` for clean state
-- Key tests:
-  - `LapScoreScreenTest` - Score entry screen
-  - `RegressionTest` - End-to-end scenarios
-  - `PreferenceTest` - DataStore integration
 
 ## Key Implementation Details
 
 ### Score Entry
 - Score radio buttons display score value as background overlay
 - Points entry screen uses tabs for loop navigation
-- Automatic initialization of blank score sets for new riders
 - Real-time calculation of totals displayed in UI
 
 ### CSV Import/Export
