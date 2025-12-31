@@ -19,11 +19,7 @@ import java.io.InputStream
 class CsvExchangeRepositoryTest {
     private val sut = CsvExchangeRepository()
 
-    private val outputStream: ByteArrayOutputStream
-        get() {
-            val output = ByteArrayOutputStream()
-            return output
-        }
+    private val outputStream = ByteArrayOutputStream()
 
     @Test
     fun export() {
