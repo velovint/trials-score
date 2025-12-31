@@ -84,35 +84,29 @@ class EventScoreViewModel @Inject constructor(
     fun exportReport(uri: Uri, contentResolver: ContentResolver) {
         // more about coroutines https://developer.android.com/kotlin/coroutines
         viewModelScope.launch(Dispatchers.IO) {
-            Log.d("EventScoreViewModel", "Exporting results to $uri")
+            Log.d(TAG, "Exporting results to $uri")
             try {
-                val descriptor = contentResolver.openFileDescriptor(uri, "w")
-                if (descriptor == null) {
-                    Log.e("EventScoreViewModel", "Couldn't open $uri")
-                    return@launch
-                }
-                sectionScoreRepository.fetchFullResults().collect { result ->
-                    importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
-                }
-                descriptor.close()
+                contentResolver.openFileDescriptor(uri, "w")?.use { descriptor ->
+                    sectionScoreRepository.fetchFullResults().collect { result ->
+                        importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
+                    }
+                } ?: Log.e(TAG, "Couldn't open $uri")
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "Failed to open file for export", e)
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to open file for export", e)
             }
+            Log.d(TAG, "CSV Export complete")
         }
     }
 
     fun importRiders(uri: Uri, contentResolver: ContentResolver) {
         viewModelScope.launch(Dispatchers.IO) {
-            val inputStream = contentResolver.openInputStream(uri)
-            if (inputStream == null) {
-                Log.e(TAG, "Can't open file $uri")
-            }
-            importExportService.importRiders(inputStream!!).collect { rider ->
-                sectionScoreRepository.addRider(rider)
-            }
-            inputStream.close()
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                importExportService.importRiders(inputStream).collect { rider ->
+                    sectionScoreRepository.addRider(rider)
+                }
+            } ?: Log.e(TAG, "Can't open file $uri")
         }
 
     }
