@@ -35,33 +35,21 @@ class SectionScoreRepositoryTest {
 
     @Test
     fun fetchOrInitRiderScore_returnsCompleteSet_whenPartiallyScored() = runBlocking {
-        // Given: Rider has scored only sections 1-5 in loop 1
         val riderId = 1
-        val numSections = 10
+        val numSections = 3
         val requestedLoop = 1
 
         val dao = RiderScoreDaoFake()
-        // Add only sections 1-5 with actual scores
-        val partialScores = (1..5).map { sectionNum ->
-            SectionScore(riderId, requestedLoop, sectionNum, sectionNum % 6)
-        }
-        dao.existingScores.addAll(partialScores)
+        dao.existingScores.add(SectionScore(riderId, requestedLoop, sectionNumber = 2, points = 5))
 
         val sut = SectionScoreRepository(dao)
 
-        // When: Fetching scores for loop 1
         val result = sut.fetchOrInitRiderScore(riderId, requestedLoop, numSections).first()
 
-        // Then: Should return ALL 10 sections (not just the 5 scored)
-        assertThat(result.sectionScores, hasSize(numSections))
-
-        // Sections 1-5 should have actual scores
-        assertThat(result.sectionScores[0].points, equalTo(1))
-        assertThat(result.sectionScores[4].points, equalTo(5))
-
-        // Sections 6-10 should be unscored (-1)
-        assertThat(result.sectionScores[5].points, equalTo(-1))
-        assertThat(result.sectionScores[9].points, equalTo(-1))
+        assertThat(result.sectionScores, hasSize(3))
+        assertThat(result.sectionScores[0].points, equalTo(-1))
+        assertThat(result.sectionScores[1].points, equalTo(5))
+        assertThat(result.sectionScores[2].points, equalTo(-1))
     }
 
     @Test
