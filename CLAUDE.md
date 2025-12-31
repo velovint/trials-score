@@ -44,10 +44,10 @@ The application code is located in `app` module and follows MVVM architecture wi
 - Room database with `ScoreDatabase` as single source of truth
 - `RiderScoreDao` provides reactive Flow-based queries
 - Repositories abstract data operations:
-  - `SectionScoreRepository` - CRUD for riders and section scores
+  - `SectionScoreRepository` - CRUD for riders and section scores. Most operations return partial/as-entered data that needs to be normalized to fill gaps for not entered sections. 
   - `ScoreSummaryRepository` - Aggregated leaderboard data
   - `UserPreferencesRepository` - Event settings via DataStore
-  - `CsvExchangeRepository` - Import/export functionality
+  - `CsvExchangeRepository` - CSV Import/export functionality
 
 **ViewModel Layer** (`/viewmodel/`):
 - All ViewModels are `@HiltViewModel` with constructor-injected dependencies
