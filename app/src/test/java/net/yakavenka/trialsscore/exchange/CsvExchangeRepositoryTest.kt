@@ -10,6 +10,8 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.not
+import org.junit.Ignore
 import org.junit.Test
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -48,6 +50,27 @@ class CsvExchangeRepositoryTest {
 
         val csvOutput = outputStream.toString()
         assertThat(csvOutput, containsString("Test Rider,Expert,1,0,,1"))
+    }
+
+    @Test
+    fun export_includesScores_forMultipleLoops() {
+        // given a score for 2 loops and 2 sections
+        val rider = RiderScore(1, "Rider 1", "Expert")
+        val scores = listOf(
+            SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 1, points = 0),
+            SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 2, points = 1),
+            SectionScore(riderId = 1, loopNumber = 2, sectionNumber = 1, points = 2),
+            SectionScore(riderId = 1, loopNumber = 2, sectionNumber = 2, points = 3)
+        )
+        val aggregates = listOf(
+            RiderScoreAggregate(rider, scores),
+        )
+
+        sut.export(aggregates, outputStream)
+
+        val csvOutput = outputStream.toString()
+        assertThat("Header has S1 through S4", csvOutput, containsString("S1,S2,S3,S4"))
+        assertThat("Section scores", csvOutput, containsString("0,1,2,3"))
     }
 
     @Test

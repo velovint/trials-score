@@ -15,7 +15,6 @@ import java.io.OutputStreamWriter
 import java.util.stream.Collectors
 import java.util.stream.IntStream.range
 import javax.inject.Inject
-import kotlin.streams.toList
 
 private const val TAG = "CsvExchangeRepository"
 
@@ -26,11 +25,15 @@ class CsvExchangeRepository @Inject constructor(){
         val numSections = result
             .flatMap { it.sections }
             .maxOfOrNull { it.sectionNumber }
-            ?: 30
+            ?: 10
+        val numLoops = result
+            .flatMap { it.sections }
+            .maxOfOrNull { it.loopNumber }
+            ?: 3
 
-        writer.writeNext(generateHeader(numSections), false)
+        writer.writeNext(generateHeader(numSections * numLoops), false)
         result
-            .map { riderScoreAsArray(it, numSections) }
+            .map { riderScoreAsArray(it, numSections, numLoops) }
             .forEach { writer.writeNext(it, false) }
 
         writer.close()
@@ -56,14 +59,14 @@ class CsvExchangeRepository @Inject constructor(){
         return arrayOf("Name", "Class", "Points", "Cleans").plus(sectionsHeader)
     }
 
-    private fun riderScoreAsArray(score: RiderScoreAggregate, numSections: Int): Array<String> {
+    private fun riderScoreAsArray(score: RiderScoreAggregate, numSections: Int, numLoops: Int): Array<String> {
         val sectionSet = SectionScore.Set(score.sections)
 
         // Create a map of section number to points for quick lookup
-        val sectionPointsMap = score.sections.associateBy({ it.sectionNumber }, { it.points })
+        val sectionPointsMap = score.sections.associateBy({ it.sectionNumber + (it.loopNumber - 1) * numSections}, { it.points })
 
         // Generate section scores with proper gaps
-        val sectionScores = (1..numSections).map { sectionNum ->
+        val sectionScores = (1..numSections * numLoops).map { sectionNum ->
             sectionPointsMap[sectionNum]?.toString() ?: ""
         }
 
