@@ -15,7 +15,6 @@ import java.io.OutputStreamWriter
 import java.util.stream.Collectors
 import java.util.stream.IntStream.range
 import javax.inject.Inject
-import kotlin.streams.toList
 
 private const val TAG = "CsvExchangeRepository"
 
@@ -23,9 +22,18 @@ class CsvExchangeRepository @Inject constructor(){
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 
-        writer.writeNext(generateHeader(result), false)
+        val numSections = result
+            .flatMap { it.sections }
+            .maxOfOrNull { it.sectionNumber }
+            ?: 10
+        val numLoops = result
+            .flatMap { it.sections }
+            .maxOfOrNull { it.loopNumber }
+            ?: 3
+
+        writer.writeNext(generateHeader(numSections * numLoops), false)
         result
-            .map(::riderScoreAsArray)
+            .map { riderScoreAsArray(it, numSections, numLoops) }
             .forEach { writer.writeNext(it, false) }
 
         writer.close()
@@ -44,22 +52,30 @@ class CsvExchangeRepository @Inject constructor(){
             }
     }
 
-    private fun generateHeader(result: List<RiderScoreAggregate>): Array<String> {
-        val numSections = result.map { it.sections.size }.firstOrNull() ?: 30
+    private fun generateHeader(numSections: Int): Array<String> {
         val sectionsHeader = range(1, numSections + 1)
             .mapToObj {"S${it}" }
             .collect(Collectors.toList())
         return arrayOf("Name", "Class", "Points", "Cleans").plus(sectionsHeader)
     }
 
-    private fun riderScoreAsArray(score: RiderScoreAggregate): Array<String> {
+    private fun riderScoreAsArray(score: RiderScoreAggregate, numSections: Int, numLoops: Int): Array<String> {
         val sectionSet = SectionScore.Set(score.sections)
+
+        // Create a map of section number to points for quick lookup
+        val sectionPointsMap = score.sections.associateBy({ it.sectionNumber + (it.loopNumber - 1) * numSections}, { it.points })
+
+        // Generate section scores with proper gaps
+        val sectionScores = (1..numSections * numLoops).map { sectionNum ->
+            sectionPointsMap[sectionNum]?.toString() ?: ""
+        }
+
         return arrayOf(
             score.riderName,
             score.riderEntity.riderClass,
             sectionSet.getPoints().toString(),
             sectionSet.getCleans().toString()
         )
-            .plus(score.sections.map { it.points.toString() })
+            .plus(sectionScores)
     }
 }

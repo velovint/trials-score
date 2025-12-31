@@ -10,31 +10,20 @@ import javax.inject.Singleton
 class SectionScoreRepository @Inject constructor(
     private val dao: RiderScoreDao
 ) {
-    fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int, numLoops: Int): Flow<SectionScore.Set> {
+    fun fetchOrInitRiderScore(riderId: Int, loopNumber: Int = 1, numSections: Int): Flow<SectionScore.Set> {
         return dao.sectionScores(riderId, loopNumber)
-            .map { scores ->
-                if (scores.isEmpty()) {
-                    val allScores = initRiderScoreSet(riderId, numSections, numLoops)
-                    SectionScore.Set(allScores.sectionScores.filter { it.loopNumber == loopNumber })
-                } else {
-                    SectionScore.Set(scores)
-                }
+            .map { existingScores ->
+                SectionScore.Set.createForLoop(
+                    riderId = riderId,
+                    loopNumber = loopNumber,
+                    numSections = numSections,
+                    existingScores = existingScores
+                )
             }
-//            .onEmpty { emit(initRiderScoreSet(riderId, numSections)) }
-//            .transform {
-//                if (it.sectionScores.isEmpty()) emit(initRiderScoreSet(riderId, numSections))
-//                else emit(it)
-//            }
     }
 
     fun fetchFullResults(): Flow<List<RiderScoreAggregate>> {
         return dao.getAll()
-    }
-
-    suspend fun initRiderScoreSet(riderId: Int, numSections: Int, numLoops: Int): SectionScore.Set {
-        val blankScoreSet = SectionScore.Set.createForRider(riderId, numSections, numLoops)
-        dao.insertAll(blankScoreSet.sectionScores)
-        return blankScoreSet
     }
 
     suspend fun updateSectionScore(updatedRecord: SectionScore) {

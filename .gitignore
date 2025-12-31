@@ -12,8 +12,10 @@
 .externalNativeBuild
 .cxx
 local.properties
+CLAUDE.local.md
 
 # Android Studio/IDEA
 *.iml
 .idea
 .kotlin
+

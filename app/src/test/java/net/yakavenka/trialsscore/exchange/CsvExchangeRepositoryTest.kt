@@ -19,20 +19,56 @@ import java.io.InputStream
 class CsvExchangeRepositoryTest {
     private val sut = CsvExchangeRepository()
 
+    private val outputStream = ByteArrayOutputStream()
+
     @Test
     fun export() {
         val aggregate = sampleSectionScore()
-        val output = ByteArrayOutputStream()
 
-        sut.export(listOf(aggregate), output)
+        sut.export(listOf(aggregate), outputStream)
 
-        val actual = output.toString()
+        val actual = outputStream.toString()
         assertThat("Header", actual, containsString("S10"))
         assertThat("Class", actual, containsString("Novice"))
         assertThat("Name", actual, containsString("Test1"))
         assertThat("Section scores", actual, containsString("-1,-1"))
         assertThat("Points", actual, containsString("5"))
         assertThat("Cleans", actual, containsString("2"))
+    }
+
+    @Test
+    fun export_fillsGapsInSectionNumbers_whenSectionsAreMissing() {
+        val rider = RiderScore(1, "Test Rider", "Expert")
+        val sections = listOf(
+            SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 2, points = 1)
+        )
+        val aggregate = RiderScoreAggregate(rider, sections)
+
+        sut.export(listOf(aggregate), outputStream)
+
+        val csvOutput = outputStream.toString()
+        assertThat(csvOutput, containsString("Test Rider,Expert,1,0,,1"))
+    }
+
+    @Test
+    fun export_includesScores_forMultipleLoops() {
+        // given a score for 2 loops and 2 sections
+        val rider = RiderScore(1, "Rider 1", "Expert")
+        val scores = listOf(
+            SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 1, points = 0),
+            SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 2, points = 1),
+            SectionScore(riderId = 1, loopNumber = 2, sectionNumber = 1, points = 2),
+            SectionScore(riderId = 1, loopNumber = 2, sectionNumber = 2, points = 3)
+        )
+        val aggregates = listOf(
+            RiderScoreAggregate(rider, scores),
+        )
+
+        sut.export(aggregates, outputStream)
+
+        val csvOutput = outputStream.toString()
+        assertThat("Header has S1 through S4", csvOutput, containsString("S1,S2,S3,S4"))
+        assertThat("Section scores", csvOutput, containsString("0,1,2,3"))
     }
 
     @Test
