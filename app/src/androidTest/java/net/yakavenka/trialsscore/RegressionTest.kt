@@ -13,10 +13,15 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextReplacement
+import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.Until
 import com.github.javafaker.Faker
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
+import java.io.File
 
 class RegressionTest {
     @get:Rule
@@ -84,6 +89,54 @@ class RegressionTest {
         repeat(10) { basicScoreEntry() }
 
         Thread.sleep(10000)
+    }
+
+    @Test
+    fun exportScoresAsCsv() {
+        // Given: a rider with entered scores
+        val riderName = addRider()
+        val scores = List(numSections) { allowedScores.random() }
+        openScoreEntry(riderName, 1)
+        enterScores(scores)
+        backToLeaderboard()
+
+        // When: export results as CSV
+        val moreActionsLabel = compose.activity.getString(R.string.more_actions)
+        compose.onNodeWithContentDescription(moreActionsLabel).performClick()
+        compose.onNodeWithText("Export results").performClick()
+
+        // Handle system file picker using UIAutomator
+        val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+        val filename = "test_export_${System.currentTimeMillis()}"
+
+        // Wait for document picker to appear
+        device.wait(Until.hasObject(By.pkg("com.android.documentsui")), 5000)
+
+        // Enter filename in the text field
+        val filenameField = device.wait(
+            Until.findObject(By.res("com.android.documentsui:id/item_root")),
+            3000
+        ) ?: device.findObject(By.clazz("android.widget.EditText"))
+        filenameField?.text = filename
+
+        // Click Save button
+        val saveButton = device.findObject(By.text("Save"))
+            ?: device.findObject(By.text("SAVE"))
+        saveButton?.click()
+
+        // Wait for file to be written
+        Thread.sleep(2000)
+
+        // Then: verify file exists and is non-empty in Downloads directory
+        val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
+            android.os.Environment.DIRECTORY_DOWNLOADS
+        )
+        val file = File(downloadsDir, "$filename.csv")
+        assert(file.exists()) { "Exported CSV file should exist at ${file.absolutePath}" }
+        assert(file.length() > 0) { "Exported CSV file should not be empty" }
+
+        // Cleanup
+        file.delete()
     }
 
     private fun leaderboardTitle(): SemanticsMatcher {

@@ -17,6 +17,7 @@ opencsv = "4.1"
 orchestrator = "1.6.1"
 room = "2.6.1"
 test-core = "1.7.0"
+uiautomator = "2.3.0"
 
 [libraries]
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.0" }
@@ -36,6 +37,7 @@ androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", versi
 androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "compose-ui" }
 androidx-ui-tooling-core = { module = "androidx.compose.ui:ui-tooling", version.ref = "compose-ui" }
 androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "compose-ui" }
+androidx-uiautomator = { module = "androidx.test.uiautomator:uiautomator", version.ref = "uiautomator" }
 compose-material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
 hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
 hilt-android-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-core" }
