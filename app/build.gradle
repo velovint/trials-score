@@ -102,6 +102,7 @@ dependencies {
     testImplementation libs.javafaker
     testImplementation libs.kotlinx.coroutines.test
     testImplementation libs.robolectric
+    testImplementation libs.mockito.kotlin
 
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.rules
