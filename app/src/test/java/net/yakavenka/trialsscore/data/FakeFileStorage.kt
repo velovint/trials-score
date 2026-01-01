@@ -41,13 +41,13 @@ class FakeFileStorage : FileStorageDao {
         block(outputStream)
     }
 
-    override suspend fun readFromUri(uri: Uri, block: suspend (InputStream) -> Unit) {
+    override suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T {
         if (urisToFail.contains(uri.toString())) {
             throw FileNotFoundException("Simulated failure for $uri")
         }
         val data = dataToRead[uri.toString()]
             ?: throw FileNotFoundException("No data set for $uri")
         val inputStream = ByteArrayInputStream(data)
-        block(inputStream)
+        return block(inputStream)
     }
 }

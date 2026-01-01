@@ -97,9 +97,10 @@ class EventScoreViewModel @Inject constructor(
     }
 
     fun importRiders(uri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                importExportService.importRidersFromUri(uri).collect { rider ->
+                val riders = importExportService.importRidersFromUri(uri)
+                riders.forEach { rider ->
                     sectionScoreRepository.addRider(rider)
                 }
             } catch (e: FileNotFoundException) {

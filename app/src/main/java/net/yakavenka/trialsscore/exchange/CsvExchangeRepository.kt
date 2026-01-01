@@ -6,8 +6,6 @@ import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import net.yakavenka.trialsscore.data.ContentResolverFileStorage
 import net.yakavenka.trialsscore.data.FileStorageDao
@@ -50,15 +48,15 @@ class CsvExchangeRepository constructor(
         writer.close()
     }
 
-    fun importRiders(inputStream: InputStream): Flow<RiderScore> = flow {
-
-        CSVReaderBuilder((InputStreamReader(inputStream)))
+    suspend fun importRiders(inputStream: InputStream): List<RiderScore> = withContext(dispatcher) {
+        CSVReaderBuilder(InputStreamReader(inputStream))
             .build()
-            .forEach { line ->
-                if (line.size < 2) {
-                    Log.d(TAG, "CSV line has invalid format [$line]")
+            .mapNotNull { line ->
+                if (line.size >= 2) {
+                    RiderScore(0, line[0].trim(), line[1].trim())
                 } else {
-                    emit(RiderScore(0, line[0].trim(), line[1].trim()))
+                    Log.d(TAG, "CSV line has invalid format [$line]")
+                    null
                 }
             }
     }
@@ -71,13 +69,9 @@ class CsvExchangeRepository constructor(
         }
     }
 
-    suspend fun importRidersFromUri(uri: Uri): Flow<RiderScore> {
-        return flow {
-            fileStorage.readFromUri(uri) { inputStream ->
-                importRiders(inputStream).collect { rider ->
-                    emit(rider)
-                }
-            }
+    suspend fun importRidersFromUri(uri: Uri): List<RiderScore> = withContext(dispatcher) {
+        fileStorage.readFromUri(uri) { inputStream ->
+            importRiders(inputStream)
         }
     }
 

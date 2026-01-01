@@ -24,11 +24,11 @@ class ContentResolverFileStorage @Inject constructor(
         }
     }
 
-    override suspend fun readFromUri(uri: Uri, block: suspend (InputStream) -> Unit) {
+    override suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T {
         val inputStream = contentResolver.openInputStream(uri)
             ?: throw FileNotFoundException("Can't open file $uri")
         inputStream.use { stream ->
-            block(stream)
+            return block(stream)
         }
     }
 }

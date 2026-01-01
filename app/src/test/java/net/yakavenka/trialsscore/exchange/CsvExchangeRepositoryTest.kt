@@ -81,14 +81,15 @@ class CsvExchangeRepositoryTest {
 
     @Test
     fun importRidersReadsFullInput() = runBlocking{
-        val riders = sut.importRiders(sampleImportStream()).toList()
+        val riders = sut.importRiders(sampleImportStream())
 
         assertThat(riders, hasSize(2))
     }
 
     @Test
     fun importRidersMapsFields() = runBlocking {
-        val rider = sut.importRiders(sampleImportStream()).first()
+        val riders = sut.importRiders(sampleImportStream())
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -98,7 +99,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersRemovesWhitespaces() = runBlocking {
         val input = ByteArrayInputStream(("Rider 1 , Novice \n").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -108,7 +110,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersWithQuotes() = runBlocking {
         val input = ByteArrayInputStream(("\"Rider, 1\",Novice\n").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider, 1"))
     }
@@ -117,7 +120,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersIgnoresInvalidLines() = runBlocking {
         val input = ByteArrayInputStream(("\nRider 1,Novice").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -169,7 +173,7 @@ class CsvExchangeRepositoryTest {
         val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
         fakeFileStorage.setDataToRead(mockUri, csvData)
 
-        val riders = sut.importRidersFromUri(mockUri).toList()
+        val riders = sut.importRidersFromUri(mockUri)
 
         assertThat(riders, hasSize(2))
         assertThat(riders[0].name, equalTo("Rider 1"))
@@ -183,6 +187,6 @@ class CsvExchangeRepositoryTest {
 
         fakeFileStorage.simulateFileNotFound(mockUri)
 
-        sut.importRidersFromUri(mockUri).toList()
+        sut.importRidersFromUri(mockUri)
     }
 }
