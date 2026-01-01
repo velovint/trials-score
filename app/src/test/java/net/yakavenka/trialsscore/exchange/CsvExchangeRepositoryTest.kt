@@ -4,6 +4,8 @@ import android.net.Uri
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.runTest
 import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
@@ -142,7 +144,7 @@ class CsvExchangeRepositoryTest {
     // Tests for Uri-based methods
 
     @Test
-    fun exportToUri_writesValidCsv() {
+    fun exportToUri_writesValidCsv() = runTest {
         val aggregate = sampleSectionScore()
 
         sut.exportToUri(listOf(aggregate), mockUri)
@@ -155,7 +157,7 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test(expected = FileNotFoundException::class)
-    fun exportToUri_handlesFileNotFoundException() {
+    fun exportToUri_handlesFileNotFoundException() = runTest {
         fakeFileStorage.simulateFileNotFound(mockUri)
         val aggregate = sampleSectionScore()
 
@@ -163,7 +165,7 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test
-    fun importRidersFromUri_readsValidCsv() = runBlocking {
+    fun importRidersFromUri_readsValidCsv() = runTest {
         val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
         fakeFileStorage.setDataToRead(mockUri, csvData)
 
@@ -177,11 +179,10 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test(expected = FileNotFoundException::class)
-    fun importRidersFromUri_handlesFileNotFoundException() {
-        runBlocking {
-            fakeFileStorage.simulateFileNotFound(mockUri)
+    fun importRidersFromUri_handlesFileNotFoundException() = runTest {
 
-            sut.importRidersFromUri(mockUri).toList()
-        }
+        fakeFileStorage.simulateFileNotFound(mockUri)
+
+        sut.importRidersFromUri(mockUri).toList()
     }
 }

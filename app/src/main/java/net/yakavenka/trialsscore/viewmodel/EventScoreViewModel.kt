@@ -81,7 +81,7 @@ class EventScoreViewModel @Inject constructor(
 
     fun exportReport(uri: Uri) {
         // more about coroutines https://developer.android.com/kotlin/coroutines
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             Log.d(TAG, "Exporting results to $uri")
             try {
                 sectionScoreRepository.fetchFullResults().collect { result ->
