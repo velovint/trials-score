@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
@@ -84,9 +85,8 @@ class EventScoreViewModel @Inject constructor(
         viewModelScope.launch {
             Log.d(TAG, "Exporting results to $uri")
             try {
-                sectionScoreRepository.fetchFullResults().collect { result ->
-                    importExportService.exportToUri(result, uri)
-                }
+                val result = sectionScoreRepository.fetchFullResults().first()
+                importExportService.exportToUri(result, uri)
                 Log.d(TAG, "CSV Export complete")
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "Failed to open file for export", e)
