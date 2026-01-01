@@ -1,8 +1,10 @@
 package net.yakavenka.trialsscore.exchange
 
+import android.net.Uri
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
@@ -10,14 +12,20 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.notNullValue
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
 import java.io.InputStream
 
 
+@RunWith(RobolectricTestRunner::class)
 class CsvExchangeRepositoryTest {
-    private val sut = CsvExchangeRepository()
+    private val fakeFileStorage = FakeFileStorage()
+    private val sut = CsvExchangeRepository(fakeFileStorage)
 
     private val outputStream = ByteArrayOutputStream()
 
@@ -131,5 +139,53 @@ class CsvExchangeRepositoryTest {
         return RiderScoreAggregate(
             RiderScore(1, "Test1", "Novice"),
             sections)
+    }
+
+    // Tests for Uri-based methods
+
+    @Test
+    fun exportToUri_writesValidCsv() {
+        val uri = Uri.parse("content://test/export.csv")
+        val aggregate = sampleSectionScore()
+
+        sut.exportToUri(listOf(aggregate), uri)
+
+        val writtenData = fakeFileStorage.getWrittenDataAsString(uri)
+        assertThat("Data was written", writtenData, notNullValue())
+        assertThat("Header", writtenData, containsString("S10"))
+        assertThat("Class", writtenData, containsString("Novice"))
+        assertThat("Name", writtenData, containsString("Test1"))
+    }
+
+    @Test(expected = FileNotFoundException::class)
+    fun exportToUri_handlesFileNotFoundException() {
+        val uri = Uri.parse("content://test/fail.csv")
+        fakeFileStorage.simulateFileNotFound(uri)
+        val aggregate = sampleSectionScore()
+
+        sut.exportToUri(listOf(aggregate), uri)
+    }
+
+    @Test
+    fun importRidersFromUri_readsValidCsv() = runBlocking {
+        val uri = Uri.parse("content://test/import.csv")
+        val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
+        fakeFileStorage.setDataToRead(uri, csvData)
+
+        val riders = sut.importRidersFromUri(uri).toList()
+
+        assertThat(riders, hasSize(2))
+        assertThat(riders[0].name, equalTo("Rider 1"))
+        assertThat(riders[0].riderClass, equalTo("Novice"))
+        assertThat(riders[1].name, equalTo("Rider 2"))
+        assertThat(riders[1].riderClass, equalTo("Advanced"))
+    }
+
+    @Test(expected = FileNotFoundException::class)
+    fun importRidersFromUri_handlesFileNotFoundException() = runBlocking {
+        val uri = Uri.parse("content://test/missing.csv")
+        fakeFileStorage.simulateFileNotFound(uri)
+
+        sut.importRidersFromUri(uri).toList()
     }
 }

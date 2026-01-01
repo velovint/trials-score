@@ -1,10 +1,12 @@
 package net.yakavenka.trialsscore.exchange
 
+import android.net.Uri
 import android.util.Log
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
+import net.yakavenka.trialsscore.data.FileStorageDao
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
@@ -18,7 +20,9 @@ import javax.inject.Inject
 
 private const val TAG = "CsvExchangeRepository"
 
-class CsvExchangeRepository @Inject constructor(){
+class CsvExchangeRepository @Inject constructor(
+    private val fileStorage: FileStorageDao
+){
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 
@@ -50,6 +54,22 @@ class CsvExchangeRepository @Inject constructor(){
                     emit(RiderScore(0, line[0].trim(), line[1].trim()))
                 }
             }
+    }
+
+    fun exportToUri(result: List<RiderScoreAggregate>, uri: Uri) {
+        fileStorage.openOutputStream(uri).use { outputStream ->
+            export(result, outputStream)
+        }
+    }
+
+    fun importRidersFromUri(uri: Uri): Flow<RiderScore> {
+        return flow {
+            fileStorage.openInputStream(uri).use { inputStream ->
+                importRiders(inputStream).collect { rider ->
+                    emit(rider)
+                }
+            }
+        }
     }
 
     private fun generateHeader(numSections: Int): Array<String> {

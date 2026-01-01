@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +17,6 @@ import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
 
@@ -81,34 +79,35 @@ class EventScoreViewModel @Inject constructor(
                 .groupBy { score -> score.riderClass }
         }.asLiveData()
 
-    fun exportReport(uri: Uri, contentResolver: ContentResolver) {
+    fun exportReport(uri: Uri) {
         // more about coroutines https://developer.android.com/kotlin/coroutines
         viewModelScope.launch(Dispatchers.IO) {
             Log.d(TAG, "Exporting results to $uri")
             try {
-                contentResolver.openFileDescriptor(uri, "w")?.use { descriptor ->
-                    sectionScoreRepository.fetchFullResults().collect { result ->
-                        importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
-                    }
-                } ?: Log.e(TAG, "Couldn't open $uri")
+                sectionScoreRepository.fetchFullResults().collect { result ->
+                    importExportService.exportToUri(result, uri)
+                }
+                Log.d(TAG, "CSV Export complete")
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "Failed to open file for export", e)
             } catch (e: IOException) {
                 Log.e(TAG, "Failed to open file for export", e)
             }
-            Log.d(TAG, "CSV Export complete")
         }
     }
 
-    fun importRiders(uri: Uri, contentResolver: ContentResolver) {
+    fun importRiders(uri: Uri) {
         viewModelScope.launch(Dispatchers.IO) {
-            contentResolver.openInputStream(uri)?.use { inputStream ->
-                importExportService.importRiders(inputStream).collect { rider ->
+            try {
+                importExportService.importRidersFromUri(uri).collect { rider ->
                     sectionScoreRepository.addRider(rider)
                 }
-            } ?: Log.e(TAG, "Can't open file $uri")
+            } catch (e: FileNotFoundException) {
+                Log.e(TAG, "Can't open file $uri", e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to read file for import", e)
+            }
         }
-
     }
 
     fun clearAll() {
