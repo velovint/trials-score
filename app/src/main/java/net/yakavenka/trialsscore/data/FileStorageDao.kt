@@ -6,18 +6,18 @@ import java.io.OutputStream
 
 /**
  * DAO for file storage operations.
- * Abstracts Uri-to-stream conversion to enable testing.
+ * Manages stream lifecycle internally for safe resource management.
  */
 interface FileStorageDao {
     /**
-     * Opens an output stream for writing to the given URI.
-     * Caller is responsible for closing the stream.
+     * Writes to the given URI using the provided block.
+     * Manages stream lifecycle internally.
      */
-    fun openOutputStream(uri: Uri): OutputStream
+    fun writeToUri(uri: Uri, block: (OutputStream) -> Unit)
 
     /**
-     * Opens an input stream for reading from the given URI.
-     * Caller is responsible for closing the stream.
+     * Reads from the given URI using the provided suspend block.
+     * Manages stream lifecycle internally.
      */
-    fun openInputStream(uri: Uri): InputStream
+    suspend fun readFromUri(uri: Uri, block: suspend (InputStream) -> Unit)
 }

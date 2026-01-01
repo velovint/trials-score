@@ -57,14 +57,14 @@ class CsvExchangeRepository @Inject constructor(
     }
 
     fun exportToUri(result: List<RiderScoreAggregate>, uri: Uri) {
-        fileStorage.openOutputStream(uri).use { outputStream ->
+        fileStorage.writeToUri(uri) { outputStream ->
             export(result, outputStream)
         }
     }
 
-    fun importRidersFromUri(uri: Uri): Flow<RiderScore> {
+    suspend fun importRidersFromUri(uri: Uri): Flow<RiderScore> {
         return flow {
-            fileStorage.openInputStream(uri).use { inputStream ->
+            fileStorage.readFromUri(uri) { inputStream ->
                 importRiders(inputStream).collect { rider ->
                     emit(rider)
                 }

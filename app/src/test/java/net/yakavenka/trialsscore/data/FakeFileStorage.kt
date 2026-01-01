@@ -32,21 +32,22 @@ class FakeFileStorage : FileStorageDao {
         return getWrittenData(uri)?.toString(Charsets.UTF_8)
     }
 
-    override fun openOutputStream(uri: Uri): OutputStream {
+    override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
         if (urisToFail.contains(uri.toString())) {
             throw FileNotFoundException("Simulated failure for $uri")
         }
         val outputStream = ByteArrayOutputStream()
         writtenData[uri.toString()] = outputStream
-        return outputStream
+        block(outputStream)
     }
 
-    override fun openInputStream(uri: Uri): InputStream {
+    override suspend fun readFromUri(uri: Uri, block: suspend (InputStream) -> Unit) {
         if (urisToFail.contains(uri.toString())) {
             throw FileNotFoundException("Simulated failure for $uri")
         }
         val data = dataToRead[uri.toString()]
             ?: throw FileNotFoundException("No data set for $uri")
-        return ByteArrayInputStream(data)
+        val inputStream = ByteArrayInputStream(data)
+        block(inputStream)
     }
 }

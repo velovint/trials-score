@@ -167,25 +167,29 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test
-    fun importRidersFromUri_readsValidCsv() = runBlocking {
-        val uri = Uri.parse("content://test/import.csv")
-        val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
-        fakeFileStorage.setDataToRead(uri, csvData)
+    fun importRidersFromUri_readsValidCsv() {
+        runBlocking {
+            val uri = Uri.parse("content://test/import.csv")
+            val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
+            fakeFileStorage.setDataToRead(uri, csvData)
 
-        val riders = sut.importRidersFromUri(uri).toList()
+            val riders = sut.importRidersFromUri(uri).toList()
 
-        assertThat(riders, hasSize(2))
-        assertThat(riders[0].name, equalTo("Rider 1"))
-        assertThat(riders[0].riderClass, equalTo("Novice"))
-        assertThat(riders[1].name, equalTo("Rider 2"))
-        assertThat(riders[1].riderClass, equalTo("Advanced"))
+            assertThat(riders, hasSize(2))
+            assertThat(riders[0].name, equalTo("Rider 1"))
+            assertThat(riders[0].riderClass, equalTo("Novice"))
+            assertThat(riders[1].name, equalTo("Rider 2"))
+            assertThat(riders[1].riderClass, equalTo("Advanced"))
+        }
     }
 
     @Test(expected = FileNotFoundException::class)
-    fun importRidersFromUri_handlesFileNotFoundException() = runBlocking {
-        val uri = Uri.parse("content://test/missing.csv")
-        fakeFileStorage.simulateFileNotFound(uri)
+    fun importRidersFromUri_handlesFileNotFoundException() {
+        runBlocking {
+            val uri = Uri.parse("content://test/missing.csv")
+            fakeFileStorage.simulateFileNotFound(uri)
 
-        sut.importRidersFromUri(uri).toList()
+            sut.importRidersFromUri(uri).toList()
+        }
     }
 }

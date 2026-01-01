@@ -14,14 +14,21 @@ class ContentResolverFileStorage @Inject constructor(
     private val contentResolver: ContentResolver
 ) : FileStorageDao {
 
-    override fun openOutputStream(uri: Uri): OutputStream {
+    override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
         val descriptor = contentResolver.openFileDescriptor(uri, "w")
             ?: throw FileNotFoundException("Couldn't open $uri")
-        return FileOutputStream(descriptor.fileDescriptor)
+        descriptor.use { pfd ->
+            FileOutputStream(pfd.fileDescriptor).use { outputStream ->
+                block(outputStream)
+            }
+        }
     }
 
-    override fun openInputStream(uri: Uri): InputStream {
-        return contentResolver.openInputStream(uri)
+    override suspend fun readFromUri(uri: Uri, block: suspend (InputStream) -> Unit) {
+        val inputStream = contentResolver.openInputStream(uri)
             ?: throw FileNotFoundException("Can't open file $uri")
+        inputStream.use { stream ->
+            block(stream)
+        }
     }
 }
