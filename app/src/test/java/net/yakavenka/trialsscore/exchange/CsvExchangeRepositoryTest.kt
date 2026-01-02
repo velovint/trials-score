@@ -15,7 +15,6 @@ import org.hamcrest.Matchers.notNullValue
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.FileNotFoundException
 import java.io.InputStream
 
@@ -23,40 +22,24 @@ import java.io.InputStream
 class CsvExchangeRepositoryTest {
     private val fakeFileStorage = FakeFileStorage()
     private val sut = CsvExchangeRepository(fakeFileStorage)
-    private val outputStream = ByteArrayOutputStream()
     private val mockUri by lazy { mock<Uri> {} }
 
     @Test
-    fun export() {
-        val aggregate = sampleSectionScore()
-
-        sut.export(listOf(aggregate), outputStream)
-
-        val actual = outputStream.toString()
-        assertThat("Header", actual, containsString("S10"))
-        assertThat("Class", actual, containsString("Novice"))
-        assertThat("Name", actual, containsString("Test1"))
-        assertThat("Section scores", actual, containsString("-1,-1"))
-        assertThat("Points", actual, containsString("5"))
-        assertThat("Cleans", actual, containsString("2"))
-    }
-
-    @Test
-    fun export_fillsGapsInSectionNumbers_whenSectionsAreMissing() {
+    fun export_fillsGapsInSectionNumbers_whenSectionsAreMissing() = runTest {
         val rider = RiderScore(1, "Test Rider", "Expert")
         val sections = listOf(
             SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 2, points = 1)
         )
         val aggregate = RiderScoreAggregate(rider, sections)
 
-        sut.export(listOf(aggregate), outputStream)
+        sut.exportToUri(listOf(aggregate), mockUri)
 
-        val csvOutput = outputStream.toString()
+        val csvOutput = fakeFileStorage.readStringFromUri(mockUri)
         assertThat(csvOutput, containsString("Test Rider,Expert,1,0,,1"))
     }
 
     @Test
-    fun export_includesScores_forMultipleLoops() {
+    fun export_includesScores_forMultipleLoops() = runTest {
         // given a score for 2 loops and 2 sections
         val rider = RiderScore(1, "Rider 1", "Expert")
         val scores = listOf(
@@ -69,9 +52,9 @@ class CsvExchangeRepositoryTest {
             RiderScoreAggregate(rider, scores),
         )
 
-        sut.export(aggregates, outputStream)
+        sut.exportToUri(aggregates, mockUri)
 
-        val csvOutput = outputStream.toString()
+        val csvOutput = fakeFileStorage.readStringFromUri(mockUri)
         assertThat("Header has S1 through S4", csvOutput, containsString("S1,S2,S3,S4"))
         assertThat("Section scores", csvOutput, containsString("0,1,2,3"))
     }
@@ -142,8 +125,6 @@ class CsvExchangeRepositoryTest {
             sections)
     }
 
-    // Tests for Uri-based methods
-
     @Test
     fun exportToUri_writesValidCsv() = runTest {
         val aggregate = sampleSectionScore()
@@ -155,6 +136,9 @@ class CsvExchangeRepositoryTest {
         assertThat("Header", writtenData, containsString("S10"))
         assertThat("Class", writtenData, containsString("Novice"))
         assertThat("Name", writtenData, containsString("Test1"))
+        assertThat("Section scores", writtenData, containsString("-1,-1"))
+        assertThat("Points", writtenData, containsString("5"))
+        assertThat("Cleans", writtenData, containsString("2"))
     }
 
     @Test
