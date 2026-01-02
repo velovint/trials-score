@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.yakavenka.trialsscore.data.FakeFileStorage
+import net.yakavenka.trialsscore.data.FakeRiderScoreDao
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.RiderScoreDao
@@ -76,63 +77,6 @@ class EventScoreViewModelTest {
             writtenContent.occurrencesOf("Name,Class"),
             equalTo(1)
         )
-    }
-}
-
-/**
- * Configurable fake DAO for testing.
- * Tests can set the Flow that should be returned by each method.
- */
-class FakeRiderScoreDao : RiderScoreDao {
-    /**
-     * Configurable Flow for getAll(). Tests should set this to control behavior.
-     */
-    var getAllFlow: Flow<List<RiderScoreAggregate>> = flow { emit(emptyList()) }
-
-    /**
-     * Configurable Flow for fetchSummary(). Defaults to empty list.
-     */
-    var fetchSummaryFlow: Flow<List<RiderScoreSummary>> = flow { emit(emptyList()) }
-
-    override fun getAll(): Flow<List<RiderScoreAggregate>> = getAllFlow
-
-    override fun fetchSummary(): Flow<List<RiderScoreSummary>> = fetchSummaryFlow
-
-    // Other methods throw NotImplementedError - implement only when needed
-    override fun getRider(riderId: Int): Flow<RiderScore> {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override fun sectionScores(riderId: Int, loopNumber: Int): Flow<List<SectionScore>> {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun updateSectionScore(sectionScore: SectionScore) {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun deleteAllRiders() {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun deleteAllScores() {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun deleteRiderScores(riderId: Int) {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun insertAll(sectionScores: List<SectionScore>) {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun addRider(riderScore: RiderScore) {
-        throw NotImplementedError("Not configured for this test")
-    }
-
-    override suspend fun updateRider(riderScore: RiderScore) {
-        throw NotImplementedError("Not configured for this test")
     }
 }
 

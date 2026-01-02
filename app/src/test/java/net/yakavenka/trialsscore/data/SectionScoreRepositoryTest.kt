@@ -19,7 +19,7 @@ class SectionScoreRepositoryTest {
         val numLoops = 3
         val requestedLoop = 2
 
-        val dao = RiderScoreDaoFake()
+        val dao = FakeRiderScoreDao()
         val allScores = SectionScore.Set.createForRider(riderId, numSections, numLoops)
         dao.existingScores.addAll(allScores.sectionScores)
 
@@ -39,7 +39,7 @@ class SectionScoreRepositoryTest {
         val numSections = 3
         val requestedLoop = 1
 
-        val dao = RiderScoreDaoFake()
+        val dao = FakeRiderScoreDao()
         dao.existingScores.add(SectionScore(riderId, requestedLoop, sectionNumber = 2, points = 5))
 
         val sut = SectionScoreRepository(dao)
@@ -59,7 +59,7 @@ class SectionScoreRepositoryTest {
         val numSections = 10
         val requestedLoop = 2
 
-        val dao = RiderScoreDaoFake()
+        val dao = FakeRiderScoreDao()
         val sut = SectionScoreRepository(dao)
 
         // When: Fetching scores for loop 2 (will trigger initialization)
@@ -70,53 +70,4 @@ class SectionScoreRepositoryTest {
         assertThat(result.getLoopNumber(), equalTo(requestedLoop))
     }
 
-    class RiderScoreDaoFake : RiderScoreDao {
-        val existingScores = mutableListOf<SectionScore>()
-
-        override fun getAll(): Flow<List<RiderScoreAggregate>> {
-            TODO("Not yet implemented")
-        }
-
-        override fun getRider(riderId: Int): Flow<RiderScore> {
-            TODO("Not yet implemented")
-        }
-
-        override fun sectionScores(riderId: Int, loopNumber: Int): Flow<List<SectionScore>> = flow {
-            // Return only scores for the requested loop
-            val scores = existingScores.filter { it.riderId == riderId && it.loopNumber == loopNumber }
-            emit(scores)
-        }
-
-        override suspend fun updateSectionScore(sectionScore: SectionScore) {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun deleteAllRiders() {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun deleteAllScores() {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun deleteRiderScores(riderId: Int) {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun insertAll(sectionScores: List<SectionScore>) {
-            existingScores.addAll(sectionScores)
-        }
-
-        override suspend fun addRider(riderScore: RiderScore) {
-            TODO("Not yet implemented")
-        }
-
-        override fun fetchSummary(): Flow<List<RiderScoreSummary>> {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun updateRider(riderScore: RiderScore) {
-            TODO("Not yet implemented")
-        }
-    }
 }
