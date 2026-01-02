@@ -19,3 +19,5 @@ CLAUDE.local.md
 .idea
 .kotlin
 
+.env
+.mcp.json
