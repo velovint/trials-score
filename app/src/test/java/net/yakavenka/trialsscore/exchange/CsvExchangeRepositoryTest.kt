@@ -1,7 +1,6 @@
 package net.yakavenka.trialsscore.exchange
 
 import android.net.Uri
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
@@ -14,9 +13,7 @@ import org.hamcrest.Matchers.hasSize
 import org.hamcrest.Matchers.notNullValue
 import org.junit.Test
 import org.mockito.kotlin.mock
-import java.io.ByteArrayInputStream
 import java.io.FileNotFoundException
-import java.io.InputStream
 
 
 class CsvExchangeRepositoryTest {
@@ -25,7 +22,7 @@ class CsvExchangeRepositoryTest {
     private val mockUri by lazy { mock<Uri> {} }
 
     @Test
-    fun export_fillsGapsInSectionNumbers_whenSectionsAreMissing() = runTest {
+    fun exportToUri_fillsGapsInSectionNumbers_whenSectionsAreMissing() = runTest {
         val rider = RiderScore(1, "Test Rider", "Expert")
         val sections = listOf(
             SectionScore(riderId = 1, loopNumber = 1, sectionNumber = 2, points = 1)
@@ -39,7 +36,7 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test
-    fun export_includesScores_forMultipleLoops() = runTest {
+    fun exportToUri_includesScores_forMultipleLoops() = runTest {
         // given a score for 2 loops and 2 sections
         val rider = RiderScore(1, "Rider 1", "Expert")
         val scores = listOf(
@@ -60,72 +57,6 @@ class CsvExchangeRepositoryTest {
     }
 
     @Test
-    fun importRidersReadsFullInput() = runBlocking{
-        val riders = sut.importRiders(sampleImportStream())
-
-        assertThat(riders, hasSize(2))
-    }
-
-    @Test
-    fun importRidersMapsFields() = runBlocking {
-        val riders = sut.importRiders(sampleImportStream())
-        val rider = riders.first()
-
-        assertThat(rider.name, equalTo("Rider 1"))
-        assertThat(rider.riderClass, equalTo("Novice"))
-    }
-
-    @Test
-    fun importRidersRemovesWhitespaces() = runBlocking {
-        val input = ByteArrayInputStream(("Rider 1 , Novice \n").toByteArray())
-
-        val riders = sut.importRiders(input)
-        val rider = riders.first()
-
-        assertThat(rider.name, equalTo("Rider 1"))
-        assertThat(rider.riderClass, equalTo("Novice"))
-    }
-
-    @Test
-    fun importRidersWithQuotes() = runBlocking {
-        val input = ByteArrayInputStream(("\"Rider, 1\",Novice\n").toByteArray())
-
-        val riders = sut.importRiders(input)
-        val rider = riders.first()
-
-        assertThat(rider.name, equalTo("Rider, 1"))
-    }
-
-    @Test
-    fun importRidersIgnoresInvalidLines() = runBlocking {
-        val input = ByteArrayInputStream(("\nRider 1,Novice").toByteArray())
-
-        val riders = sut.importRiders(input)
-        val rider = riders.first()
-
-        assertThat(rider.name, equalTo("Rider 1"))
-        assertThat(rider.riderClass, equalTo("Novice"))
-    }
-
-    private fun sampleImportStream(): InputStream {
-        return ByteArrayInputStream(
-            ("Rider 1,Novice\n" +
-                    "Rider 2,Advanced\n")
-                .toByteArray()
-        )
-    }
-
-    private fun sampleSectionScore(): RiderScoreAggregate {
-        val sections = SectionScore.Set.createForRider(1, 30, 1).sectionScores.toMutableList()
-        sections[0] = sections[0].copy(points = 0)
-        sections[1] = sections[1].copy(points = 0)
-        sections[2] = sections[2].copy(points = 5)
-        return RiderScoreAggregate(
-            RiderScore(1, "Test1", "Novice"),
-            sections)
-    }
-
-    @Test
     fun exportToUri_writesValidCsv() = runTest {
         val aggregate = sampleSectionScore()
 
@@ -139,6 +70,11 @@ class CsvExchangeRepositoryTest {
         assertThat("Section scores", writtenData, containsString("-1,-1"))
         assertThat("Points", writtenData, containsString("5"))
         assertThat("Cleans", writtenData, containsString("2"))
+    }
+
+    @Test(expected = FileNotFoundException::class)
+    fun importRidersFromUri_handlesFileNotFoundException() = runTest {
+        sut.importRidersFromUri(mockUri)
     }
 
     @Test
@@ -155,8 +91,65 @@ class CsvExchangeRepositoryTest {
         assertThat(riders[1].riderClass, equalTo("Advanced"))
     }
 
-    @Test(expected = FileNotFoundException::class)
-    fun importRidersFromUri_handlesFileNotFoundException() = runTest {
-        sut.importRidersFromUri(mockUri)
+    @Test
+    fun importRidersIgnoresInvalidLines() = runTest {
+        fakeFileStorage.writeStringToUri(mockUri, "\nRider 1,Novice")
+
+        val riders = sut.importRidersFromUri(mockUri)
+        val rider = riders.first()
+
+        assertThat(rider.name, equalTo("Rider 1"))
+        assertThat(rider.riderClass, equalTo("Novice"))
+    }
+
+    @Test
+    fun importRidersMapsFields() = runTest {
+        fakeFileStorage.writeStringToUri(mockUri, "Rider 1,Novice\nRider 2,Advanced\n")
+
+        val riders = sut.importRidersFromUri(mockUri)
+        val rider = riders.first()
+
+        assertThat(rider.name, equalTo("Rider 1"))
+        assertThat(rider.riderClass, equalTo("Novice"))
+    }
+
+    @Test
+    fun importRidersReadsFullInput() = runTest {
+        fakeFileStorage.writeStringToUri(mockUri, "Rider 1,Novice\nRider 2,Advanced\n")
+
+        val riders = sut.importRidersFromUri(mockUri)
+
+        assertThat(riders, hasSize(2))
+    }
+
+    @Test
+    fun importRidersRemovesWhitespaces() = runTest {
+        fakeFileStorage.writeStringToUri(mockUri, "Rider 1 , Novice \n")
+
+        val riders = sut.importRidersFromUri(mockUri)
+        val rider = riders.first()
+
+        assertThat(rider.name, equalTo("Rider 1"))
+        assertThat(rider.riderClass, equalTo("Novice"))
+    }
+
+    @Test
+    fun importRidersWithQuotes() = runTest {
+        fakeFileStorage.writeStringToUri(mockUri, "\"Rider, 1\",Novice\n")
+
+        val riders = sut.importRidersFromUri(mockUri)
+        val rider = riders.first()
+
+        assertThat(rider.name, equalTo("Rider, 1"))
+    }
+
+    private fun sampleSectionScore(): RiderScoreAggregate {
+        val sections = SectionScore.Set.createForRider(1, 30, 1).sectionScores.toMutableList()
+        sections[0] = sections[0].copy(points = 0)
+        sections[1] = sections[1].copy(points = 0)
+        sections[2] = sections[2].copy(points = 5)
+        return RiderScoreAggregate(
+            RiderScore(1, "Test1", "Novice"),
+            sections)
     }
 }

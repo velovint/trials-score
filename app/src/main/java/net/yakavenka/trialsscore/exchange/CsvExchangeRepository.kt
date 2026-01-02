@@ -60,7 +60,7 @@ class CsvExchangeRepository constructor(
         }
     }
 
-    fun importRiders(inputStream: InputStream): List<RiderScore> {
+    private fun importRiders(inputStream: InputStream): List<RiderScore> {
         return CSVReaderBuilder(InputStreamReader(inputStream))
             .build()
             .mapNotNull { line ->
