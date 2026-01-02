@@ -16,7 +16,7 @@ class ContentResolverFileStorage @Inject constructor(
 
     override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
         val descriptor = contentResolver.openFileDescriptor(uri, "w")
-            ?: throw FileNotFoundException("Couldn't open $uri")
+            ?: throw FileNotFoundException("Couldn't open $uri") // TODO, just log this as error
         descriptor.use { pfd ->
             FileOutputStream(pfd.fileDescriptor).use { outputStream ->
                 block(outputStream)

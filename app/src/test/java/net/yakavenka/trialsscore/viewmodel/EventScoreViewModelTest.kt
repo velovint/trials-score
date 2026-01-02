@@ -3,12 +3,15 @@ package net.yakavenka.trialsscore.viewmodel
 import android.net.Uri
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
@@ -21,22 +24,26 @@ import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
 class EventScoreViewModelTest {
     private val fakeFileStorage = FakeFileStorage()
     private val fakeDao = FakeRiderScoreDao()
     private lateinit var viewModel: EventScoreViewModel
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher) // For ModelView
         val sectionScoreRepository = SectionScoreRepository(fakeDao)
         val scoreSummaryRepository = ScoreSummaryRepository(fakeDao)
-        val csvRepository = CsvExchangeRepository(fakeFileStorage)
+        val csvRepository = CsvExchangeRepository(fakeFileStorage, testDispatcher)
         val preferencesRepository = UserPreferencesRepository(FakeDataStore())
 
         viewModel = EventScoreViewModel(
@@ -47,8 +54,13 @@ class EventScoreViewModelTest {
         )
     }
 
+    @After
+    fun teardown() {
+        Dispatchers.resetMain()
+    }
+
     @Test
-    fun exportReport_writesOnce_whenFlowEmitsMultipleTimes() = runBlocking {
+    fun exportReport_writesOnce_whenFlowEmitsMultipleTimes() = runTest {
         // Given: DAO configured to emit twice (simulating reactive Room Flow behavior)
         val testData = listOf(createTestRiderAggregate())
         fakeDao.getAllFlow = flowOf(testData, testData)
@@ -56,18 +68,14 @@ class EventScoreViewModelTest {
 
         // When: Export is triggered
         viewModel.exportReport(testUri)
-        // TODO figure out how to avoid delay
-        delay(2000) // Wait for coroutine to complete (increased delay)
 
         // Then: Export should be called only ONCE (not twice)
-        // FakeFileStorage appends on each write, so if called twice, content is duplicated
         val writtenContent = fakeFileStorage.readStringFromUri(testUri)
-        val headerOccurrences = "Name,Class".toRegex().findAll(writtenContent).count()
-
-        // Expected: 1 occurrence (single write)
-        // With bug: 2 occurrences (content written twice)
-        assertThat("CSV header should appear once, but appeared $headerOccurrences times",
-                   headerOccurrences, equalTo(1))
+        assertThat(
+            "CSV header should appear exactly once",
+            writtenContent.occurrencesOf("Name,Class"),
+            equalTo(1)
+        )
     }
 }
 
@@ -152,3 +160,10 @@ fun createTestRiderAggregate(
     val rider = RiderScore(riderId, riderName, riderClass)
     return RiderScoreAggregate(rider, sectionScores)
 }
+
+/**
+ * Extension function to count occurrences of a substring.
+ * More efficient than regex for simple substring counting.
+ */
+fun String.occurrencesOf(substring: String): Int =
+    split(substring).size - 1
