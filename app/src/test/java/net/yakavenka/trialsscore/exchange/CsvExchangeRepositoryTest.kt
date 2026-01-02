@@ -159,15 +159,6 @@ class CsvExchangeRepositoryTest {
         assertThat("Name", writtenData, containsString("Test1"))
     }
 
-    @Test(expected = FileNotFoundException::class)
-    fun exportToUri_handlesFileNotFoundException() = runTest {
-        val failingStorage = FakeFileStorage(shouldFailOnWrite = true)
-        val repository = CsvExchangeRepository(failingStorage)
-        val aggregate = sampleSectionScore()
-
-        repository.exportToUri(listOf(aggregate), mockUri)
-    }
-
     @Test
     fun importRidersFromUri_readsValidCsv() = runTest {
         val csvData = "Rider 1,Novice\nRider 2,Advanced\n"

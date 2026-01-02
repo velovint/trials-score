@@ -11,7 +11,7 @@ import java.io.OutputStream
  * Fake implementation of FileStorageDao for testing.
  * Uses in-memory storage to simulate file I/O with unified read/write storage.
  */
-class FakeFileStorage(private val shouldFailOnWrite: Boolean = false) : FileStorageDao {
+class FakeFileStorage : FileStorageDao {
     private val storage = mutableMapOf<String, ByteArray>()
 
     /**
@@ -22,9 +22,6 @@ class FakeFileStorage(private val shouldFailOnWrite: Boolean = false) : FileStor
      * invocations by examining the accumulated content.
      */
     override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
-        if (shouldFailOnWrite) {
-            throw FileNotFoundException("Simulated write failure for $uri")
-        }
         val outputStream = ByteArrayOutputStream()
         block(outputStream)
         val newData = outputStream.toByteArray()

@@ -2,6 +2,7 @@ package net.yakavenka.trialsscore.data
 
 import android.content.ContentResolver
 import android.net.Uri
+import android.util.Log
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -14,9 +15,16 @@ class ContentResolverFileStorage @Inject constructor(
     private val contentResolver: ContentResolver
 ) : FileStorageDao {
 
+    companion object {
+        private const val TAG = "ContentResolverFileStorage"
+    }
+
     override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
         val descriptor = contentResolver.openFileDescriptor(uri, "w")
-            ?: throw FileNotFoundException("Couldn't open $uri") // TODO, just log this as error
+        if (descriptor == null) {
+            Log.e(TAG, "Failed to open file descriptor for $uri")
+            return
+        }
         descriptor.use { pfd ->
             FileOutputStream(pfd.fileDescriptor).use { outputStream ->
                 block(outputStream)
