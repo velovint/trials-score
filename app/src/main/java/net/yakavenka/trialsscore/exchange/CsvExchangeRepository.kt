@@ -28,7 +28,13 @@ class CsvExchangeRepository constructor(
 ){
     @Inject constructor(fileStorage: FileStorageDao) : this(fileStorage, Dispatchers.IO)
 
-    fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
+    suspend fun exportToUri(result: List<RiderScoreAggregate>, uri: Uri) = withContext(dispatcher) {
+        fileStorage.writeToUri(uri) { outputStream ->
+            export(result, outputStream)
+        }
+    }
+
+    private fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 
         val numSections = result
@@ -48,8 +54,14 @@ class CsvExchangeRepository constructor(
         writer.close()
     }
 
-    suspend fun importRiders(inputStream: InputStream): List<RiderScore> = withContext(dispatcher) {
-        CSVReaderBuilder(InputStreamReader(inputStream))
+    suspend fun importRidersFromUri(uri: Uri): List<RiderScore> = withContext(dispatcher) {
+        fileStorage.readFromUri(uri) { inputStream ->
+            importRiders(inputStream)
+        }
+    }
+
+    private fun importRiders(inputStream: InputStream): List<RiderScore> {
+        return CSVReaderBuilder(InputStreamReader(inputStream))
             .build()
             .mapNotNull { line ->
                 if (line.size >= 2) {
@@ -59,20 +71,6 @@ class CsvExchangeRepository constructor(
                     null
                 }
             }
-    }
-
-    suspend fun exportToUri(result: List<RiderScoreAggregate>, uri: Uri) {
-        withContext(dispatcher) {
-            fileStorage.writeToUri(uri) { outputStream ->
-                export(result, outputStream)
-            }
-        }
-    }
-
-    suspend fun importRidersFromUri(uri: Uri): List<RiderScore> = withContext(dispatcher) {
-        fileStorage.readFromUri(uri) { inputStream ->
-            importRiders(inputStream)
-        }
     }
 
     private fun generateHeader(numSections: Int): Array<String> {

@@ -31,7 +31,7 @@ class FakeFileStorage : FileStorageDao {
         storage[uri.toString()] = existingData + newData
     }
 
-    override suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T {
+    override fun <T> readFromUri(uri: Uri, block: (InputStream) -> T): T {
         val data = storage[uri.toString()]
             ?: throw FileNotFoundException("No data written to $uri")
         val inputStream = ByteArrayInputStream(data)
@@ -44,7 +44,7 @@ class FakeFileStorage : FileStorageDao {
         }
     }
 
-    suspend fun readStringFromUri(uri: Uri): String {
+    fun readStringFromUri(uri: Uri): String {
         return readFromUri(uri) { inputStream ->
             inputStream.readBytes().toString(Charsets.UTF_8)
         }

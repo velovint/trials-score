@@ -19,5 +19,5 @@ interface FileStorageDao {
      * Reads from the given URI using the provided suspend block.
      * Manages stream lifecycle internally.
      */
-    suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T
+    fun <T> readFromUri(uri: Uri, block: (InputStream) -> T): T
 }
