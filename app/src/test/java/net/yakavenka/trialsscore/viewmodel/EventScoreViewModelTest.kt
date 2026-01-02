@@ -28,7 +28,7 @@ import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
 class EventScoreViewModelTest {
-    private val trackingFileStorage = TrackingFakeFileStorage()
+    private val fakeFileStorage = FakeFileStorage()
     private val fakeDao = FakeRiderScoreDao()
     private lateinit var viewModel: EventScoreViewModel
 
@@ -36,7 +36,7 @@ class EventScoreViewModelTest {
     fun setup() {
         val sectionScoreRepository = SectionScoreRepository(fakeDao)
         val scoreSummaryRepository = ScoreSummaryRepository(fakeDao)
-        val csvRepository = CsvExchangeRepository(trackingFileStorage)
+        val csvRepository = CsvExchangeRepository(fakeFileStorage)
         val preferencesRepository = UserPreferencesRepository(FakeDataStore())
 
         viewModel = EventScoreViewModel(
@@ -60,36 +60,14 @@ class EventScoreViewModelTest {
         delay(2000) // Wait for coroutine to complete (increased delay)
 
         // Then: Export should be called only ONCE (not twice)
-        val actualCallCount = trackingFileStorage.writeCount
+        // FakeFileStorage appends on each write, so if called twice, content is duplicated
+        val writtenContent = fakeFileStorage.readStringFromUri(testUri)
+        val headerOccurrences = "Name,Class".toRegex().findAll(writtenContent).count()
 
-        // Expected: 1 call
-        // With bug: 2 calls (one for each Flow emission)
-        // This assertion should FAIL initially, showing actualCallCount = 2
-        assertThat("Should call export only once, but was called $actualCallCount times",
-                   actualCallCount, equalTo(1))
-    }
-}
-
-/**
- * Tracks how many times writeToUri is called to detect duplicate exports
- */
-class TrackingFakeFileStorage : net.yakavenka.trialsscore.data.FileStorageDao {
-    private val delegate = FakeFileStorage()
-    var writeCount = 0
-        private set
-
-    override fun writeToUri(uri: Uri, block: (java.io.OutputStream) -> Unit) {
-        writeCount++
-        println("=== STORAGE: writeToUri called (count = $writeCount) ===")
-        delegate.writeToUri(uri, block)
-    }
-
-    override suspend fun <T> readFromUri(uri: Uri, block: suspend (java.io.InputStream) -> T): T {
-        return delegate.readFromUri(uri, block)
-    }
-
-    fun getWrittenDataAsString(uri: Uri): String? {
-        return delegate.getWrittenDataAsString(uri)
+        // Expected: 1 occurrence (single write)
+        // With bug: 2 occurrences (content written twice)
+        assertThat("CSV header should appear once, but appeared $headerOccurrences times",
+                   headerOccurrences, equalTo(1))
     }
 }
 

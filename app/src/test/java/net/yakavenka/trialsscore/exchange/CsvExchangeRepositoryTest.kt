@@ -1,10 +1,7 @@
 package net.yakavenka.trialsscore.exchange
 
 import android.net.Uri
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
@@ -153,7 +150,9 @@ class CsvExchangeRepositoryTest {
 
         sut.exportToUri(listOf(aggregate), mockUri)
 
-        val writtenData = fakeFileStorage.getWrittenDataAsString(mockUri)
+        val writtenData = runBlocking {
+            fakeFileStorage.readStringFromUri(mockUri)
+        }
         assertThat("Data was written", writtenData, notNullValue())
         assertThat("Header", writtenData, containsString("S10"))
         assertThat("Class", writtenData, containsString("Novice"))
@@ -162,16 +161,17 @@ class CsvExchangeRepositoryTest {
 
     @Test(expected = FileNotFoundException::class)
     fun exportToUri_handlesFileNotFoundException() = runTest {
-        fakeFileStorage.simulateFileNotFound(mockUri)
+        val failingStorage = FakeFileStorage(shouldFailOnWrite = true)
+        val repository = CsvExchangeRepository(failingStorage)
         val aggregate = sampleSectionScore()
 
-        sut.exportToUri(listOf(aggregate), mockUri)
+        repository.exportToUri(listOf(aggregate), mockUri)
     }
 
     @Test
     fun importRidersFromUri_readsValidCsv() = runTest {
-        val csvData = "Rider 1,Novice\nRider 2,Advanced\n".toByteArray()
-        fakeFileStorage.setDataToRead(mockUri, csvData)
+        val csvData = "Rider 1,Novice\nRider 2,Advanced\n"
+        fakeFileStorage.writeStringToUri(mockUri, csvData)
 
         val riders = sut.importRidersFromUri(mockUri)
 
@@ -184,9 +184,6 @@ class CsvExchangeRepositoryTest {
 
     @Test(expected = FileNotFoundException::class)
     fun importRidersFromUri_handlesFileNotFoundException() = runTest {
-
-        fakeFileStorage.simulateFileNotFound(mockUri)
-
         sut.importRidersFromUri(mockUri)
     }
 }

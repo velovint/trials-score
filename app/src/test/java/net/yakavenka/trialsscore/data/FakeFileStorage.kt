@@ -9,45 +9,47 @@ import java.io.OutputStream
 
 /**
  * Fake implementation of FileStorageDao for testing.
- * Uses in-memory byte arrays to simulate file I/O.
+ * Uses in-memory storage to simulate file I/O with unified read/write storage.
  */
-class FakeFileStorage : FileStorageDao {
-    private val writtenData = mutableMapOf<String, ByteArrayOutputStream>()
-    private val dataToRead = mutableMapOf<String, ByteArray>()
-    private val urisToFail = mutableSetOf<String>()
+class FakeFileStorage(private val shouldFailOnWrite: Boolean = false) : FileStorageDao {
+    private val storage = mutableMapOf<String, ByteArray>()
 
-    fun simulateFileNotFound(uri: Uri) {
-        urisToFail.add(uri.toString())
-    }
-
-    fun setDataToRead(uri: Uri, data: ByteArray) {
-        dataToRead[uri.toString()] = data
-    }
-
-    fun getWrittenData(uri: Uri): ByteArray? {
-        return writtenData[uri.toString()]?.toByteArray()
-    }
-
-    fun getWrittenDataAsString(uri: Uri): String? {
-        return getWrittenData(uri)?.toString(Charsets.UTF_8)
-    }
-
+    /**
+     * Writes to the given URI using the provided block.
+     *
+     * NOTE: Unlike the actual implementation, this fake APPENDS to existing content
+     * instead of overwriting it. This allows tests to verify the number of write
+     * invocations by examining the accumulated content.
+     */
     override fun writeToUri(uri: Uri, block: (OutputStream) -> Unit) {
-        if (urisToFail.contains(uri.toString())) {
-            throw FileNotFoundException("Simulated failure for $uri")
+        if (shouldFailOnWrite) {
+            throw FileNotFoundException("Simulated write failure for $uri")
         }
         val outputStream = ByteArrayOutputStream()
-        writtenData[uri.toString()] = outputStream
         block(outputStream)
+        val newData = outputStream.toByteArray()
+
+        // Append to existing content instead of overwriting
+        val existingData = storage[uri.toString()] ?: ByteArray(0)
+        storage[uri.toString()] = existingData + newData
     }
 
     override suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T {
-        if (urisToFail.contains(uri.toString())) {
-            throw FileNotFoundException("Simulated failure for $uri")
-        }
-        val data = dataToRead[uri.toString()]
-            ?: throw FileNotFoundException("No data set for $uri")
+        val data = storage[uri.toString()]
+            ?: throw FileNotFoundException("No data written to $uri")
         val inputStream = ByteArrayInputStream(data)
         return block(inputStream)
+    }
+
+    fun writeStringToUri(uri: Uri, data: String) {
+        writeToUri(uri) { outputStream ->
+            outputStream.write(data.toByteArray(Charsets.UTF_8))
+        }
+    }
+
+    suspend fun readStringFromUri(uri: Uri): String {
+        return readFromUri(uri) { inputStream ->
+            inputStream.readBytes().toString(Charsets.UTF_8)
+        }
     }
 }
