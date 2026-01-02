@@ -150,9 +150,7 @@ class CsvExchangeRepositoryTest {
 
         sut.exportToUri(listOf(aggregate), mockUri)
 
-        val writtenData = runBlocking {
-            fakeFileStorage.readStringFromUri(mockUri)
-        }
+        val writtenData = fakeFileStorage.readStringFromUri(mockUri)
         assertThat("Data was written", writtenData, notNullValue())
         assertThat("Header", writtenData, containsString("S10"))
         assertThat("Class", writtenData, containsString("Novice"))

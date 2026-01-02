@@ -48,8 +48,8 @@ class CsvExchangeRepository constructor(
         writer.close()
     }
 
-    suspend fun importRiders(inputStream: InputStream): List<RiderScore> = withContext(dispatcher) {
-        CSVReaderBuilder(InputStreamReader(inputStream))
+    fun importRiders(inputStream: InputStream): List<RiderScore> {
+        return CSVReaderBuilder(InputStreamReader(inputStream))
             .build()
             .mapNotNull { line ->
                 if (line.size >= 2) {

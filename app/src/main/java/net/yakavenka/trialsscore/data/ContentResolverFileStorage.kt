@@ -26,17 +26,13 @@ class ContentResolverFileStorage @Inject constructor(
             return
         }
         descriptor.use { pfd ->
-            FileOutputStream(pfd.fileDescriptor).use { outputStream ->
-                block(outputStream)
-            }
+            block(FileOutputStream(pfd.fileDescriptor))
         }
     }
 
-    override suspend fun <T> readFromUri(uri: Uri, block: suspend (InputStream) -> T): T {
+    override fun <T> readFromUri(uri: Uri, block: (InputStream) -> T): T {
         val inputStream = contentResolver.openInputStream(uri)
             ?: throw FileNotFoundException("Can't open file $uri")
-        inputStream.use { stream ->
-            return block(stream)
-        }
+        return block(inputStream)
     }
 }
