@@ -4,10 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-TrialsScore is a motorcycle trials scoring application for Android. 
-Riders compete in multiple sections across multiple loops, 
-accumulating points from 0 (clean) to 5 per section. 
+TrialsScore is a motorcycle trials scoring application for Android.
+Riders compete in multiple sections across multiple loops,
+accumulating points from 0 (clean) to 5 per section.
 Lower total score wins.
+
+## User Documentation
+
+For complete usage instructions, see `docs/index.md`. This includes:
+- Application setup and configuration
+- Event workflow (configure event → import riders → enter scores → share/export results)
+- CSV import/export format details
+- Screenshot sharing instructions
+- Device recommendations
+
+Reference this file when planning features related to user workflows, data import/export formats, or understanding the end-user experience.
 
 ## Build Commands
 
@@ -65,6 +76,23 @@ The application code is located in `app` module and follows MVVM architecture wi
   - `add_rider` / `edit_rider/{riderId}` - Rider management
   - `settings` - Event configuration
   - `screenshot_view` - Full leaderboard view
+
+### UI Entry Points
+
+Map of key use cases to UI components (all in `/app/src/main/java/net/yakavenka/trialsscore/components/`):
+
+| Use Case | Entry Point | Navigation Route | Notes |
+|----------|-------------|------------------|-------|
+| View leaderboard | `LeaderboardScreen.kt` | `leaderboard` | Start destination; displays all riders grouped by class |
+| Configure event (sections/loops/classes) | `EventSettingsScreen.kt` | `settings` | Accessed via menu from `LeaderboardScreen` |
+| Import riders from CSV | `LeaderboardScreen.kt` | `leaderboard` | Import action in menu, handled by `EventScoreViewModel` |
+| Add new rider | `EditRiderScreen.kt` | `add_rider` | Accessed via FAB on `LeaderboardScreen` |
+| Edit rider info | `EditRiderScreen.kt` | `edit_rider/{riderId}` | Accessed via pencil icon from `LoopScoreEntryScreen` |
+| Enter/view rider scores | `LoopScoreEntryScreen.kt` | `points_entry/{riderId}/{loop}` | Tap rider name from `LeaderboardScreen` |
+| Share scores (screenshot) | `ScreenshotLeaderboardScreen.kt` | `screenshot_view` | Compact view for Android screenshots |
+| Export results to CSV | `LeaderboardScreen.kt` | `leaderboard` | Export action in menu, handled by `EventScoreViewModel` |
+
+When implementing features, consult `docs/index.md` for user workflow context and expected behavior.
 
 ### Dependency Injection
 
