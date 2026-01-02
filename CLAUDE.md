@@ -114,8 +114,17 @@ Room DB → Repository (Flow) → ViewModel (LiveData) → UI (Compose State)
 UI observes LiveData with `observeAsState()`. Write operations launch in ViewModel coroutine scope. Updates propagate automatically via Flow streams.
 
 ## Testing
-Use the following convention for all test method names
-<method that is tested>_<expectation>_<optionally conditions>
+
+### Test Naming Conventions
+
+**Test methods**: `<methodBeingTested>_<expectation>_<optionalConditions>`
+- Example: `fetchOrInitRiderScore_returnsOnlyRequestedLoop_whenScoresExist`
+
+**Test fakes/doubles**: `Fake<InterfaceName>`
+- Example: `FakeRiderScoreDao`, `FakeFileStorage`, `FakeDataStore`
+- Pattern: Always prefix with "Fake" followed by the interface name
+- Location: Test source set (`/app/src/test/java/`) under the same package as the interface
+  - Example: `RiderScoreDao` interface in `net.yakavenka.trialsscore.data` → `FakeRiderScoreDao` in `/app/src/test/java/net/yakavenka/trialsscore/data/`
 
 **Unit Tests** (`/test/`):
 - Pure JUnit tests with Hamcrest assertions
