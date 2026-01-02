@@ -63,13 +63,12 @@ fun LeaderboardScreen(
     onShowFullList: () -> Unit = {}
 ) {
     val scores by viewModel.allScores.observeAsState(initial = emptyMap())
-    val context = LocalContext.current
     val importPicker = rememberLauncherForActivityResult(
         contract = viewModel.importContract,
-        onResult = { uri -> uri?.let { viewModel.importRiders(it, context.contentResolver) }})
+        onResult = { uri -> uri?.let { viewModel.importRiders(it) }})
     val exportPicker = rememberLauncherForActivityResult(
         contract = viewModel.exportContract,
-        onResult = { uri -> uri?.let { viewModel.exportReport(it, context.contentResolver) }})
+        onResult = { uri -> uri?.let { viewModel.exportReport(it) }})
 
     Scaffold(
         topBar = {

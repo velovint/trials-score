@@ -1,8 +1,9 @@
 package net.yakavenka.trialsscore.exchange
 
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.toList
+import android.net.Uri
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
+import net.yakavenka.trialsscore.data.FakeFileStorage
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
@@ -10,16 +11,20 @@ import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.hasSize
+import org.hamcrest.Matchers.notNullValue
 import org.junit.Test
+import org.mockito.kotlin.mock
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.io.FileNotFoundException
 import java.io.InputStream
 
 
 class CsvExchangeRepositoryTest {
-    private val sut = CsvExchangeRepository()
-
+    private val fakeFileStorage = FakeFileStorage()
+    private val sut = CsvExchangeRepository(fakeFileStorage)
     private val outputStream = ByteArrayOutputStream()
+    private val mockUri by lazy { mock<Uri> {} }
 
     @Test
     fun export() {
@@ -73,14 +78,15 @@ class CsvExchangeRepositoryTest {
 
     @Test
     fun importRidersReadsFullInput() = runBlocking{
-        val riders = sut.importRiders(sampleImportStream()).toList()
+        val riders = sut.importRiders(sampleImportStream())
 
         assertThat(riders, hasSize(2))
     }
 
     @Test
     fun importRidersMapsFields() = runBlocking {
-        val rider = sut.importRiders(sampleImportStream()).first()
+        val riders = sut.importRiders(sampleImportStream())
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -90,7 +96,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersRemovesWhitespaces() = runBlocking {
         val input = ByteArrayInputStream(("Rider 1 , Novice \n").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -100,7 +107,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersWithQuotes() = runBlocking {
         val input = ByteArrayInputStream(("\"Rider, 1\",Novice\n").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider, 1"))
     }
@@ -109,7 +117,8 @@ class CsvExchangeRepositoryTest {
     fun importRidersIgnoresInvalidLines() = runBlocking {
         val input = ByteArrayInputStream(("\nRider 1,Novice").toByteArray())
 
-        val rider = sut.importRiders(input).first()
+        val riders = sut.importRiders(input)
+        val rider = riders.first()
 
         assertThat(rider.name, equalTo("Rider 1"))
         assertThat(rider.riderClass, equalTo("Novice"))
@@ -131,5 +140,41 @@ class CsvExchangeRepositoryTest {
         return RiderScoreAggregate(
             RiderScore(1, "Test1", "Novice"),
             sections)
+    }
+
+    // Tests for Uri-based methods
+
+    @Test
+    fun exportToUri_writesValidCsv() = runTest {
+        val aggregate = sampleSectionScore()
+
+        sut.exportToUri(listOf(aggregate), mockUri)
+
+        val writtenData = runBlocking {
+            fakeFileStorage.readStringFromUri(mockUri)
+        }
+        assertThat("Data was written", writtenData, notNullValue())
+        assertThat("Header", writtenData, containsString("S10"))
+        assertThat("Class", writtenData, containsString("Novice"))
+        assertThat("Name", writtenData, containsString("Test1"))
+    }
+
+    @Test
+    fun importRidersFromUri_readsValidCsv() = runTest {
+        val csvData = "Rider 1,Novice\nRider 2,Advanced\n"
+        fakeFileStorage.writeStringToUri(mockUri, csvData)
+
+        val riders = sut.importRidersFromUri(mockUri)
+
+        assertThat(riders, hasSize(2))
+        assertThat(riders[0].name, equalTo("Rider 1"))
+        assertThat(riders[0].riderClass, equalTo("Novice"))
+        assertThat(riders[1].name, equalTo("Rider 2"))
+        assertThat(riders[1].riderClass, equalTo("Advanced"))
+    }
+
+    @Test(expected = FileNotFoundException::class)
+    fun importRidersFromUri_handlesFileNotFoundException() = runTest {
+        sut.importRidersFromUri(mockUri)
     }
 }

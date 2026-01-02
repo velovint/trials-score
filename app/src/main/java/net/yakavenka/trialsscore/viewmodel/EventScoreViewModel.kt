@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import android.content.ContentResolver
 import android.net.Uri
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
@@ -11,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.ScoreSummaryRepository
@@ -18,7 +18,6 @@ import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import java.io.FileNotFoundException
-import java.io.FileOutputStream
 import java.io.IOException
 import javax.inject.Inject
 
@@ -81,20 +80,14 @@ class EventScoreViewModel @Inject constructor(
                 .groupBy { score -> score.riderClass }
         }.asLiveData()
 
-    fun exportReport(uri: Uri, contentResolver: ContentResolver) {
+    fun exportReport(uri: Uri) {
         // more about coroutines https://developer.android.com/kotlin/coroutines
-        viewModelScope.launch(Dispatchers.IO) {
-            Log.d("EventScoreViewModel", "Exporting results to $uri")
+        viewModelScope.launch {
+            Log.d(TAG, "Exporting results to $uri")
             try {
-                val descriptor = contentResolver.openFileDescriptor(uri, "w")
-                if (descriptor == null) {
-                    Log.e("EventScoreViewModel", "Couldn't open $uri")
-                    return@launch
-                }
-                sectionScoreRepository.fetchFullResults().collect { result ->
-                    importExportService.export(result, FileOutputStream(descriptor.fileDescriptor))
-                }
-                descriptor.close()
+                val result = sectionScoreRepository.fetchFullResults().first()
+                importExportService.exportToUri(result, uri)
+                Log.d(TAG, "CSV Export complete")
             } catch (e: FileNotFoundException) {
                 Log.e(TAG, "Failed to open file for export", e)
             } catch (e: IOException) {
@@ -103,18 +96,19 @@ class EventScoreViewModel @Inject constructor(
         }
     }
 
-    fun importRiders(uri: Uri, contentResolver: ContentResolver) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val inputStream = contentResolver.openInputStream(uri)
-            if (inputStream == null) {
-                Log.e(TAG, "Can't open file $uri")
+    fun importRiders(uri: Uri) {
+        viewModelScope.launch {
+            try {
+                val riders = importExportService.importRidersFromUri(uri)
+                riders.forEach { rider ->
+                    sectionScoreRepository.addRider(rider)
+                }
+            } catch (e: FileNotFoundException) {
+                Log.e(TAG, "Can't open file $uri", e)
+            } catch (e: IOException) {
+                Log.e(TAG, "Failed to read file for import", e)
             }
-            importExportService.importRiders(inputStream!!).collect { rider ->
-                sectionScoreRepository.addRider(rider)
-            }
-            inputStream.close()
         }
-
     }
 
     fun clearAll() {

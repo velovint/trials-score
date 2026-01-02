@@ -100,10 +100,14 @@ dependencies {
     testImplementation libs.junit
     testImplementation libs.hamcrest.library
     testImplementation libs.javafaker
+    testImplementation libs.kotlinx.coroutines.test
+    testImplementation libs.robolectric
+    testImplementation libs.mockito.kotlin
 
     androidTestImplementation libs.androidx.test.runner
     androidTestImplementation libs.androidx.test.rules
     androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.uiautomator
     androidTestImplementation libs.javafaker
     androidTestUtil libs.androidx.test.orchestrator
 

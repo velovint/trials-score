@@ -1,10 +1,14 @@
 package net.yakavenka.trialsscore.exchange
 
+import android.net.Uri
 import android.util.Log
 import com.opencsv.CSVReaderBuilder
 import com.opencsv.CSVWriter
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import net.yakavenka.trialsscore.data.ContentResolverFileStorage
+import net.yakavenka.trialsscore.data.FileStorageDao
 import net.yakavenka.trialsscore.data.RiderScore
 import net.yakavenka.trialsscore.data.RiderScoreAggregate
 import net.yakavenka.trialsscore.data.SectionScore
@@ -18,7 +22,12 @@ import javax.inject.Inject
 
 private const val TAG = "CsvExchangeRepository"
 
-class CsvExchangeRepository @Inject constructor(){
+class CsvExchangeRepository constructor(
+    private val fileStorage: FileStorageDao,
+    private val dispatcher: CoroutineDispatcher
+){
+    @Inject constructor(fileStorage: FileStorageDao) : this(fileStorage, Dispatchers.IO)
+
     fun export(result: List<RiderScoreAggregate>, outputStream: OutputStream) {
         val writer = CSVWriter(OutputStreamWriter(outputStream))
 
@@ -39,17 +48,31 @@ class CsvExchangeRepository @Inject constructor(){
         writer.close()
     }
 
-    fun importRiders(inputStream: InputStream): Flow<RiderScore> = flow {
-
-        CSVReaderBuilder((InputStreamReader(inputStream)))
+    suspend fun importRiders(inputStream: InputStream): List<RiderScore> = withContext(dispatcher) {
+        CSVReaderBuilder(InputStreamReader(inputStream))
             .build()
-            .forEach { line ->
-                if (line.size < 2) {
-                    Log.d(TAG, "CSV line has invalid format [$line]")
+            .mapNotNull { line ->
+                if (line.size >= 2) {
+                    RiderScore(0, line[0].trim(), line[1].trim())
                 } else {
-                    emit(RiderScore(0, line[0].trim(), line[1].trim()))
+                    Log.d(TAG, "CSV line has invalid format [$line]")
+                    null
                 }
             }
+    }
+
+    suspend fun exportToUri(result: List<RiderScoreAggregate>, uri: Uri) {
+        withContext(dispatcher) {
+            fileStorage.writeToUri(uri) { outputStream ->
+                export(result, outputStream)
+            }
+        }
+    }
+
+    suspend fun importRidersFromUri(uri: Uri): List<RiderScore> = withContext(dispatcher) {
+        fileStorage.readFromUri(uri) { inputStream ->
+            importRiders(inputStream)
+        }
     }
 
     private fun generateHeader(numSections: Int): Array<String> {
