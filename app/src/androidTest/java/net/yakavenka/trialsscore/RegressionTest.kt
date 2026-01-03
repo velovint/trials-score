@@ -124,10 +124,19 @@ class RegressionTest {
             ?: device.findObject(By.text("SAVE"))
         saveButton?.click()
 
-        // Wait for file to be written
-        Thread.sleep(2000)
+        // Then: Wait for and verify success notification appears
+        compose.waitForIdle()
+        compose.waitUntil(timeoutMillis = 5000) {
+            try {
+                compose.onNodeWithText("Export complete").assertExists()
+                true
+            } catch (e: AssertionError) {
+                false
+            }
+        }
+        compose.onNodeWithText("Export complete").assertIsDisplayed()
 
-        // Then: verify file exists and is non-empty in Downloads directory
+        // And: verify file exists and is non-empty in Downloads directory
         val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
             android.os.Environment.DIRECTORY_DOWNLOADS
         )
