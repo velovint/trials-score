@@ -24,7 +24,9 @@ import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.equalTo
+import org.hamcrest.Matchers.notNullValue
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -77,6 +79,51 @@ class EventScoreViewModelTest {
             writtenContent.occurrencesOf("Name,Class"),
             equalTo(1)
         )
+    }
+
+    @Test
+    fun exportReport_setsSuccessMessage_onSuccess() = runTest {
+        // Given
+        val testData = listOf(createTestRiderAggregate())
+        fakeDao.getAllFlow = flowOf(testData)
+        val testUri = Uri.parse("file://test.csv")
+
+        // When
+        viewModel.exportReport(testUri)
+
+        // Then
+        assertThat(viewModel.snackbarMessage.value, equalTo("Export complete"))
+    }
+
+    @Test
+    fun exportReport_setsErrorMessage_onException() = runTest {
+        // Given: DAO that throws exception
+        fakeDao.getAllFlow = flow { throw IllegalStateException("Database error") }
+        val testUri = Uri.parse("file://test.csv")
+
+        // When
+        viewModel.exportReport(testUri)
+
+        // Then
+        val message = viewModel.snackbarMessage.value
+        assertThat(message, notNullValue())
+        assertThat(message, containsString("Export failed"))
+        assertThat(message, containsString("Database error"))
+    }
+
+    @Test
+    fun clearSnackbarMessage_clearsMessage() = runTest {
+        // Given: Message is set
+        val testData = listOf(createTestRiderAggregate())
+        fakeDao.getAllFlow = flowOf(testData)
+        viewModel.exportReport(Uri.parse("file://test.csv"))
+        assertThat(viewModel.snackbarMessage.value, notNullValue())
+
+        // When
+        viewModel.clearSnackbarMessage()
+
+        // Then
+        assertThat(viewModel.snackbarMessage.value, equalTo(null))
     }
 }
 

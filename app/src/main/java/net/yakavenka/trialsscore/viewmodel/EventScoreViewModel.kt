@@ -4,6 +4,7 @@ import android.net.Uri
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
@@ -17,8 +18,6 @@ import net.yakavenka.trialsscore.data.ScoreSummaryRepository
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import net.yakavenka.trialsscore.exchange.CsvExchangeRepository
-import java.io.FileNotFoundException
-import java.io.IOException
 import javax.inject.Inject
 
 private const val TAG = "EventScoreViewModel"
@@ -71,6 +70,10 @@ class EventScoreViewModel @Inject constructor(
     val importContract = ActivityResultContracts.GetContent()
     val exportContract = ActivityResultContracts.CreateDocument("text/csv")
 
+    // Snackbar message for export notifications
+    private val _snackbarMessage = MutableLiveData<String?>(null)
+    val snackbarMessage: LiveData<String?> = _snackbarMessage
+
     val allScores: LiveData<Map<String, List<RiderStanding>>> = combine(
             scoreSummaryRepository.fetchSummary(), preferencesRepository.userPreferencesFlow
         ) { summary, prefs ->
@@ -80,6 +83,10 @@ class EventScoreViewModel @Inject constructor(
                 .groupBy { score -> score.riderClass }
         }.asLiveData()
 
+    fun clearSnackbarMessage() {
+        _snackbarMessage.value = null
+    }
+
     fun exportReport(uri: Uri) {
         // more about coroutines https://developer.android.com/kotlin/coroutines
         viewModelScope.launch {
@@ -88,10 +95,10 @@ class EventScoreViewModel @Inject constructor(
                 val result = sectionScoreRepository.fetchFullResults().first()
                 importExportService.exportToUri(result, uri)
                 Log.d(TAG, "CSV Export complete")
-            } catch (e: FileNotFoundException) {
-                Log.e(TAG, "Failed to open file for export", e)
-            } catch (e: IOException) {
-                Log.e(TAG, "Failed to open file for export", e)
+                _snackbarMessage.value = "Export complete"
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to export file", e)
+                _snackbarMessage.value = "Export failed: ${e.message ?: "Unknown error"}"
             }
         }
     }
@@ -102,10 +109,8 @@ class EventScoreViewModel @Inject constructor(
                 importExportService.importRidersFromUri(uri).forEach {
                     sectionScoreRepository.addRider(it)
                 }
-            } catch (e: FileNotFoundException) {
-                Log.e(TAG, "Can't open file $uri", e)
-            } catch (e: IOException) {
-                Log.e(TAG, "Failed to read file for import", e)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to import file", e)
             }
         }
     }
