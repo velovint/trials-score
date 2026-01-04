@@ -20,8 +20,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -166,7 +166,7 @@ fun LoopSelectionBar(
     onUpdate: (Int) -> Unit = {}
 ) {
     if (totalLoops < 2) return
-    TabRow(selectedTabIndex = currentLoop - 1, modifier = modifier) {
+    PrimaryTabRow(selectedTabIndex = currentLoop - 1, modifier = modifier) {
         repeat(totalLoops) { loopIdx ->
             Tab(
                 selected = loopIdx + 1 == currentLoop,

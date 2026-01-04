@@ -22,7 +22,7 @@ abstract class ScoreDatabase : RoomDatabase() {
                         "score_database"
                     )
                         .createFromAsset("database/score_database.db")
-                        .fallbackToDestructiveMigration()
+                        .fallbackToDestructiveMigration(dropAllTables = true)
                         .build()
                 INSTANCE = instance
                 return instance
