@@ -1,6 +1,6 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import com.github.javafaker.Faker
+import net.datafaker.Faker
 import net.yakavenka.trialsscore.data.RiderScoreSummary
 import net.yakavenka.trialsscore.data.UserPreferences
 import org.hamcrest.CoreMatchers.equalTo
