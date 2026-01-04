@@ -28,18 +28,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,6 +66,9 @@ fun LeaderboardScreen(
     onShowFullList: () -> Unit = {}
 ) {
     val scores by viewModel.allScores.observeAsState(initial = emptyMap())
+    val snackbarMessage by viewModel.snackbarMessage.observeAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
     val importPicker = rememberLauncherForActivityResult(
         contract = viewModel.importContract,
         onResult = { uri -> uri?.let { viewModel.importRiders(it) }})
@@ -70,7 +76,19 @@ fun LeaderboardScreen(
         contract = viewModel.exportContract,
         onResult = { uri -> uri?.let { viewModel.exportReport(it) }})
 
+    // Show snackbar when export completes
+    LaunchedEffect(snackbarMessage) {
+        snackbarMessage?.let { message ->
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearSnackbarMessage()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             LeaderboardTopBar(
                 onPurge = viewModel::clearAll,
