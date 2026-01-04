@@ -89,13 +89,6 @@ fun LeaderboardScreen(
         }
     }
 
-    // Clear message when navigating away to prevent stale notifications
-    DisposableEffect(Unit) {
-        onDispose {
-            viewModel.clearSnackbarMessage()
-        }
-    }
-
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
