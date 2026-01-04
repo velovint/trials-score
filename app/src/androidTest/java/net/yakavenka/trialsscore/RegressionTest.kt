@@ -17,7 +17,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiDevice
 import androidx.test.uiautomator.Until
-import com.github.javafaker.Faker
+import net.datafaker.Faker
 import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test

@@ -45,7 +45,7 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 hamcrest-library = { module = "org.hamcrest:hamcrest-library", version.ref = "hamcrest" }
 hilt-android-core = { module = "com.google.dagger:hilt-android", version.ref = "hilt-core" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hilt-core" }
-javafaker = { module = "com.github.javafaker:javafaker", version = "0.15" }
+javafaker = { module = "net.datafaker:datafaker", version = "1.9.0" }
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinx-coroutines" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
