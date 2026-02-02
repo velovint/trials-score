@@ -99,6 +99,15 @@ dependencies {
     // CSV
     implementation libs.opencsv
 
+    // CameraX
+    implementation libs.androidx.camera.core
+    implementation libs.androidx.camera.camera2
+    implementation libs.androidx.camera.lifecycle
+    implementation libs.androidx.camera.compose
+
+    // Permissions
+    implementation libs.accompanist.permissions
+
     // Android Studio Preview support
     implementation libs.androidx.ui.tooling.preview
     debugImplementation libs.androidx.ui.tooling.core

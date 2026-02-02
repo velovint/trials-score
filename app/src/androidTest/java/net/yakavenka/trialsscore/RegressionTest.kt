@@ -148,6 +148,19 @@ class RegressionTest {
         file.delete()
     }
 
+    @Test
+    fun captureScoreCardImage_fromScoreEntryScreen_navigatesBack() {
+        // Given: a rider with score entry open
+        val riderName = addRider()
+        openCameraScreen(riderName, loopNumber = 1)
+
+        // When: camera capture is initiated
+        captureImage()
+
+        // Then: app returns to score entry screen
+        compose.onNodeWithText(riderName).assertIsDisplayed()
+    }
+
     private fun leaderboardTitle(): SemanticsMatcher {
         return hasText("Trials Score")
     }
@@ -201,17 +214,94 @@ class RegressionTest {
         compose.onNodeWithText(saveLabel).assertIsDisplayed().performClick()
     }
 
-    private fun openScoreEntry(riderName: String, loopNumber: Int) {
+    private fun navigateToScoreEntry(riderName: String, loopNumber: Int, assertSelected: Boolean = false) {
         compose.onNodeWithText(riderName).performClick()
-        compose.onNodeWithText("Loop $loopNumber")
-            .assertIsDisplayed()
-            .performClick()
-            .assertIsSelected()
+        compose.onNodeWithText("Loop $loopNumber").assertIsDisplayed().performClick()
+        if (assertSelected) {
+            compose.onNodeWithText("Loop $loopNumber").assertIsSelected()
+        }
+    }
+
+    private fun openScoreEntry(riderName: String, loopNumber: Int) {
+        navigateToScoreEntry(riderName, loopNumber, assertSelected = true)
     }
 
     private fun sectionScoreNode(section: Int, score: Int): SemanticsMatcher {
         return hasParent(hasContentDescription("Section $section")) and
                 hasContentDescription(score.toString())
+    }
+
+    private fun openCameraScreen(riderName: String, loopNumber: Int) {
+        // Navigate to score entry screen
+        navigateToScoreEntry(riderName, loopNumber)
+
+        // Tap camera button in TopAppBar
+        val cameraLabel = compose.activity.getString(R.string.camera_action)
+        compose.onNodeWithContentDescription(cameraLabel).performClick()
+
+        // Verify camera screen appears with title
+        compose.waitForIdle()
+        val captureCardLabel = compose.activity.getString(R.string.capture_card)
+        compose.onNodeWithText(captureCardLabel).assertIsDisplayed()
+
+        // Verify back button is visible
+        val backLabel = compose.activity.getString(R.string.back_action)
+        compose.onNodeWithContentDescription(backLabel).assertIsDisplayed()
+
+        // Handle camera permission if needed
+        handleCameraPermissionIfShown()
+    }
+
+    private fun handleCameraPermissionIfShown() {
+        // Wait a moment for permission dialog to appear
+        compose.waitForIdle()
+
+        try {
+            // Check if permission request UI is shown
+            val grantPermissionLabel = compose.activity.getString(R.string.grant_permission)
+            compose.onNodeWithText(grantPermissionLabel).assertIsDisplayed()
+            // Grant the permission
+            compose.onNodeWithText(grantPermissionLabel).performClick()
+            compose.waitForIdle()
+        } catch (e: AssertionError) {
+            // Permission already granted or not shown, continue
+        }
+
+        // Also try to handle system permission dialog via UIAutomator
+        try {
+            val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            val grantButton = device.findObject(By.text("Allow"))
+                ?: device.findObject(By.text("ALLOW"))
+                ?: device.findObject(By.text("Grant"))
+            grantButton?.click()
+        } catch (e: Exception) {
+            // System dialog not present, continue
+        }
+    }
+
+    private fun captureImage() {
+        compose.waitForIdle()
+
+        // Verify capture button (FAB) is visible
+        // The FAB is the camera icon button at the bottom
+        val captureLabel = compose.activity.getString(R.string.capture_action)
+        compose.onNodeWithContentDescription(captureLabel).assertIsDisplayed()
+
+        // Tap the capture button
+        compose.onNodeWithContentDescription(captureLabel).performClick()
+
+        // Wait for image capture to complete and navigation back
+        compose.waitForIdle()
+        compose.waitUntil(timeoutMillis = 5000) {
+            try {
+                // Verify we're back at the score entry screen by checking for a rider name
+                // The score entry screen should show the rider's name in the TopAppBar
+                compose.onNodeWithText("Loop 1").assertIsDisplayed()
+                true
+            } catch (e: AssertionError) {
+                false
+            }
+        }
     }
 
 }

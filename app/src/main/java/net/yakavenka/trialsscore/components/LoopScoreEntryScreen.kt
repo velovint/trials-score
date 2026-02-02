@@ -52,7 +52,8 @@ fun LoopScoreEntryScreen(
     viewModel: ScoreCardViewModel,
     onBack: () -> Unit = {},
     onLoopSelect: (Int) -> Unit = {},
-    onEditRider: (RiderScore) -> Unit = {}
+    onEditRider: (RiderScore) -> Unit = {},
+    onCameraClick: () -> Unit = {}
 ) {
     val sectionScores by viewModel.sectionScores.observeAsState()
     val userPreference by viewModel.userPreference.observeAsState()
@@ -65,6 +66,7 @@ fun LoopScoreEntryScreen(
                 riderInfo,
                 onBack,
                 onEditRider,
+                onCameraClick,
                 onClearScores = { viewModel.clearScores(it.id) })
         }
     ) { padding ->
@@ -97,6 +99,7 @@ private fun ScoreEntryNavigationBar(
     riderInfo: RiderScore?,
     onBack: () -> Unit,
     onEditRider: (RiderScore) -> Unit,
+    onCameraClick: () -> Unit = {},
     onClearScores: (RiderScore) -> Unit = {}
 ) {
     var displayConfirmation by remember {mutableStateOf(false)}
@@ -112,6 +115,12 @@ private fun ScoreEntryNavigationBar(
             }
         },
         actions = {
+            IconButton(onClick = onCameraClick) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_camera_24),
+                    contentDescription = stringResource(id = R.string.camera_action)
+                )
+            }
             IconButton(onClick = { riderInfo?.let { onEditRider(it) }}) {
                 Icon(
                     imageVector = Icons.Filled.Edit,

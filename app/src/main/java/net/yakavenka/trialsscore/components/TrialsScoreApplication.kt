@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import net.yakavenka.trialsscore.camera.CameraScreen
 
 @Composable
 fun TrialsScoreApplicationComponent() {
@@ -57,9 +58,27 @@ fun TrialsScoreNavHost(navController: NavHostController) {
                     )
                 },
                 onEditRider = { riderInfo -> navController.navigate("edit_rider/${riderInfo.id}")},
+                onCameraClick = {
+                    val riderId = backStackEntry.arguments?.getInt("riderId")
+                    val loop = backStackEntry.arguments?.getInt("loop")
+                    navController.navigate("camera/${riderId}/${loop}")
+                },
                 onBack = navController::navigateUp
             )
 
+        }
+        composable(
+            "camera/{riderId}/{loop}",
+            arguments = listOf(
+                navArgument("riderId") { type = NavType.IntType },
+                navArgument("loop") { type = NavType.IntType }
+            )
+        ) {
+            CameraScreen(
+                viewModel = hiltViewModel(),
+                onBack = navController::navigateUp,
+                onImageCaptured = navController::navigateUp
+            )
         }
         composable("add_rider") {
             EditRiderScreen(
