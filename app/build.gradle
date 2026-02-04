@@ -71,6 +71,10 @@ android {
 }
 
 dependencies {
+    implementation(project(':card-scanner')) {
+        exclude group: 'org.openpnp', module: 'opencv'
+    }
+
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.activity.compose
     implementation libs.androidx.lifecycle.viewmodel.compose
@@ -98,6 +102,9 @@ dependencies {
 
     // CSV
     implementation libs.opencsv
+
+    // OpenCV for Android (required for Bitmap→Mat conversion and native operations)
+    implementation "org.opencv:opencv:4.10.0"
 
     // CameraX
     implementation libs.androidx.camera.core

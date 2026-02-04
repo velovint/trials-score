@@ -5,6 +5,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import net.yakavenka.cardscanner.CardScannerService
+import net.yakavenka.cardscanner.MockCardScannerService
 
 /**
  * Hilt module for providing camera and scanning dependencies.

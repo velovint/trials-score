@@ -10,8 +10,8 @@ import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import net.yakavenka.trialsscore.camera.CardScannerService
-import net.yakavenka.trialsscore.camera.ScanResult
+import net.yakavenka.cardscanner.CardScannerService
+import net.yakavenka.cardscanner.ScanResult
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.instanceOf

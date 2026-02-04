@@ -1,9 +1,7 @@
-package net.yakavenka.trialsscore.camera
+package net.yakavenka.cardscanner
 
-import android.graphics.Bitmap
 import kotlinx.coroutines.delay
-import javax.inject.Inject
-import javax.inject.Singleton
+import org.opencv.core.Mat
 
 /**
  * Mock implementation of CardScannerService for testing and development.
@@ -11,10 +9,9 @@ import javax.inject.Singleton
  * Returns hardcoded test scores to simulate score card processing.
  * Adds a 500ms delay to simulate real CV processing time.
  */
-@Singleton
-class MockCardScannerService @Inject constructor() : CardScannerService {
+class MockCardScannerService : CardScannerService {
 
-    override suspend fun extractScores(bitmap: Bitmap): ScanResult {
+    override suspend fun extractScores(image: Mat): ScanResult {
         // Simulate CV processing delay
         delay(500)
 

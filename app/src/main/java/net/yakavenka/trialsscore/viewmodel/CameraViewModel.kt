@@ -20,8 +20,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.camera.CardScannerService
-import net.yakavenka.trialsscore.camera.ScanResult
+import net.yakavenka.cardscanner.CardScannerService
+import net.yakavenka.cardscanner.ScanResult
+import org.opencv.android.Utils
+import org.opencv.core.Mat
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import javax.inject.Inject
@@ -145,11 +147,15 @@ class CameraViewModel @Inject constructor(
                             val bitmap = imageProxyToBitmap(image)
                             image.close()
 
+                            val mat = bitmapToMat(bitmap)
+
                             // Transition to processing state
                             _uiState.value = CameraUiState.Processing
 
-                            // Extract scores from bitmap
-                            val scanResult = cardScanner.extractScores(bitmap)
+                            // Extract scores from Mat
+                            val scanResult = cardScanner.extractScores(mat)
+
+                            mat.release()
 
                             // Apply scores directly to database
                             applyScanResult(scanResult)
@@ -207,6 +213,16 @@ class CameraViewModel @Inject constructor(
         // The toBitmap() extension is available from androidx.camera.core
         @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_DECLARATION_EXPECTATIONS")
         return imageProxy.toBitmap()
+    }
+
+    /**
+     * Convert Android Bitmap to OpenCV Mat using Android OpenCV Utils.
+     * Caller is responsible for calling mat.release() when done.
+     */
+    private fun bitmapToMat(bitmap: Bitmap): Mat {
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+        return mat
     }
 
     /**

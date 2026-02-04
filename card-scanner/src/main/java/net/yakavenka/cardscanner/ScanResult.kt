@@ -1,4 +1,4 @@
-package net.yakavenka.trialsscore.camera
+package net.yakavenka.cardscanner
 
 /**
  * Result of extracting scores from a captured score card image.
