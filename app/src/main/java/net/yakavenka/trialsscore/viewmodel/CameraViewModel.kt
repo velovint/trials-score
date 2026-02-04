@@ -1,10 +1,12 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.content.Context
-import android.net.Uri
+import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.core.SurfaceRequest
 import androidx.lifecycle.LifecycleOwner
@@ -18,21 +20,29 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import net.yakavenka.trialsscore.camera.ImageStorageRepository
+import net.yakavenka.trialsscore.camera.CardScannerService
+import net.yakavenka.trialsscore.camera.ScanResult
+import net.yakavenka.trialsscore.data.SectionScore
+import net.yakavenka.trialsscore.data.SectionScoreRepository
 import javax.inject.Inject
+import androidx.core.content.ContextCompat
+import androidx.camera.lifecycle.awaitInstance
+import java.util.concurrent.Executor
 
 private const val TAG = "CameraViewModel"
 
 sealed class CameraUiState {
     object Ready : CameraUiState()
     object Capturing : CameraUiState()
-    data class Success(val imageUri: Uri) : CameraUiState()
+    object Processing : CameraUiState()
+    data class Success(val scanResult: ScanResult) : CameraUiState()
     data class Error(val message: String) : CameraUiState()
 }
 
 @HiltViewModel
 class CameraViewModel @Inject constructor(
-    private val imageStorage: ImageStorageRepository,
+    private val cardScanner: CardScannerService,
+    private val sectionScoreRepository: SectionScoreRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -49,15 +59,23 @@ class CameraViewModel @Inject constructor(
     internal var imageCapture: ImageCapture? = null
     private var preview: Preview? = null
     private val cameraSelector: CameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
+    internal var executor: Executor? = null  // Executor for takePicture callbacks (injectable for testing)
 
     /**
-     * Bind camera use cases to lifecycle and publish SurfaceRequest
+     * Bind camera use cases to lifecycle and publish SurfaceRequest.
+     *
+     * Uses modern CameraX 1.4+ awaitInstance() API for suspending coroutine access
+     * to ProcessCameraProvider, replacing legacy ListenableFuture + addListener pattern.
+     *
+     * Stores executor (not context) to avoid context leaks. Executor is safe to hold
+     * in ViewModel and can be injected for testing.
      */
     fun bindCamera(context: Context, lifecycleOwner: LifecycleOwner) {
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
-        cameraProviderFuture.addListener({
+        // Store executor instead of context to avoid memory leaks
+        this.executor = ContextCompat.getMainExecutor(context)
+        viewModelScope.launch {
             try {
-                val cameraProvider = cameraProviderFuture.get()
+                val cameraProvider = ProcessCameraProvider.awaitInstance(context)
                 cameraProvider.unbindAll()
 
                 // Create Preview use case
@@ -84,11 +102,24 @@ class CameraViewModel @Inject constructor(
                 Log.e(TAG, "Error binding camera", e)
                 _uiState.value = CameraUiState.Error("Camera binding failed: ${e.message}")
             }
-        }, androidx.core.content.ContextCompat.getMainExecutor(context))
+        }
     }
 
     /**
-     * Capture image and save to storage
+     * Capture image from camera, process with scanner, and apply scores to database.
+     *
+     * Flow:
+     * 1. Capture image to memory via callback (no disk storage)
+     * 2. Launch coroutine in callback to process captured image
+     * 3. Call CardScannerService.extractScores()
+     * 4. Apply scores directly to database via applyScanResult()
+     * 5. Navigate back (score entry screen will show scores from database)
+     *
+     * Uses direct callback approach instead of suspendCancellableCoroutine wrapper,
+     * matching modern CameraX API patterns. Coroutine launched only in success callback
+     * where actual suspend work (extractScores) is needed.
+     *
+     * Executor is set during bindCamera() and stored to avoid context leaks.
      */
     fun captureImage() {
         val capture = imageCapture ?: run {
@@ -96,18 +127,86 @@ class CameraViewModel @Inject constructor(
             return
         }
 
+        val exec = executor ?: run {
+            _uiState.value = CameraUiState.Error("Executor not initialized")
+            return
+        }
+
         _uiState.value = CameraUiState.Capturing
 
-        viewModelScope.launch {
-            try {
-                val uri = imageStorage.captureImage(capture, riderId, loopNumber)
-                Log.d(TAG, "Image captured: $uri")
-                _uiState.value = CameraUiState.Success(uri)
-            } catch (e: Exception) {
-                Log.e(TAG, "Image capture failed", e)
-                _uiState.value = CameraUiState.Error(e.message ?: "Unknown error")
+        // Direct callback approach - executor already stored from bindCamera()
+        capture.takePicture(
+            exec,
+            object : ImageCapture.OnImageCapturedCallback() {
+                override fun onCaptureSuccess(image: ImageProxy) {
+                    // Launch coroutine only for processing (where suspend work is needed)
+                    viewModelScope.launch {
+                        try {
+                            val bitmap = imageProxyToBitmap(image)
+                            image.close()
+
+                            // Transition to processing state
+                            _uiState.value = CameraUiState.Processing
+
+                            // Extract scores from bitmap
+                            val scanResult = cardScanner.extractScores(bitmap)
+
+                            // Apply scores directly to database
+                            applyScanResult(scanResult)
+
+                            Log.d(TAG, "Image scanned successfully: $scanResult")
+                            _uiState.value = CameraUiState.Success(scanResult)
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Image processing/scan failed", e)
+                            _uiState.value = CameraUiState.Error(e.message ?: "Unknown error")
+                        }
+                    }
+                }
+
+                override fun onError(exception: ImageCaptureException) {
+                    Log.e(TAG, "Image capture failed", exception)
+                    _uiState.value = CameraUiState.Error(exception.message ?: "Capture failed")
+                }
+            }
+        )
+    }
+
+    /**
+     * Apply scan result scores directly to database.
+     *
+     * Filters out invalid section numbers and applies each score.
+     * Uses the same logic as ScoreCardViewModel.applyScanResult().
+     */
+    private suspend fun applyScanResult(scanResult: ScanResult) {
+        when (scanResult) {
+            is ScanResult.Success -> {
+                scanResult.scores.forEach { (sectionNumber, points) ->
+                    if (sectionNumber > 0) {
+                        val sectionScore = SectionScore(riderId, loopNumber, sectionNumber, points)
+                        sectionScoreRepository.updateSectionScore(sectionScore)
+                    }
+                }
+                Log.d(TAG, "Applied ${scanResult.scores.size} scanned scores to database")
+            }
+            is ScanResult.Failure -> {
+                Log.e(TAG, "Scan failed: ${scanResult.error}")
+                _uiState.value = CameraUiState.Error(scanResult.error)
             }
         }
+    }
+
+    /**
+     * Convert ImageProxy to Bitmap using CameraX extension.
+     *
+     * Uses the extension function from androidx.camera.core which handles
+     * YUV->RGB conversion automatically. For Phase 2 with mock scanner, the actual
+     * pixel data is not used but proper conversion ensures compatibility with
+     * Phase 3 real CV implementation.
+     */
+    private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
+        // The toBitmap() extension is available from androidx.camera.core
+        @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_DECLARATION_EXPECTATIONS")
+        return imageProxy.toBitmap()
     }
 
     /**

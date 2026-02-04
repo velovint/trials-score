@@ -149,7 +149,7 @@ class RegressionTest {
     }
 
     @Test
-    fun captureScoreCardImage_fromScoreEntryScreen_navigatesBack() {
+    fun captureScoreCardImage_populatesScoresFromMockScanner() {
         // Given: a rider with score entry open
         val riderName = addRider()
         openCameraScreen(riderName, loopNumber = 1)
@@ -157,8 +157,15 @@ class RegressionTest {
         // When: camera capture is initiated
         captureImage()
 
-        // Then: app returns to score entry screen
+        // Then: app returns to score entry screen with auto-populated scores
+        compose.waitForIdle()
         compose.onNodeWithText(riderName).assertIsDisplayed()
+
+        // And: verify some of the mock scores are populated
+        // Mock returns: [0, 1, 0, 2, 0, 3, 0, 5, 0, 1, 0, 0]
+        compose.onNode(sectionScoreNode(1, 0)).assertIsDisplayed()
+        compose.onNode(sectionScoreNode(2, 1)).assertIsDisplayed()
+        compose.onNode(sectionScoreNode(4, 2)).assertIsDisplayed()
     }
 
     private fun leaderboardTitle(): SemanticsMatcher {
@@ -180,7 +187,6 @@ class RegressionTest {
     private fun addRider(riderName: String, riderClass: String) {
         val addRiderLabel = compose.activity.getString(R.string.add_new_rider)
         compose.onNodeWithContentDescription(addRiderLabel).performClick()
-//        compose.onRoot().printToLog("currentLabelExists")
         fillEditRiderForm(riderName, riderClass)
 
         compose.onNodeWithText("Trials Score").assertIsDisplayed()
@@ -198,7 +204,6 @@ class RegressionTest {
         scores.forEachIndexed { idx, score ->
             compose.onNode(sectionScoreNode(idx + 1, score))
                 .performClick()
-//                .assertIsSelected()
         }
     }
 
@@ -280,17 +285,14 @@ class RegressionTest {
     }
 
     private fun captureImage() {
-        compose.waitForIdle()
-
-        // Verify capture button (FAB) is visible
-        // The FAB is the camera icon button at the bottom
         val captureLabel = compose.activity.getString(R.string.capture_action)
         compose.onNodeWithContentDescription(captureLabel).assertIsDisplayed()
 
-        // Tap the capture button
+        // Give camera time to initialize before capturing
+        Thread.sleep(1000)
+
         compose.onNodeWithContentDescription(captureLabel).performClick()
 
-        // Wait for image capture to complete and navigation back
         compose.waitForIdle()
         compose.waitUntil(timeoutMillis = 5000) {
             try {

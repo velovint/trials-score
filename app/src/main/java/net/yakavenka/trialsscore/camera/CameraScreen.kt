@@ -97,6 +97,28 @@ fun CameraScreen(
                     modifier = Modifier.padding(padding)
                 )
             }
+            uiState is CameraUiState.Processing -> {
+                // Processing state - show progress while scanner processes image
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("Processing image...", style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
             else -> {
                 // Camera preview
                 Box(modifier = Modifier.fillMaxSize().padding(padding)) {
