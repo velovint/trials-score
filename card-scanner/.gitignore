@@ -1,1 +1,2 @@
 /build
+/card-scanner/src/main/assets/score_classifier_model.tflite

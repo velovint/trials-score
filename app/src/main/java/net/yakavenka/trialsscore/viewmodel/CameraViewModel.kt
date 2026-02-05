@@ -147,12 +147,15 @@ class CameraViewModel @Inject constructor(
                             val bitmap = imageProxyToBitmap(image)
                             image.close()
 
-                            val mat = bitmapToMat(bitmap)
+                            // Resize to max 1024px wide to reduce processing time
+                            val resizedBitmap = resizeBitmap(bitmap, maxWidth = 640)
+
+                            val mat = bitmapToMat(resizedBitmap)
 
                             // Transition to processing state
                             _uiState.value = CameraUiState.Processing
 
-                            // Extract scores from Mat
+                            // Extract scores from Mat (card scanner handles grayscale conversion)
                             val scanResult = cardScanner.extractScores(mat)
 
                             mat.release()
@@ -213,6 +216,29 @@ class CameraViewModel @Inject constructor(
         // The toBitmap() extension is available from androidx.camera.core
         @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_DECLARATION_EXPECTATIONS")
         return imageProxy.toBitmap()
+    }
+
+    /**
+     * Resize bitmap to maximum width while maintaining aspect ratio.
+     *
+     * If the bitmap width is already smaller than maxWidth, returns the original.
+     * Otherwise, scales down proportionally.
+     *
+     * @param bitmap Original bitmap to resize
+     * @param maxWidth Maximum width in pixels (default 1024)
+     * @return Resized bitmap (or original if already smaller)
+     */
+    private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int = 1024): Bitmap {
+        if (bitmap.width <= maxWidth) {
+            return bitmap
+        }
+
+        val aspectRatio = bitmap.height.toFloat() / bitmap.width.toFloat()
+        val targetHeight = (maxWidth * aspectRatio).toInt()
+
+        Log.d(TAG, "Resizing bitmap from ${bitmap.width}×${bitmap.height} to ${maxWidth}×${targetHeight}")
+
+        return Bitmap.createScaledBitmap(bitmap, maxWidth, targetHeight, true)
     }
 
     /**

@@ -1,10 +1,35 @@
 plugins {
-    id 'org.jetbrains.kotlin.jvm'
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+android {
+    namespace 'net.yakavenka.cardscanner'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 35
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 dependencies {
@@ -12,17 +37,24 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 
-    // OpenCV for pure JVM (includes native libs for all platforms)
-    implementation "org.openpnp:opencv:4.9.0-0"
+    // OpenCV for Android
+    implementation "org.opencv:opencv:4.10.0"
 
+    // TensorFlow Lite (LiteRT)
+    implementation "org.tensorflow:tensorflow-lite:2.17.0"
+    implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
+        exclude group: "org.tensorflow", module: "tensorflow-lite-api"
+    }
+
+    // Testing
     testImplementation "junit:junit:4.13.2"
     testImplementation "org.hamcrest:hamcrest-library:3.0"
     testImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
-}
 
-tasks.named('test') {
-    useJUnit()
-    testLogging {
-        events "passed", "skipped", "failed"
-    }
+    // Android instrumented tests
+    androidTestImplementation "androidx.test.ext:junit:1.2.1"
+    androidTestImplementation "androidx.test:runner:1.6.2"
+    androidTestImplementation "androidx.test:core:1.6.1"
+    androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
+    androidTestImplementation "org.hamcrest:hamcrest-library:3.0"
 }
