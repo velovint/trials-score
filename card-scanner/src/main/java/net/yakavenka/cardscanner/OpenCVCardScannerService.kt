@@ -89,10 +89,10 @@ class OpenCVCardScannerService(
             Log.d(TAG, "Extracting scores from ${image.width()}x${image.height()} grayscale image")
 
             // Step 1: Preprocess (resize + enhancements)
-            val preprocessed = preprocessImage(image)
+            val preprocessed = CardImagePreprocessor.preprocessImage(image)
 
             // Step 2: Extract rows (STUBBED)
-            val rowImages = extractRowImages(preprocessed)
+            val rowImages = CardImagePreprocessor.extractRowImages(preprocessed)
             preprocessed.release()
 
             // Step 3: Classify each row with TFLite
@@ -110,39 +110,6 @@ class OpenCVCardScannerService(
         } catch (e: Exception) {
             ScanResult.Failure("Card scanning failed: ${e.toString()} caused by ${e.stackTraceToString()}")
         }
-    }
-
-    // PLACEHOLDER: Image preprocessing
-    private fun preprocessImage(image: Mat): Mat {
-        // TODO Phase 4: Implement real preprocessing
-        // - Contrast enhancement (CLAHE)
-        // - Noise reduction (Gaussian blur)
-        // - Rotation correction (perspective transform)
-
-        // Image should already be grayscale from CameraViewModel (CV_8UC1)
-        // Resize to standard width for consistent processing
-        val resized = Mat()
-        val targetWidth = 640.0
-        val aspectRatio = image.height().toDouble() / image.width().toDouble()
-        val targetHeight = (targetWidth * aspectRatio).toInt()
-        val size = Size(targetWidth, targetHeight.toDouble())
-
-        Imgproc.resize(image, resized, size)
-
-        Log.d(TAG, "Preprocessed image: ${resized.width()}×${resized.height()}, channels=${resized.channels()}")
-        return resized
-    }
-
-    // STUB: Extract row images (returns entire image 15 times)
-    private fun extractRowImages(image: Mat): List<Mat> {
-        // TODO Phase 4: Implement real grid detection
-        // - Edge detection (Canny)
-        // - Horizontal line detection (morphological operations)
-        // - Line spacing analysis to separate data grid from headers
-        // - Extract 15 individual row images
-
-        // STUB: Return entire image as each "row"
-        return (1..NUM_SECTIONS).map { image.clone() }
     }
 
     // Real ML inference
