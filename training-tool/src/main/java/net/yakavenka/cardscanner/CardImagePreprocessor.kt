@@ -29,20 +29,29 @@ object CardImagePreprocessor {
 
     /**
      * Preprocess score card image for row extraction.
-     * Detects card boundaries (if enabled), crops to card, and resizes to 640px width.
+     * Converts to grayscale, detects card boundaries (if enabled), crops to card, and resizes to 640px width.
      * @return Preprocessed Mat (caller must release)
      */
     fun preprocessImage(image: Mat): Mat {
-        // Image should already be grayscale from CameraViewModel (CV_8UC1)
-
-        // Step 1: Detect and crop card boundaries (if enabled)
-        val cropped = if (ENABLE_CARD_DETECTION) {
-            detectAndCropCard(image)
+        // Step 1: Convert to grayscale if needed
+        val grayscale = if (image.channels() == 3) {
+            // Color image (BGR) - convert to grayscale
+            val gray = Mat()
+            Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
+            gray
         } else {
+            // Already grayscale
             image
         }
 
-        // Step 2: Resize to standard width for consistent processing
+        // Step 2: Detect and crop card boundaries (if enabled)
+        val cropped = if (ENABLE_CARD_DETECTION) {
+            detectAndCropCard(grayscale)
+        } else {
+            grayscale
+        }
+
+        // Step 3: Resize to standard width for consistent processing
         val resized = Mat()
         val aspectRatio = cropped.height().toDouble() / cropped.width().toDouble()
         val targetHeight = (TARGET_WIDTH * aspectRatio).toInt()
@@ -50,8 +59,13 @@ object CardImagePreprocessor {
 
         Imgproc.resize(cropped, resized, size)
 
-        // Release cropped if it's different from input
-        if (cropped !== image) {
+        // Clean up intermediate Mats
+        // Release grayscale if it was created (color -> gray conversion)
+        if (grayscale !== image) {
+            grayscale.release()
+        }
+        // Release cropped if it's different from grayscale
+        if (cropped !== grayscale) {
             cropped.release()
         }
 

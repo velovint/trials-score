@@ -80,8 +80,8 @@ class TrainingDataGenerator(
         // Parse scores from filename
         val scores = FilenameParser.parseScores(file.name)
 
-        // Load image as grayscale
-        val image = Imgcodecs.imread(file.absolutePath, Imgcodecs.IMREAD_GRAYSCALE)
+        // Load image (color or grayscale - preprocessor will handle conversion)
+        val image = Imgcodecs.imread(file.absolutePath)
         if (image.empty()) {
             throw IllegalArgumentException("Failed to load image: ${file.name}")
         }
