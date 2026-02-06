@@ -1,0 +1,33 @@
+plugins {
+    alias libs.plugins.kotlin.jvm
+    id 'application'
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+kotlin {
+    jvmToolchain(21)
+}
+
+// Using standard source directories (src/main/java, src/main/kotlin)
+
+application {
+    mainClass.set('net.yakavenka.trialsscore.training.MainKt')
+}
+
+dependencies {
+    implementation platform("org.jetbrains.kotlin:kotlin-bom:2.3.0")
+    implementation "org.jetbrains.kotlin:kotlin-stdlib"
+
+    // JVM OpenCV (compiles CardImagePreprocessor)
+    implementation libs.opencv.jvm
+
+    // CLI parsing
+    implementation libs.kotlinx.cli
+
+    testImplementation libs.junit
+    testImplementation libs.hamcrest.library
+}

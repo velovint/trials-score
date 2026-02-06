@@ -45,6 +45,13 @@ Reference this file when planning features related to user workflows, data impor
 ### Commit messages
 Use concise commit messages and include only a summary for simple changes.
 
+### Training Data Preparation
+```bash
+./gradlew prepareTrainingData
+```
+
+Prepares ML training data from score card images. Downloads, unpacks, and processes images to extract individual row images organized by score value. See `training-tool/README.md` for detailed usage.
+
 ## Architecture
 
 ### Layer Structure

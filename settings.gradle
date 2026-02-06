@@ -28,3 +28,4 @@ dependencyResolutionManagement {
 rootProject.name = "TrialsScore"
 include ':app'
 include ':card-scanner'
+include ':training-tool'

@@ -11,10 +11,61 @@ plugins {
     alias libs.plugins.android.app apply false
     alias libs.plugins.compose.compiler apply false
     alias libs.plugins.kotlin.android apply false
+    alias libs.plugins.kotlin.jvm apply false
     alias libs.plugins.ksp apply false
     alias libs.plugins.hilt apply false
 }
 
 tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
+}
+
+// Training data preparation configuration
+ext {
+    trainingDataUrl = project.findProperty('trainingDataUrl') ?:
+                      System.getenv('TRAINING_DATA_URL') ?:
+                      'https://example.com/training-data.tgz'
+    trainingDataSourceDir = "$buildDir/training-data-source"
+    trainingDataOutputDir = "$buildDir/training-data"
+}
+
+tasks.register('downloadTrainingData') {
+    def destFile = file("$buildDir/training-data.tgz")
+    inputs.property('trainingDataUrl', trainingDataUrl)
+    outputs.file(destFile)
+    onlyIf { !destFile.exists() }
+    doLast {
+        println "Downloading training data from: $trainingDataUrl"
+        ant.get(src: trainingDataUrl, dest: destFile)
+        println "Downloaded to: ${destFile.absolutePath}"
+    }
+}
+
+tasks.register('unpackTrainingData', Copy) {
+    dependsOn 'downloadTrainingData'
+    from tarTree("$buildDir/training-data.tgz")
+    into trainingDataSourceDir
+    onlyIf {
+        !file(trainingDataSourceDir).exists() ||
+        file(trainingDataSourceDir).list().length == 0
+    }
+    doFirst {
+        println "Unpacking training data to: $trainingDataSourceDir"
+    }
+}
+
+tasks.register('prepareTrainingData', JavaExec) {
+    dependsOn 'unpackTrainingData', ':training-tool:build'
+    classpath = project(':training-tool').sourceSets.main.runtimeClasspath
+    mainClass = 'net.yakavenka.trialsscore.training.MainKt'
+    args = [
+        '--input-dir', trainingDataSourceDir,
+        '--output-dir', trainingDataOutputDir
+    ]
+    doFirst {
+        println "Preparing training data..."
+        println "  Input:  $trainingDataSourceDir"
+        println "  Output: $trainingDataOutputDir"
+        file(trainingDataOutputDir).mkdirs()
+    }
 }
