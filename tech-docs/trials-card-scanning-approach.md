@@ -1,221 +1,67 @@
-# Trials Card Scanning Approach
+# Trials Card Scanning Approach (v2.0)
 
-## Card Structure
-
-**Physical Layout:**
-- **Header:** Card number, class, rider name, departure/arrival info
-- **Grid Header:** Column labels for scores (0, 1, 2, 3, 5) and section numbers
-- **Data Grid:** 15 rows (sections) × 5 columns (scores)
-  - Each row = one section/obstacle
-  - Each column = penalty score value
-  - One mark per row at the intersection of section and score
-
-**Scoring Logic:**
-- Exactly ONE score per section
-- Score recorded by marking/punching the cell at row-section × column-score intersection
-- Example: 3 points for section 1 → mark at row 1, column "3"
-
-**Output:**
-Array of 15 integers: `[score_1, score_2, ..., score_15]`
+## 1. Card Structure & Scoring
+- **Data Grid:** 15 rows (sections) × 5 columns (penalty scores: 0, 1, 2, 3, 5).
+- **Scoring Logic:** Exactly one mark per row.
+- **Output:** An array of 15 integers `[score_1, ..., score_15]`.
 
 ---
 
-## Overall Approach
-
-```
-Image Input → Grid Detection → Row Extraction → ML Classification → Score Array
-              (OpenCV)          (OpenCV)         (TensorFlow Lite)
-```
+## 2. Overall Pipeline Strategy: The "Data Flywheel"
+The approach is a two-phase process that balances predictable math with flexible pattern recognition.
 
 ### Phase 1: Grid Detection (Computer Vision)
+- **Tool:** OpenCV for Android.
+- **Goal:** Isolate the data grid from headers and extract 15 individual row images.
+- **Strategy:** Instead of training a model, use a **predictable algorithm** (Morphological operations + line spacing analysis).
+- **UX Integration:** Implement a **Viewfinder UI** to guide the user's hand, ensuring the card is aligned before processing begins.
 
-**Goal:** Isolate the data grid and extract 15 individual row images
-
-**Method:**
-1. Preprocess: grayscale, edge detection
-2. Detect horizontal lines using morphological operations
-3. Identify evenly-spaced grid lines (filter out headers by spacing pattern)
-4. Extract 15 row images from grid
-
-**Key Challenge:** Separate data grid from header sections
-
-**Solution:** Grid rows have consistent spacing; headers don't. Use line spacing analysis to identify and skip header rows.
-
-### Phase 2: Score Classification (Machine Learning)
-
-**Goal:** Determine which score column (0, 1, 2, 3, or 5) is marked in each row
-
-**Recommended Approach: Row-Level Classification**
-- Input: Full row image (contains all 5 score columns)
-- Output: Single classification from 5 classes [0, 1, 2, 3, 5]
-- Process: 15 classifications (one per row)
-
-**Why Row-Level vs Cell-Level:**
-- Simpler: 15 classifications instead of 75 (15 rows × 5 columns)
-- Matches structure: Each row has exactly one mark
-- More robust: Model sees full context of mark position
-- Less sensitive to grid alignment errors
-
-**Alternative (Cell-Level):**
-- Classify each of 75 cells as marked/unmarked
-- Requires more precise grid detection
-- More training data needed
+### Phase 2: Row Classification (Machine Learning)
+- **Tool:** LiteRT (formerly TensorFlow Lite).
+- **Goal:** Classify each row image into one of 5 classes [0, 1, 2, 3, 5].
+- **Strategy:** **Row-level classification** is more robust than cell-level as the model sees the relative position of the mark within the full row context.
 
 ---
 
-## ML Framework Choice
+## 3. Training & Data Management
 
-### TensorFlow Lite (Recommended)
+### Realistic Training Data
+- **Generalization:** Do not use perfect digital scans. Collect ~50 real photos of physical cards in varying light (shadows, sunlight) and backgrounds.
+- **Auto-Labeling:** Use the Phase 1 OpenCV logic to programmatically crop rows from these photos, then manually verify labels to build a dataset of 1,500–2,500 rows.
+- **Augmentation:** Use Python libraries (`Albumentations`) during training to artificially add rotation, blur, and contrast shifts to mimic shaky hands and poor camera sensors.
 
-**Why:**
-- Offline operation (trials often in remote areas)
-- Better performance (20-30ms per row vs 30-50ms for ML Kit)
-- Full control over optimization
-- Smaller app size impact
-- No dependency on Google Play Services
-
-**Trade-offs:**
-- More implementation code
-- Steeper learning curve
-- Manual model management
-
-### ML Kit (Alternative)
-
-**Why:**
-- Faster development
-- Higher-level APIs
-- Firebase integration for model updates
-
-**Trade-offs:**
-- Requires internet for some features
-- Larger app size
-- Less control over inference
+### MLOps & Storage
+- **Source:** Use **Google Cloud Storage (GCS)** or Google Drive for image datasets to avoid bloating the Git repository.
+- **Training Environment:** Use **Google Colab** with **TFLite Model Maker** (Python) for free GPU access and simplified transfer learning.
+- **Format:** Package training data as **TFRecords** for faster loading during training.
 
 ---
 
-## Training Data
+## 4. Android Implementation Stack
 
-**Row-Level Model:**
-- 300-500 row images per class (5 classes)
-- Total: ~1,500-2,500 labeled row images
-- Balance across all score values
-- Include variety: different marks, lighting, angles
+### Framework: LiteRT via Play Services
+- **APK Size:** Using the **Play Services Runtime** reduces app size by ~15MB as the engine is shared across the device.
+- **Performance:** Enable **GPU or XNNPACK delegates** via the `CompiledModel` API to achieve sub-30ms inference per row.
 
-**Collection:**
-- Scan 100-200 complete cards
-- Extract rows programmatically
-- Label which score is marked
-- Augment: rotation, brightness, contrast
+### Memory & Threading
+- **Native Memory:** Manually call `Mat.release()` on all OpenCV objects to prevent "Out of Memory" crashes in the JNI layer.
+- **Background Processing:** Run all CV and ML logic on a background worker or coroutine to keep the CameraX preview smooth.
 
----
-
-## Grid Detection Details
-
-### Line Detection Method
-
-**Morphological Operations (Recommended):**
-```
-1. Apply horizontal kernel → detect horizontal lines
-2. Find y-coordinates of all lines
-3. Calculate spacing between consecutive lines
-4. Find median spacing (= grid row height)
-5. Keep only lines with consistent spacing (the data grid)
-6. Skip first line (grid header), extract next 15 rows
-```
-
-**Alternative: Hough Transform**
-- Detect edges, apply probabilistic Hough
-- More flexible for damaged cards
-- More parameters to tune
-
-### Header Separation
-
-**Line Spacing Analysis:**
-- Grid rows = evenly spaced
-- Headers = irregular spacing
-- Filter by spacing consistency
-
-**Other Options:**
-- Fixed ROI crop (if cards always aligned)
-- Contour detection (find largest rectangle)
-- Template matching for grid header
+### Gradle Workflow Automation
+- **Unified Project:** Keep Python training scripts in an `/ml` subfolder of the Android project.
+- **Auto-Sync:** Use a Gradle `Exec` task to "pull" the latest `model.tflite` from the training source into the Android `assets/` folder during the `preBuild` phase.
 
 ---
 
-## Android Implementation Stack
-
-**Libraries:**
-- OpenCV for Android (grid detection)
-- TensorFlow Lite (ML inference)
-- CameraX (camera capture)
-
-**Key Components:**
-- `CardProcessor`: Grid detection and row extraction
-- `RowClassifier`: TensorFlow Lite model wrapper
-- `CardScoreExtractor`: Orchestrates pipeline
-
-**Performance Targets:**
-- Row inference: <30ms
-- Full card: <500ms
-- Offline capable
-- App size: <5MB increase
+## 5. Verification & Testing
+- **Golden Set:** Maintain a folder of 50 "difficult" card images.
+- **Automated Tests:** Every build should run these images through the pipeline.
+    - **Pass criteria:** 100% grid detection (15 rows found) and >98% classification accuracy.
 
 ---
 
-## Error Handling
-
-**Common Issues:**
-- Card at extreme angle → real-time alignment feedback
-- Poor lighting → image enhancement preprocessing
-- Multiple/no marks in row → confidence thresholding, flag for review
-- Damaged cards → fallback to manual entry
-
-**Validation:**
-- Each row must have exactly one score
-- All 15 sections must have scores
-- Scores must be in {0, 1, 2, 3, 5}
-
----
-
-## High-Level Pipeline
-
-```kotlin
-class CardScoreExtractor(context: Context) {
-    private val cardProcessor = CardProcessor()
-    private val rowClassifier = TFLiteRowClassifier(context)
-    
-    fun extractScores(imagePath: String): List<Int> {
-        // 1. Extract 15 row images from card
-        val rows = cardProcessor.extractScoreRows(imagePath)
-        
-        // 2. Classify each row
-        val scores = rows.map { rowMat ->
-            val score = rowClassifier.classifyRow(rowMat)
-            rowMat.release()
-            score
-        }
-        
-        return scores
-    }
-}
-```
-
----
-
-## Summary
-
-**Two-Phase Approach:**
-1. **Computer Vision (OpenCV):** Detect grid structure, extract rows
-2. **Machine Learning (TFLite):** Classify each row to determine score
-
-**Key Decisions:**
-- Row-level classification (not cell-level)
-- TensorFlow Lite (not ML Kit)
-- Morphological operations for line detection
-- Offline-first design
-
-**Critical Success Factors:**
-- Robust grid detection across real-world variations
-- Well-trained model with diverse data
-- Fast processing for good UX
-- Graceful error handling with manual fallback
+## 6. Summary of Key Decisions
+- **Predictable Logic for Grids:** No ML for geometry; use OpenCV math for speed and reliability.
+- **Python for Training:** Utilize Python's superior ML ecosystem (Keras/TensorFlow) for the "model creation" phase.
+- **LiteRT for Inference:** High performance and low overhead on mobile.
+- **Viewfinder UX:** Collaborate with the user to get a clean scan rather than trying to fix highly distorted images in code.

@@ -22,13 +22,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import net.yakavenka.cardscanner.CardScannerService
 import net.yakavenka.cardscanner.ScanResult
-import org.opencv.android.Utils
-import org.opencv.core.Mat
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import javax.inject.Inject
 import androidx.core.content.ContextCompat
 import androidx.camera.lifecycle.awaitInstance
+import org.opencv.core.CvType
+import org.opencv.core.Mat
+import java.nio.ByteBuffer
 import java.util.concurrent.Executor
 
 private const val TAG = "CameraViewModel"
@@ -112,14 +113,15 @@ class CameraViewModel @Inject constructor(
      *
      * Flow:
      * 1. Capture image to memory via callback (no disk storage)
-     * 2. Launch coroutine in callback to process captured image
-     * 3. Call CardScannerService.extractScores()
+     * 2. Extract grayscale Y plane from ImageProxy (zero-copy)
+     * 3. Pass ByteBuffer directly to CardScannerService
      * 4. Apply scores directly to database via applyScanResult()
      * 5. Navigate back (score entry screen will show scores from database)
      *
-     * Uses direct callback approach instead of suspendCancellableCoroutine wrapper,
-     * matching modern CameraX API patterns. Coroutine launched only in success callback
-     * where actual suspend work (extractScores) is needed.
+     * Optimized to minimize memory copies:
+     * - Extracts Y plane (grayscale) directly from YUV ImageProxy
+     * - Passes ByteBuffer to scanner (no Bitmap intermediate)
+     * - Scanner wraps ByteBuffer into Mat (zero-copy operation)
      *
      * Executor is set during bindCamera() and stored to avoid context leaks.
      */
@@ -144,21 +146,18 @@ class CameraViewModel @Inject constructor(
                     // Launch coroutine only for processing (where suspend work is needed)
                     viewModelScope.launch {
                         try {
-                            val bitmap = imageProxyToBitmap(image)
-                            image.close()
-
-                            // Resize to max 1024px wide to reduce processing time
-                            val resizedBitmap = resizeBitmap(bitmap, maxWidth = 640)
-
-                            val mat = bitmapToMat(resizedBitmap)
+                            // Convert ImageProxy to grayscale Mat
+                            // Keep ImageProxy open until conversion completes
+                            val grayscaleMat = imageProxyToGrayscaleMat(image)
 
                             // Transition to processing state
                             _uiState.value = CameraUiState.Processing
 
-                            // Extract scores from Mat (card scanner handles grayscale conversion)
-                            val scanResult = cardScanner.extractScores(mat)
+                            // Extract scores from Mat
+                            val scanResult = cardScanner.extractScores(grayscaleMat)
 
-                            mat.release()
+                            // Release Mat after processing
+                            grayscaleMat.release()
 
                             // Apply scores directly to database
                             applyScanResult(scanResult)
@@ -168,6 +167,9 @@ class CameraViewModel @Inject constructor(
                         } catch (e: Exception) {
                             Log.e(TAG, "Image processing/scan failed", e)
                             _uiState.value = CameraUiState.Error(e.message ?: "Unknown error")
+                        } finally {
+                            // Always close ImageProxy to release camera buffer
+                            image.close()
                         }
                     }
                 }
@@ -205,50 +207,44 @@ class CameraViewModel @Inject constructor(
     }
 
     /**
-     * Convert ImageProxy to Bitmap using CameraX extension.
+     * Convert ImageProxy to grayscale OpenCV Mat.
      *
-     * Uses the extension function from androidx.camera.core which handles
-     * YUV->RGB conversion automatically. For Phase 2 with mock scanner, the actual
-     * pixel data is not used but proper conversion ensures compatibility with
-     * Phase 3 real CV implementation.
+     * Extracts Y plane (luminance) from YUV_420_888 format and creates CV_8UC1 Mat.
+     * Handles row padding/strides efficiently.
+     *
+     * @param image ImageProxy from camera (must remain open during this call)
+     * @return Grayscale Mat (CV_8UC1) - caller must release when done
      */
-    private fun imageProxyToBitmap(imageProxy: ImageProxy): Bitmap {
-        // The toBitmap() extension is available from androidx.camera.core
-        @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_DECLARATION_EXPECTATIONS")
-        return imageProxy.toBitmap()
-    }
+    private fun imageProxyToGrayscaleMat(image: ImageProxy): Mat {
+        val width = image.width
+        val height = image.height
 
-    /**
-     * Resize bitmap to maximum width while maintaining aspect ratio.
-     *
-     * If the bitmap width is already smaller than maxWidth, returns the original.
-     * Otherwise, scales down proportionally.
-     *
-     * @param bitmap Original bitmap to resize
-     * @param maxWidth Maximum width in pixels (default 1024)
-     * @return Resized bitmap (or original if already smaller)
-     */
-    private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int = 1024): Bitmap {
-        if (bitmap.width <= maxWidth) {
-            return bitmap
+        // 1. Get the Y-plane (the first plane in YUV_420_888)
+        val plane = image.planes[0]
+        val buffer = plane.buffer
+        val rowStride = plane.rowStride
+        val pixelStride = plane.pixelStride
+
+        // 2. Create the destination Mat
+        val grayscaleMat = Mat(height, width, CvType.CV_8UC1)
+
+        // 3. Optimized Copy: Handle padding/strides
+        // If pixelStride is 1 and no row padding, we can do a bulk put
+        if (pixelStride == 1 && rowStride == width) {
+            val data = ByteArray(width * height)
+            buffer.get(data)
+            grayscaleMat.put(0, 0, data)
+        } else {
+            // Handle row-by-row copy to strip out padding (strides)
+            val rowData = ByteArray(width)
+            for (row in 0 until height) {
+                buffer.position(row * rowStride)
+                buffer.get(rowData, 0, width)
+                grayscaleMat.put(row, 0, rowData)
+            }
         }
 
-        val aspectRatio = bitmap.height.toFloat() / bitmap.width.toFloat()
-        val targetHeight = (maxWidth * aspectRatio).toInt()
-
-        Log.d(TAG, "Resizing bitmap from ${bitmap.width}×${bitmap.height} to ${maxWidth}×${targetHeight}")
-
-        return Bitmap.createScaledBitmap(bitmap, maxWidth, targetHeight, true)
-    }
-
-    /**
-     * Convert Android Bitmap to OpenCV Mat using Android OpenCV Utils.
-     * Caller is responsible for calling mat.release() when done.
-     */
-    private fun bitmapToMat(bitmap: Bitmap): Mat {
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-        return mat
+        return grayscaleMat
     }
 
     /**

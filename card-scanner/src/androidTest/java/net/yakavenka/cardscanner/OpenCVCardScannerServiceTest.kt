@@ -29,7 +29,7 @@ class OpenCVCardScannerServiceTest {
 
     @Test
     fun extractScores_withTestImage_returnsValidScores() = runTest {
-        val testImage = createTestMat(179, 1374)
+        val testImage = createTestMat(1374, 179)
 
         val result = scanner.extractScores(testImage)
 
@@ -46,12 +46,14 @@ class OpenCVCardScannerServiceTest {
     }
 
     @Test
-    fun extractScores_withNullImage_returnsFailure() = runTest {
+    fun extractScores_withEmptyImage_returnsFailure() = runTest {
         val emptyMat = Mat()
 
         val result = scanner.extractScores(emptyMat)
 
         assertThat(result, instanceOf(ScanResult.Failure::class.java))
+
+        emptyMat.release()
     }
 
     @After
@@ -59,7 +61,8 @@ class OpenCVCardScannerServiceTest {
         scanner.cleanup()
     }
 
-    private fun createTestMat(height: Int, width: Int): Mat {
+    private fun createTestMat(width: Int, height: Int): Mat {
+        // Create grayscale Mat (CV_8UC1)
         return Mat(height, width, CvType.CV_8UC1)
     }
 }

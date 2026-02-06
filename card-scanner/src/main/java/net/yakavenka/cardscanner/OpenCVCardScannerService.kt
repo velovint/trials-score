@@ -86,8 +86,9 @@ class OpenCVCardScannerService(
 
     override suspend fun extractScores(image: Mat): ScanResult = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Extracting scores")
-            // Step 1: Preprocess (PLACEHOLDER)
+            Log.d(TAG, "Extracting scores from ${image.width()}x${image.height()} grayscale image")
+
+            // Step 1: Preprocess (resize + enhancements)
             val preprocessed = preprocessImage(image)
 
             // Step 2: Extract rows (STUBBED)
@@ -118,17 +119,18 @@ class OpenCVCardScannerService(
         // - Noise reduction (Gaussian blur)
         // - Rotation correction (perspective transform)
 
-        // Convert to grayscale (reduces data size and simplifies processing)
-        val gray = if (image.channels() == 1) {
-            // Already grayscale, just clone
-            image.clone()
-        } else {
-            // Convert BGR/BGRA to grayscale
-            Mat().also { Imgproc.cvtColor(image, it, Imgproc.COLOR_BGR2GRAY) }
-        }
+        // Image should already be grayscale from CameraViewModel (CV_8UC1)
+        // Resize to standard width for consistent processing
+        val resized = Mat()
+        val targetWidth = 640.0
+        val aspectRatio = image.height().toDouble() / image.width().toDouble()
+        val targetHeight = (targetWidth * aspectRatio).toInt()
+        val size = Size(targetWidth, targetHeight.toDouble())
 
-        Log.d(TAG, "Preprocessed image: ${gray.width()}×${gray.height()}, channels=${gray.channels()}")
-        return gray
+        Imgproc.resize(image, resized, size)
+
+        Log.d(TAG, "Preprocessed image: ${resized.width()}×${resized.height()}, channels=${resized.channels()}")
+        return resized
     }
 
     // STUB: Extract row images (returns entire image 15 times)

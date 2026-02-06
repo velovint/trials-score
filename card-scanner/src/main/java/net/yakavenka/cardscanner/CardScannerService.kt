@@ -15,7 +15,7 @@ interface CardScannerService {
      * Image is processed in-memory and should be discarded after this call.
      * No image data is persisted to disk.
      *
-     * @param image In-memory OpenCV Mat of captured score card
+     * @param image Grayscale OpenCV Mat of captured score card (CV_8UC1)
      * @return ScanResult.Success with scores map, or Failure with error message
      */
     suspend fun extractScores(image: Mat): ScanResult

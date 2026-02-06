@@ -27,7 +27,7 @@ class MockCardScannerServiceTest {
 
     private fun createTestMat(width: Int = 640, height: Int = 480): Mat {
         // Create empty Mat (content doesn't matter for mock)
-        return Mat(height, width, CvType.CV_8UC4)
+        return Mat(height, width, CvType.CV_8UC1)
     }
 
     @Test
