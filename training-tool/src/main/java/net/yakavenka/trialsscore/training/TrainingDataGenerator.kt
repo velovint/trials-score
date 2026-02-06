@@ -38,15 +38,29 @@ class TrainingDataGenerator(
             stats[score] = 0
         }
 
+        // Create debug directory
+        val debugDir = File(outputDir, "debug")
+        debugDir.mkdirs()
+
+        // Enable debug mode for first 3 images
+        CardImagePreprocessor.DEBUG_MODE = true
+        CardImagePreprocessor.DEBUG_OUTPUT_DIR = debugDir.absolutePath
+
         val imageFiles = inputDir.listFiles { file ->
             file.isFile && file.extension.lowercase() in listOf("jpg", "jpeg", "png")
         } ?: emptyArray()
 
         println("Found ${imageFiles.size} image files in ${inputDir.absolutePath}")
+        println("Debug mode enabled for first 3 images - edge images will be saved to: ${debugDir.absolutePath}")
         println("Processing...")
 
         imageFiles.forEachIndexed { index, file ->
             try {
+                // Disable debug mode after first 3 images
+                if (index >= 3) {
+                    CardImagePreprocessor.DEBUG_MODE = false
+                }
+
                 processImage(file, index)
                 processedCount++
 
