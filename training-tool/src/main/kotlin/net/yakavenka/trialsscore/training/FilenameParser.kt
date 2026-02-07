@@ -7,7 +7,7 @@ package net.yakavenka.trialsscore.training
 object FilenameParser {
 
     private val SCORE_PATTERN = Regex("""(\d{15})""")
-    private val VALID_SCORES = setOf(0, 1, 2, 3, 5)
+    private val VALID_SCORES = setOf(0, 1, 2, 3, 5, 9)  // 9 = missing score marker
 
     /**
      * Parse 15-digit score sequence from filename.

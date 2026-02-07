@@ -21,6 +21,7 @@ class TrainingDataGenerator(
     private val stats = mutableMapOf<Int, Int>()
     private var processedCount = 0
     private var errorCount = 0
+    private var discardedCount = 0  // Tracks rows with missing scores (marked as 9)
 
     /**
      * Process all images in input directory.
@@ -95,6 +96,13 @@ class TrainingDataGenerator(
                     // Save each row to appropriate score folder
                     rows.forEachIndexed { rowIndex, rowImage ->
                         val score = scores[rowIndex]
+
+                        // Skip rows with missing scores (marked as 9)
+                        if (score == 9) {
+                            discardedCount++
+                            return@forEachIndexed
+                        }
+
                         val outputFile = File(outputDir, "$score/image_${imageIndex}_row_${rowIndex}.png")
 
                         if (Imgcodecs.imwrite(outputFile.absolutePath, rowImage)) {
@@ -122,11 +130,16 @@ class TrainingDataGenerator(
         println("=" * 50)
         println("Total images processed: $processedCount")
         println("Errors: $errorCount")
+        println("Rows discarded (missing scores): $discardedCount")
         println()
         println("Rows extracted per score:")
         listOf(0, 1, 2, 3, 5).forEach { score ->
             println("  Score $score: ${stats[score]} rows")
         }
+        val totalSaved = stats.values.sum()
+        println()
+        println("Total rows saved: $totalSaved")
+        println("Total rows discarded: $discardedCount")
         println()
         println("Output directory: ${outputDir.absolutePath}")
     }
