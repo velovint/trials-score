@@ -2,16 +2,20 @@ package net.yakavenka.trialsscore.training
 
 import net.yakavenka.cardscanner.CardImagePreprocessor
 import org.opencv.core.Mat
+import org.opencv.core.Size
 import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
 import java.io.File
 
 /**
  * Generates training data from score card images.
  *
  * Processes images with 15-digit score sequences in filenames:
- * - Resizes to 640px width
+ * - Preprocesses full card image
  * - Extracts 15 individual row images
+ * - Resizes each row to 640x66 pixels (standard size for ML training)
  * - Organizes by score value into folders (0/, 1/, 2/, 3/, 5/)
+ * - Skips rows marked with score 9 (missing/incomplete data)
  */
 class TrainingDataGenerator(
     private val inputDir: File,
@@ -103,12 +107,20 @@ class TrainingDataGenerator(
                             return@forEachIndexed
                         }
 
-                        val outputFile = File(outputDir, "$score/image_${imageIndex}_row_${rowIndex}.png")
+                        // Resize row to standard size for ML training (640x66 pixels)
+                        val resized = Mat()
+                        Imgproc.resize(rowImage, resized, Size(640.0, 66.0))
 
-                        if (Imgcodecs.imwrite(outputFile.absolutePath, rowImage)) {
-                            stats[score] = stats.getValue(score) + 1
-                        } else {
-                            throw IllegalStateException("Failed to write image: ${outputFile.name}")
+                        try {
+                            val outputFile = File(outputDir, "$score/image_${imageIndex}_row_${rowIndex}.png")
+
+                            if (Imgcodecs.imwrite(outputFile.absolutePath, resized)) {
+                                stats[score] = stats.getValue(score) + 1
+                            } else {
+                                throw IllegalStateException("Failed to write image: ${outputFile.name}")
+                            }
+                        } finally {
+                            resized.release()
                         }
                     }
                 } finally {
