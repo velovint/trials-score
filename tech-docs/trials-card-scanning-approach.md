@@ -65,3 +65,57 @@ The approach is a two-phase process that balances predictable math with flexible
 - **Python for Training:** Utilize Python's superior ML ecosystem (Keras/TensorFlow) for the "model creation" phase.
 - **LiteRT for Inference:** High performance and low overhead on mobile.
 - **Viewfinder UX:** Collaborate with the user to get a clean scan rather than trying to fix highly distorted images in code.
+
+---
+
+## 7. Implementation Flow Overview
+
+### 7.1 Camera Capture
+**Entry:** User taps camera icon in `LoopScoreEntryScreen.kt`
+- CameraX captures JPEG image via `CameraViewModel.captureImage()`
+- `ImageProxy` converted to OpenCV grayscale Mat
+- Handles both YUV and JPEG formats with bitmap fallback
+
+### 7.2 Image Preprocessing
+**File:** `CardImagePreprocessor.preprocessImage()`
+1. **Grayscale conversion** - Ensure single-channel image
+2. **Auto-rotation** - Rotate landscape images to portrait (score cards are vertical)
+3. **Card detection** - Use Canny edges + contours to isolate card from background
+4. **Resize** - Scale to 640px width, preserve aspect ratio
+
+**Output:** Normalized grayscale image (640×N pixels)
+
+### 7.3 Row Extraction
+**File:** `CardImagePreprocessor.extractRowImages()`
+- **Hough Transform** detects horizontal grid lines separating rows
+- Clusters and filters lines to find 15 evenly-spaced sections
+- Extracts individual row images between grid lines
+- **Fallback:** Equal-height division if grid detection fails
+
+**Output:** 15 row images (typically 640×66 pixels each)
+
+### 7.4 ML Classification
+**File:** `OpenCVCardScannerService.kt`
+- Loads TFLite model (`score_classifier_model.tflite`)
+- For each row:
+  1. Resize to model input size (640×66)
+  2. Convert Mat → Float32 ByteBuffer (normalized [0-1])
+  3. Run TFLite inference → 5-class probabilities
+  4. Select class with highest probability
+  5. Map to score value: [0, 1, 2, 3, 5]
+
+**Output:** `Map<Int, Int>` (section number → score)
+
+### 7.5 Persistence & Display
+**File:** `CameraViewModel.applyScanResult()`
+- Creates `SectionScore` entities for each detected score
+- Saves to Room database (UPSERT operation)
+- Navigates back to score entry screen
+- Room Flow emits updates → LiveData → Compose UI
+- Scores appear as selected radio buttons
+
+### 7.6 Key Files
+- **Camera:** `CameraScreen.kt`, `CameraViewModel.kt`
+- **Processing:** `CardImagePreprocessor.kt`, `OpenCVCardScannerService.kt`
+- **Data:** `SectionScoreRepository.kt`, `RiderScoreDao.kt`, `SectionScore.kt`
+- **Display:** `ScoreCardViewModel.kt`, `LoopScoreEntryScreen.kt`

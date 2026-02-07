@@ -31,7 +31,7 @@ class OpenCVCardScannerService(
 
     // TODO: Update based on actual model requirements
     private val modelInputWidth = 640
-    private val modelInputHeight = 30
+    private val modelInputHeight = 66
     private val numClasses = 5  // [0, 1, 2, 3, 5]
 
     companion object {

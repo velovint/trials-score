@@ -50,7 +50,14 @@ Use concise commit messages and include only a summary for simple changes.
 ./gradlew prepareTrainingData
 ```
 
-Prepares ML training data from score card images. Downloads, unpacks, and processes images to extract individual row images organized by score value. See `training-tool/README.md` for detailed usage.
+Prepares ML training data from score card images. Downloads, unpacks, and processes images to extract individual row images organized by score value. Each row is resized to 640x66 pixels and organized into folders by score (0/, 1/, 2/, 3/, 5/). Rows marked with score 9 are discarded as missing data. See `training-tool/README.md` for detailed usage.
+
+### Package Training Data
+```bash
+./gradlew packageTrainingData
+```
+
+Packages the prepared training data into a compressed .tgz archive at `build/distributions/training-data.tgz`. Automatically runs `prepareTrainingData` if needed. The archive has score categories at the top level (0/, 1/, 2/, 3/, 5/) with images directly inside each directory. Debug files are excluded.
 
 ## Architecture
 

@@ -103,17 +103,64 @@ class CardImagePreprocessorTest {
         Log.i("CardImagePreprocessorTest", message)
         println(message)
 
+        preprocessed.release()
         // Score card should be predominantly white (>70% white pixels)
         // This indicates successful card detection and cropping, removing background
-        // TODO: Enable assertion when card cropping is implemented
-        // assertThat(whitePixelPercentage, greaterThan(0.70))
-
-        preprocessed.release()
+        assertThat(whitePixelPercentage, greaterThan(0.70))
     }
 
     private fun Double.format(decimals: Int) = "%.${decimals}f".format(this)
 
-    @Ignore("Row extraction is stubbed - returns entire image clones. Enable when real grid detection is implemented.")
+    /**
+     * Debug test for troubleshooting card detection issues.
+     * Enable DEBUG_MODE to save intermediate images (edge detection, etc.) to device storage.
+     * Remove @Ignore annotation to run this test.
+     */
+    @Ignore("Debug test - enable manually when troubleshooting card detection")
+    @Test
+    fun debugCardDetection_withRealCameraImage() {
+        // Enable debug mode to save intermediate images
+        CardImagePreprocessor.DEBUG_MODE = true
+        CardImagePreprocessor.DEBUG_OUTPUT_DIR = "/sdcard/Download/card-debug"
+
+        // Create debug output directory
+        val debugDir = File("/sdcard/Download/card-debug")
+        debugDir.mkdirs()
+
+        // Load camera-like test image
+        val cameraImage = loadTestImageFromAssets("score-card-uncropped.jpg")
+
+        Log.i("CardImagePreprocessorTest", "=== DEBUG CARD DETECTION ===")
+        Log.i("CardImagePreprocessorTest", "Input image: ${cameraImage.width()}×${cameraImage.height()}")
+
+        // Run preprocessing with debug logging
+        val preprocessed = CardImagePreprocessor.preprocessImage(cameraImage)
+
+        Log.i("CardImagePreprocessorTest", "Output image: ${preprocessed.width()}×${preprocessed.height()}")
+        Log.i("CardImagePreprocessorTest", "Size changed: ${preprocessed.width() != cameraImage.width() || preprocessed.height() != cameraImage.height()}")
+
+        // Calculate white pixel percentage
+        val whitePixelPercentage = calculateWhitePixelPercentage(preprocessed, threshold = 200)
+        Log.i("CardImagePreprocessorTest", "White pixel percentage: ${(whitePixelPercentage * 100).format(2)}%")
+
+        // Save final preprocessed image
+        val outputPath = "/sdcard/Download/card-debug/final_preprocessed.png"
+        Imgcodecs.imwrite(outputPath, preprocessed)
+        Log.i("CardImagePreprocessorTest", "Final image saved to: $outputPath")
+
+        Log.i("CardImagePreprocessorTest", "=== END DEBUG ===")
+        Log.i("CardImagePreprocessorTest", "")
+        Log.i("CardImagePreprocessorTest", "To extract debug images, run:")
+        Log.i("CardImagePreprocessorTest", "  adb pull /sdcard/Download/card-debug ./debug-output")
+
+        // Clean up
+        cameraImage.release()
+        preprocessed.release()
+
+        // Disable debug mode after test
+        CardImagePreprocessor.DEBUG_MODE = false
+    }
+
     @Test
     fun extractRowImages_withPreprocessedImage_returns15Rows() {
         val preprocessed = CardImagePreprocessor.preprocessImage(testImage)

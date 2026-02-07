@@ -69,3 +69,33 @@ tasks.register('prepareTrainingData', JavaExec) {
         file(trainingDataOutputDir).mkdirs()
     }
 }
+
+tasks.register('packageTrainingData', Tar) {
+    dependsOn 'prepareTrainingData'
+    description = 'Package prepared training data into a .tgz archive'
+    group = 'build'
+
+    compression = Compression.GZIP
+    archiveFileName = 'training-data.tgz'
+    destinationDirectory = file("$buildDir/distributions")
+
+    from(trainingDataOutputDir) {
+        // Score categories at top level: /0/, /1/, /2/, /3/, /5/
+        // Exclude debug directory if present
+        exclude 'debug/**'
+    }
+
+    doFirst {
+        println "Packaging training data..."
+        println "  Source: $trainingDataOutputDir"
+        println "  Output: ${destinationDirectory.get()}/${archiveFileName.get()}"
+    }
+
+    doLast {
+        def outputFile = file("${destinationDirectory.get()}/${archiveFileName.get()}")
+        def sizeMB = outputFile.length() / (1024 * 1024)
+        println "Archive created successfully!"
+        println "  File: ${outputFile.absolutePath}"
+        println "  Size: ${String.format('%.2f', sizeMB)} MB"
+    }
+}
