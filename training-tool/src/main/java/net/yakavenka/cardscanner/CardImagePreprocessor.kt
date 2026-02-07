@@ -23,10 +23,10 @@ object CardImagePreprocessor {
     private const val GAUSSIAN_BLUR_SIZE = 5
 
     // Hough Transform parameters for grid line detection
-    private const val HOUGH_THRESHOLD = 50
-    private const val MIN_LINE_LENGTH_RATIO = 0.5
-    private const val MAX_LINE_GAP = 20.0
-    private const val LINE_CLUSTER_THRESHOLD = 5.0
+    private const val HOUGH_THRESHOLD = 25            // Lowered from 50 - fewer votes needed
+    private const val MIN_LINE_LENGTH_RATIO = 0.3     // Lowered from 0.5 - accept shorter lines (30% of width)
+    private const val MAX_LINE_GAP = 40.0             // Increased from 20 - connect more broken segments
+    private const val LINE_CLUSTER_THRESHOLD = 10.0   // Increased from 5 - merge curved/bent lines
     private const val MAX_LINE_ANGLE_DEGREES = 10.0
     private const val MIN_GRID_LINES = 14
 
@@ -193,18 +193,26 @@ object CardImagePreprocessor {
             // Blur to reduce noise
             Imgproc.GaussianBlur(image, blurred, Size(5.0, 5.0), 0.0)
 
-            // Canny edge detection with tuned thresholds
-            Imgproc.Canny(blurred, edges, 50.0, 150.0)
+            // Canny edge detection with lowered thresholds for faint grid lines
+            Imgproc.Canny(blurred, edges, 30.0, 100.0)
 
             if (DEBUG_MODE && DEBUG_OUTPUT_DIR != null) {
                 saveDebugImage(edges, "hough_edges_raw")
             }
 
-            // Morphological operations to enhance horizontal lines
-            // Use horizontal kernel to connect broken line segments
+            // First dilate to thicken thin lines (helps detection)
+            val dilateKernel = Imgproc.getStructuringElement(
+                Imgproc.MORPH_RECT,
+                Size(3.0, 3.0)
+            )
+            Imgproc.dilate(edges, edges, dilateKernel)
+            dilateKernel.release()
+
+            // Then use horizontal kernel to connect broken line segments
+            // Smaller kernel (1/16 instead of 1/8) to avoid connecting unrelated edges
             val horizontalKernel = Imgproc.getStructuringElement(
                 Imgproc.MORPH_RECT,
-                Size(image.width() / 8.0, 1.0)  // Wide horizontal kernel
+                Size(image.width() / 16.0, 1.0)
             )
             Imgproc.morphologyEx(edges, edges, Imgproc.MORPH_CLOSE, horizontalKernel)
             horizontalKernel.release()
@@ -238,6 +246,8 @@ object CardImagePreprocessor {
                 MAX_LINE_GAP                                  // maxLineGap: Max gap between line segments
             )
 
+            println("  HoughLinesP detected ${lines.rows()} raw lines")
+
             // Convert to HoughLine objects and filter for horizontal lines
             val detectedLines = mutableListOf<HoughLine>()
             for (i in 0 until lines.rows()) {
@@ -255,6 +265,7 @@ object CardImagePreprocessor {
                 }
             }
 
+            println("  ${detectedLines.size} horizontal lines after angle filtering")
             return detectedLines
         } finally {
             lines.release()
@@ -344,12 +355,29 @@ object CardImagePreprocessor {
 
     /**
      * Extract rows from image based on detected grid lines.
+     * Grid lines represent the BOTTOM border of each row, so we extract content ABOVE each line.
      */
     private fun extractRowsFromGridLines(image: Mat, gridLines: List<Double>): List<Mat> {
         val rows = mutableListOf<Mat>()
 
-        // Extract rows between consecutive line pairs
-        for (i in 0 until (gridLines.size - 1).coerceAtMost(NUM_SECTIONS)) {
+        // Calculate average spacing to estimate top of first row
+        val avgSpacing = if (gridLines.size >= 2) {
+            (gridLines.last() - gridLines.first()) / (gridLines.size - 1)
+        } else {
+            image.height() / NUM_SECTIONS.toDouble()
+        }
+
+        // For first row, start from estimated position above first line
+        val y0 = (gridLines[0] - avgSpacing).coerceAtLeast(0.0).toInt()
+        val y1 = gridLines[0].toInt()
+        val height0 = y1 - y0
+        if (height0 > 0) {
+            val roi = Rect(0, y0, image.width(), height0)
+            rows.add(Mat(image, roi).clone())
+        }
+
+        // Extract remaining rows between consecutive line pairs
+        for (i in 0 until (gridLines.size - 1).coerceAtMost(NUM_SECTIONS - 1)) {
             val y1 = gridLines[i].toInt()
             val y2 = gridLines[i + 1].toInt()
             val height = y2 - y1
