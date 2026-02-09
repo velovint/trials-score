@@ -71,9 +71,10 @@ android {
 }
 
 dependencies {
-    implementation(project(':card-scanner')) {
+    implementation(project(':shared-cv')) {
         exclude group: 'org.openpnp', module: 'opencv'
     }
+    implementation project(':ml-inference')
 
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.activity.compose

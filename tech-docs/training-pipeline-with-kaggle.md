@@ -15,7 +15,13 @@ This document defines the architecture and testing gates for the card scanning p
 
 ## 📋 The Workflow Loop
 
-1.  **Local Prep:** `:data-prep-tool` downloads raw score card images from a Kaggle dataset, then uses instrumented tests as runtime infrastructure to execute `:shared-cv` code within Android environment. Processed images are passed to `:ml-inference` module to generate labeled training dataset ➔ Uploads to **Kaggle Dataset**.
+1.  **Local Prep:** `:data-prep-tool` orchestrates data preparation via instrumented tests:
+    *   Gradle downloads raw score card images from Kaggle dataset and pushes to device storage
+    *   Instrumented test loads images, converts to `Mat`, and passes to `:shared-cv` pre-processor
+    *   `:shared-cv` performs OpenCV operations (Hough Transform, grid extraction, row cropping)
+    *   Test writes processed images to app-specific device storage, organized by score (0/, 1/, 2/, 3/, 5/)
+    *   Custom Gradle collector (mirroring test results pattern) automatically pulls processed files from device to `build/` directory after test completion
+    *   Uploads training dataset from `build/` ➔ **Kaggle Dataset**
 2.  **Remote Train:** Kaggle trains the model ➔ Gradle downloads the `.tflite` file.
 3.  **Local Validate:** `:ml-inference` instrumented tests run the new model against a "Golden Set" to verify accuracy.
 4.  **Deploy:** If accuracy passes, the model is bundled into the `:app`.
