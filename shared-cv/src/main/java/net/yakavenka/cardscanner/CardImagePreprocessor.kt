@@ -42,7 +42,7 @@ object CardImagePreprocessor {
     // Configuration flags
     var ENABLE_CARD_DETECTION = true  // Set to false to skip card detection (if images already cropped)
     var USE_HOUGH_TRANSFORM = true    // Set to false to use equal-height fallback
-    var DEBUG_MODE = true            // Set to true to save intermediate images for troubleshooting
+    var DEBUG_MODE = false           // Set to true to save intermediate images for troubleshooting
     var DEBUG_OUTPUT_DIR: String? = Environment.getExternalStorageDirectory().getPath() + "/Download/card-debug"
 
     /**
