@@ -45,8 +45,9 @@ dependencies {
     // OpenCV for Android
     implementation "org.opencv:opencv:4.10.0"
 
-    // TensorFlow Lite (LiteRT)
-    implementation "org.tensorflow:tensorflow-lite:2.14.0"
+    // TensorFlow Lite (LiteRT) - Version 2.17.0 for FULLY_CONNECTED v12 support
+    implementation "org.tensorflow:tensorflow-lite:2.17.0"
+    implementation "org.tensorflow:tensorflow-lite-gpu:2.17.0"
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
         exclude group: "org.tensorflow", module: "tensorflow-lite-api"
     }
