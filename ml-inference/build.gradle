@@ -68,3 +68,35 @@ dependencies {
     androidTestImplementation "org.hamcrest:hamcrest-library:3.0"
     androidTestUtil "androidx.test:orchestrator:1.6.1"
 }
+
+// Task to copy downloaded model from build directory to module assets
+tasks.register('copyModelToAssets', Copy) {
+    group = 'build'
+    description = 'Copy downloaded model from build directory to assets'
+
+    def sourceModel = file("${rootProject.buildDir}/ml-models/score_classifier_model.tflite")
+    def destDir = file("$projectDir/src/main/assets")
+
+    from sourceModel
+    into destDir
+
+    dependsOn rootProject.tasks.named('downloadModel')
+
+    inputs.file(sourceModel)
+    outputs.file(new File(destDir, sourceModel.name))
+
+    doFirst {
+        if (!sourceModel.exists()) {
+            throw new GradleException(
+                "Downloaded model not found: ${sourceModel.absolutePath}\n" +
+                "Run './gradlew downloadModel' first."
+            )
+        }
+        destDir.mkdirs()
+    }
+}
+
+// Ensure model is copied to assets before compiling
+tasks.named('preBuild') {
+    dependsOn tasks.named('copyModelToAssets')
+}

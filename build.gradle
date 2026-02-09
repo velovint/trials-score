@@ -113,3 +113,64 @@ tasks.register('verifyPipeline') {
     dependsOn ':ml-inference:connectedAndroidTest'
     dependsOn ':app:connectedAndroidTest'
 }
+
+tasks.register('uploadTrainingData') {
+    group = 'ml-pipeline'
+    description = 'Upload processed data to Kaggle (STUB)'
+    doLast {
+        println 'STUB: Would upload training data to Kaggle'
+    }
+}
+
+tasks.register('downloadModel', Copy) {
+    group = 'ml-pipeline'
+    description = 'Download trained model from Kaggle (STUB: copies from local source)'
+
+    def sourceModel = file("$projectDir/ml-inference/src/kaggle/score_classifier_model.tflite")
+    def destDir = file("$buildDir/ml-models")
+
+    from sourceModel
+    into destDir
+
+    inputs.file(sourceModel)
+    outputs.file(new File(destDir, sourceModel.name))
+
+    doFirst {
+        if (!sourceModel.exists()) {
+            throw new GradleException(
+                "Model source not found: ${sourceModel.absolutePath}\n" +
+                "Expected model file in ml-inference/src/kaggle/\n" +
+                "In production, this would download from Kaggle instead."
+            )
+        }
+        destDir.mkdirs()
+    }
+
+    doLast {
+        def outputFile = new File(destDir, sourceModel.name)
+        def modelSize = outputFile.length() / 1024  // KB
+        println "✓ Model downloaded to build directory"
+        println "  Source: ${sourceModel.absolutePath}"
+        println "  Output: ${outputFile.absolutePath}"
+        println "  Size: ${String.format('%.2f', modelSize)} KB"
+        println "  (STUB: In production, would download from Kaggle API)"
+    }
+}
+
+tasks.register('triggerKaggleTrain') {
+    group = 'ml-pipeline'
+    description = 'Trigger Kaggle training job (STUB)'
+    doLast {
+        println 'STUB: Would trigger Kaggle training'
+    }
+}
+
+tasks.register('buildProductionModel') {
+    group = 'ml-pipeline'
+    description = 'Full ML pipeline: prep → train → validate → deploy'
+    dependsOn ':data-prep-tool:connectedAndroidTest'
+    dependsOn 'uploadTrainingData'
+    dependsOn 'triggerKaggleTrain'
+    dependsOn 'downloadModel'
+    finalizedBy 'verifyPipeline'
+}
