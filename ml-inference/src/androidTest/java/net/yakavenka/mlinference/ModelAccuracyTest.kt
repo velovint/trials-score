@@ -1,5 +1,8 @@
 package net.yakavenka.mlinference
 
+import android.content.Context
+import android.graphics.BitmapFactory
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
@@ -7,6 +10,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.core.Scalar
@@ -116,5 +120,28 @@ class ModelAccuracyTest {
 
         // Cleanup
         goldenSamples.forEach { it.release() }
+    }
+
+    @Test
+    fun loadGoldenDataset_fromAssets_classifiesCorrectly() {
+        // Load golden PNG from assets
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val inputStream = context.assets.open("golden/0/image_0_row_1.png")
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        // Convert to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Pass through classifier
+        val prediction = classifier.classifyRow(mat)
+
+        // Verify result matches the folder name (0)
+        assertThat("Golden image from folder '0' should be classified as 0",
+            prediction, equalTo(0))
+
+        // Cleanup
+        mat.release()
     }
 }
