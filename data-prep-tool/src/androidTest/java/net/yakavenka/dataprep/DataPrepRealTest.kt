@@ -1,0 +1,99 @@
+package net.yakavenka.dataprep
+
+import android.graphics.BitmapFactory
+import android.os.Environment
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers.equalTo
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.opencv.android.OpenCVLoader
+import org.opencv.android.Utils
+import org.opencv.core.Mat
+import org.opencv.imgproc.Imgproc
+import net.yakavenka.cardscanner.CardImagePreprocessor
+import android.util.Log
+import androidx.test.rule.GrantPermissionRule
+import org.junit.Rule
+import java.io.File
+
+/**
+ * Instrumented test to verify real data flow through data-prep-tool.
+ * Loads a real score card image, processes it with CardImagePreprocessor,
+ * and verifies row extraction works correctly.
+ */
+@RunWith(AndroidJUnit4::class)
+class DataPrepRealTest {
+
+    @get:Rule
+    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
+        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        android.Manifest.permission.READ_EXTERNAL_STORAGE
+    )
+
+    @Before
+    fun setUp() {
+        // Initialize OpenCV native library
+        OpenCVLoader.initLocal()
+
+        // Set debug output to test app's external files directory (accessible via adb pull)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        // This gets /storage/emulated/0/Android/data/
+        val baseDir = Environment.getExternalStorageDirectory()
+        val mainPackageName = "net.yakavenka.dataprep"
+//        val debugDir = context.getExternalFilesDir(null)!!.resolve("card-debug")
+        val debugDir = File(baseDir, "Android/data/$mainPackageName/files/card-debug")
+        debugDir.let {
+            if (!it.exists()) {
+                val created = it.mkdirs()
+                Log.d("OpenCV_Test", "Directory created: $created")
+            }
+        }
+
+        CardImagePreprocessor.DEBUG_OUTPUT_DIR = debugDir.absolutePath
+        CardImagePreprocessor.DEBUG_MODE = true
+
+        Log.i("DataPrepRealTest", "Debug output directory: ${debugDir.absolutePath}")
+        Log.i("DataPrepRealTest", "Directory exists: ${debugDir.exists()}")
+    }
+
+    @Test
+    fun processRealScoreCard_extracts15Rows() {
+        // Load real score card image from assets
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        // Convert to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Convert to grayscale (CardImagePreprocessor expects grayscale)
+        val grayMat = Mat()
+        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        mat.release()
+
+        // Use real CardImagePreprocessor
+        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
+        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+
+        // Verify we got 15 rows
+        assertThat("Should extract exactly 15 rows from score card", rows.size, equalTo(15))
+
+        // Verify rows are properly sized (640px wide)
+        rows.forEach { row ->
+            assertThat("Row width should be 640px", row.width(), equalTo(640))
+            assertTrue("Row height should be positive", row.height() > 0)
+        }
+
+        // Cleanup
+        grayMat.release()
+        preprocessed.release()
+        rows.forEach { it.release() }
+//        Thread.sleep(15000);
+    }
+}

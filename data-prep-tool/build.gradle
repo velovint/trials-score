@@ -50,6 +50,7 @@ dependencies {
 
     // CLI parsing (may be deprecated in Android library context)
     implementation "org.jetbrains.kotlinx:kotlinx-cli:0.3.6"
+    implementation libs.androidx.test.rules
 
     // Testing
     testImplementation "junit:junit:4.13.2"
