@@ -17,8 +17,11 @@ import org.opencv.imgproc.Imgproc
 import net.yakavenka.cardscanner.CardImagePreprocessor
 import android.util.Log
 import androidx.test.rule.GrantPermissionRule
+import androidx.test.services.storage.TestStorage
 import org.junit.Rule
 import java.io.File
+import java.io.FileOutputStream
+import org.opencv.imgcodecs.Imgcodecs
 
 /**
  * Instrumented test to verify real data flow through data-prep-tool.
@@ -95,5 +98,56 @@ class DataPrepRealTest {
         preprocessed.release()
         rows.forEach { it.release() }
 //        Thread.sleep(15000);
+    }
+
+    @Test
+    fun testStorage_savesPreprocessedImage() {
+        // Load real score card image from assets
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        // Convert to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Convert to grayscale
+        val grayMat = Mat()
+        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        mat.release()
+
+        // Preprocess the image
+        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
+        grayMat.release()
+
+        // Save preprocessed image using TestStorage
+        val testStorage = TestStorage()
+
+        // First save Mat to a temporary file, then copy to TestStorage
+        val tempFile = File(context.cacheDir, "preprocessed_test.png")
+        val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, preprocessed)
+        assertTrue("Mat should be written to temp file", writeSuccess)
+
+        Log.i("DataPrepRealTest", "Temp file created: ${tempFile.absolutePath}, exists: ${tempFile.exists()}")
+
+        // Use TestStorage to save the output file
+        testStorage.openOutputFile("preprocessed_output.png").use { outputStream ->
+            tempFile.inputStream().use { inputStream ->
+                inputStream.copyTo(outputStream)
+            }
+        }
+
+        Log.i("DataPrepRealTest", "File saved to TestStorage: preprocessed_output.png")
+
+        // Verify the preprocessed image dimensions
+        assertThat("Preprocessed width should be 640", preprocessed.width(), equalTo(640))
+        assertTrue("Preprocessed height should be positive", preprocessed.height() > 0)
+
+        // Cleanup
+        preprocessed.release()
+        tempFile.delete()
+
+        Log.i("DataPrepRealTest", "Test completed - check build outputs for TestStorage files")
     }
 }

@@ -13,6 +13,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         testInstrumentationRunnerArguments clearPackageData: "true"
+        // Enable TestStorage for automatic file retrieval
+        testInstrumentationRunnerArguments useTestStorageService: "true"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -34,6 +36,10 @@ android {
 
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        // Enable automatic pulling of test output files
+        emulatorSnapshots {
+            enableForTestFailures = false
+        }
     }
 }
 
@@ -63,6 +69,7 @@ dependencies {
     androidTestImplementation "androidx.test:core:1.6.1"
     androidTestImplementation "androidx.test.espresso:espresso-core:3.6.1"
     androidTestImplementation "androidx.test:core-ktx:1.6.1"
+    androidTestImplementation "androidx.test.services:test-services:1.5.0"
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
     androidTestImplementation "org.hamcrest:hamcrest-library:3.0"
     androidTestUtil "androidx.test:orchestrator:1.6.1"
