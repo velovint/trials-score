@@ -38,11 +38,14 @@ android {
 }
 
 dependencies {
+    // Depend on shared-cv for CardImagePreprocessor
+    implementation project(':shared-cv')
+
     implementation platform("org.jetbrains.kotlin:kotlin-bom:2.3.0")
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2"
 
-    // OpenCV for Android
+    // OpenCV provided by :shared-cv dependency
     implementation "org.opencv:opencv:4.10.0"
 
     // TensorFlow Lite (LiteRT) - Version 2.17.0 for FULLY_CONNECTED v12 support
