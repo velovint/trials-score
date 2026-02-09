@@ -20,6 +20,11 @@ tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
 }
 
+// FIXME: Legacy training data tasks - These were designed for a JVM :training-tool module
+// but :training-tool was renamed to :data-prep-tool and converted to an Android library.
+// These tasks are temporarily disabled until the module structure is finalized.
+// For now, training data preparation is done via instrumented tests in :data-prep-tool.
+/*
 // Training data preparation configuration
 ext {
     trainingDataUrl = project.findProperty('trainingDataUrl') ?:
@@ -55,8 +60,8 @@ tasks.register('unpackTrainingData', Copy) {
 }
 
 tasks.register('prepareTrainingData', JavaExec) {
-    dependsOn 'unpackTrainingData', ':training-tool:build'
-    classpath = project(':training-tool').sourceSets.main.runtimeClasspath
+    dependsOn 'unpackTrainingData', ':data-prep-tool:build'
+    classpath = project(':data-prep-tool').sourceSets.main.runtimeClasspath
     mainClass = 'net.yakavenka.trialsscore.training.MainKt'
     args = [
         '--input-dir', trainingDataSourceDir,
@@ -98,4 +103,13 @@ tasks.register('packageTrainingData', Tar) {
         println "  File: ${outputFile.absolutePath}"
         println "  Size: ${String.format('%.2f', sizeMB)} MB"
     }
+}
+*/
+
+tasks.register('verifyPipeline') {
+    group = 'verification'
+    description = 'Run all ML pipeline validation tests'
+    dependsOn ':shared-cv:connectedAndroidTest'
+    dependsOn ':ml-inference:connectedAndroidTest'
+    dependsOn ':app:connectedAndroidTest'
 }

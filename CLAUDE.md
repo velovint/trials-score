@@ -45,25 +45,80 @@ Reference this file when planning features related to user workflows, data impor
 ### Commit messages
 Use concise commit messages and include only a summary for simple changes.
 
-### Training Data Preparation
+### ML Pipeline (Proof of Concept)
+
+The ML pipeline for CV-based card scanning (Issue #30) uses instrumented tests for data preparation and validation:
+
+**Modules:**
+- `:shared-cv` - Contains `CardImagePreprocessor` (OpenCV-based card detection, grid line extraction, row segmentation)
+- `:data-prep-tool` - Android library for training data preparation via instrumented tests
+- `:ml-inference` - TensorFlow Lite model inference and validation
+
+**Training Data Preparation (POC Approach):**
 ```bash
-./gradlew prepareTrainingData
+# Prepare training data using instrumented tests
+./gradlew :data-prep-tool:connectedAndroidTest
 ```
 
-Prepares ML training data from score card images. Downloads, unpacks, and processes images to extract individual row images organized by score value. Each row is resized to 640x66 pixels and organized into folders by score (0/, 1/, 2/, 3/, 5/). Rows marked with score 9 are discarded as missing data. See `training-tool/README.md` for detailed usage.
+Training data preparation runs as instrumented tests on device/emulator:
+1. Load score card images from test assets
+2. Use `CardImagePreprocessor` to detect card, extract grid lines, segment into 15 rows
+3. Resize rows to 640x66 pixels
+4. Export to device storage organized by label (0/, 1/, 2/, 3/, 5/)
+5. Pull data from device: `adb pull /storage/emulated/0/Android/data/net.yakavenka.dataprep/files/training-data/`
 
-### Package Training Data
+Row labels are provided manually (via CSV or inspection). Label 9 indicates "skip this row" (corrupted/unclear data).
+
+**ML Pipeline Validation:**
 ```bash
-./gradlew packageTrainingData
+# Run all ML pipeline tests
+./gradlew :shared-cv:connectedAndroidTest :ml-inference:connectedAndroidTest
 ```
 
-Packages the prepared training data into a compressed .tgz archive at `build/distributions/training-data.tgz`. Automatically runs `prepareTrainingData` if needed. The archive has score categories at the top level (0/, 1/, 2/, 3/, 5/) with images directly inside each directory. Debug files are excluded.
+See `tech-docs/IMPLEMENTATION_PLAN.md` for complete POC implementation details.
+
+**Note:** Legacy command-line tasks (`prepareTrainingData`, `packageTrainingData`) are temporarily disabled during POC development as the `:training-tool` module was converted to an Android library (`:data-prep-tool`).
 
 ## Architecture
 
+### Module Structure
+
+**Core Modules:**
+- `:app` - Main Android application (MVVM architecture, see Layer Structure below)
+- `:shared-cv` - Shared computer vision library using OpenCV
+- `:ml-inference` - TensorFlow Lite model inference for score classification
+- `:data-prep-tool` - Training data preparation tools (instrumented tests)
+
+**Module Dependencies:**
+```
+:app → :ml-inference → :shared-cv
+:app → :shared-cv
+:data-prep-tool → :shared-cv
+```
+
+**ML Pipeline Modules (POC):**
+- **:shared-cv**: Contains `CardImagePreprocessor` for score card image processing:
+  - Card boundary detection (Canny edges + contour detection)
+  - Hough Transform grid line detection
+  - Row extraction (15 rows per card)
+  - Image preprocessing (grayscale, resize to 640px width)
+  - Debug mode with intermediate image saving
+
+- **:ml-inference**: TFLite-based score classifier:
+  - `ScoreClassifier` interface for row image classification
+  - Model loading and inference execution
+  - Golden dataset validation tests
+  - Depends on `:shared-cv` for preprocessing
+
+- **:data-prep-tool**: Training data preparation via instrumented tests:
+  - Loads raw score card images from assets
+  - Processes via `CardImagePreprocessor`
+  - Exports labeled row images to device storage
+  - Depends on `:shared-cv` for preprocessing
+
 ### Layer Structure
 
-The application code is located in `app` module and follows MVVM architecture with three main layers:
+The application code in `:app` module follows MVVM architecture with three main layers:
 
 **Data Layer** (`/data/`):
 - Room database with `ScoreDatabase` as single source of truth
