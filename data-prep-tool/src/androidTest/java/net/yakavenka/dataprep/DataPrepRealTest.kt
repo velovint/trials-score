@@ -150,4 +150,44 @@ class DataPrepRealTest {
 
         Log.i("DataPrepRealTest", "Test completed - check build outputs for TestStorage files")
     }
+
+    @Test
+    fun prepareRowForTraining_resizesTo640x66() {
+        // Load real score card image from assets
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        // Convert to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Convert to grayscale
+        val grayMat = Mat()
+        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        mat.release()
+
+        // Extract rows using CardImagePreprocessor
+        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
+        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        grayMat.release()
+        preprocessed.release()
+
+        // Resize each row for training
+        val resizedRows = rows.map { TrainingDataProcessor.prepareRowForTraining(it) }
+
+        // Verify all resized rows have correct dimensions
+        resizedRows.forEach { row ->
+            assertThat("Resized row width should be 640", row.width(), equalTo(640))
+            assertThat("Resized row height should be 66", row.height(), equalTo(66))
+        }
+
+        // Verify we still have 15 rows
+        assertThat("Should have 15 resized rows", resizedRows.size, equalTo(15))
+
+        // Cleanup
+        rows.forEach { it.release() }
+        resizedRows.forEach { it.release() }
+    }
 }

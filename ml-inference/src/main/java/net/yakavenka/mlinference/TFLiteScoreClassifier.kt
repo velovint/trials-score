@@ -53,6 +53,14 @@ class TFLiteScoreClassifier(context: Context, modelPath: String) : ScoreClassifi
     }
 
     override fun classifyRow(inputMat: Mat): Int {
+        // Validate input dimensions
+        require(inputMat.width() == 640 && inputMat.height() == 66) {
+            "Input Mat must be 640x66, got ${inputMat.width()}x${inputMat.height()}"
+        }
+        require(inputMat.channels() == 1) {
+            "Input Mat must be grayscale (1 channel), got ${inputMat.channels()} channels"
+        }
+
         // Prepare input buffer (model expects 640x66 grayscale image)
         val inputBuffer = preprocessMatToBuffer(inputMat)
 
