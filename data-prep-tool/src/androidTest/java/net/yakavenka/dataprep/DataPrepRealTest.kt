@@ -190,4 +190,49 @@ class DataPrepRealTest {
         rows.forEach { it.release() }
         resizedRows.forEach { it.release() }
     }
+
+    @Test
+    fun exportTrainingData_organizesIntoLabelFolders() {
+        // Load real score card image from assets
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val bitmap = BitmapFactory.decodeStream(inputStream)
+        inputStream.close()
+
+        // Convert to Mat
+        val mat = Mat()
+        Utils.bitmapToMat(bitmap, mat)
+
+        // Convert to grayscale
+        val grayMat = Mat()
+        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        mat.release()
+
+        // Process through CardImagePreprocessor to extract 15 rows
+        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
+        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        grayMat.release()
+        preprocessed.release()
+
+        // Simulated labels (in real workflow, user provides these)
+        // Label 9 indicates "skip this row" (corrupted/unclear data)
+        val labels = listOf(0, 1, 2, 3, 5, 0, 1, 2, 3, 5, 0, 1, 9, 3, 5)
+
+        // Create TestStorage instance
+        val testStorage = TestStorage()
+
+        // Export rows to TestStorage organized by label folders
+        TrainingDataExporter.exportToTestStorage(
+            testStorage = testStorage,
+            rows = rows,
+            labels = labels,
+            imageBaseName = "test_card_001"
+        )
+
+        Log.i("DataPrepRealTest", "Training data exported to TestStorage")
+        Log.i("DataPrepRealTest", "Check build/outputs/managed_device_android_test_additional_output/ for exported files")
+
+        // Cleanup
+        rows.forEach { it.release() }
+    }
 }
