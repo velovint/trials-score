@@ -1,6 +1,6 @@
 package net.yakavenka.dataprep
 
-import androidx.test.services.storage.TestStorage
+import androidx.test.platform.io.PlatformTestStorage
 import org.opencv.core.Mat
 import org.opencv.core.MatOfByte
 import org.opencv.imgcodecs.Imgcodecs
@@ -21,7 +21,7 @@ object TrainingDataExporter {
      * @param imageBaseName Base name for output files (e.g., "card_001")
      */
     fun exportToTestStorage(
-        testStorage: TestStorage,
+        testStorage: PlatformTestStorage,
         rows: List<Mat>,
         labels: List<Int>,
         imageBaseName: String
