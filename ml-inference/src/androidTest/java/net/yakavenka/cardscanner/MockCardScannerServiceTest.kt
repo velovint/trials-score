@@ -6,6 +6,7 @@ import kotlinx.coroutines.test.runTest
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
+import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.junit.Before
 import org.junit.Test
@@ -92,8 +93,8 @@ class MockCardScannerServiceTest {
                     "Section $section has points $points, but should be 0-5",
                     points,
                     allOf(
-                        org.hamcrest.Matchers.greaterThanOrEqualTo(0),
-                        org.hamcrest.Matchers.lessThanOrEqualTo(5)
+                        Matchers.greaterThanOrEqualTo(0),
+                        Matchers.lessThanOrEqualTo(5)
                     )
                 )
             }

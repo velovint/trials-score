@@ -1,6 +1,5 @@
 package net.yakavenka.trialsscore.viewmodel
 
-import android.graphics.Bitmap
 import androidx.camera.core.ImageCapture
 import androidx.lifecycle.SavedStateHandle
 import kotlinx.coroutines.Dispatchers
@@ -11,7 +10,6 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.yakavenka.cardscanner.CardScannerService
-import net.yakavenka.cardscanner.ScanResult
 import net.yakavenka.trialsscore.data.SectionScoreRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.instanceOf
@@ -20,10 +18,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.Executor
 

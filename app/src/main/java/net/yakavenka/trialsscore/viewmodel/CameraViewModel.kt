@@ -1,7 +1,6 @@
 package net.yakavenka.trialsscore.viewmodel
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Log
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -31,7 +30,6 @@ import org.opencv.android.Utils
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
-import java.nio.ByteBuffer
 import java.util.concurrent.Executor
 
 private const val TAG = "CameraViewModel"

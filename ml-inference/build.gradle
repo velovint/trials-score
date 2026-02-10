@@ -35,6 +35,12 @@ android {
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
+
+    sourceSets {
+        main {
+            assets.srcDirs += "${buildDir}/generated-assets"
+        }
+    }
 }
 
 dependencies {
@@ -69,13 +75,13 @@ dependencies {
     androidTestUtil "androidx.test:orchestrator:1.6.1"
 }
 
-// Task to copy downloaded model from build directory to module assets
+// Task to copy downloaded model from build directory to generated assets
 tasks.register('copyModelToAssets', Copy) {
     group = 'build'
-    description = 'Copy downloaded model from build directory to assets'
+    description = 'Copy downloaded model from build directory to generated assets'
 
     def sourceModel = file("${rootProject.buildDir}/ml-models/score_classifier_model.tflite")
-    def destDir = file("$projectDir/src/main/assets")
+    def destDir = file("${buildDir}/generated-assets")
 
     from sourceModel
     into destDir
@@ -96,7 +102,10 @@ tasks.register('copyModelToAssets', Copy) {
     }
 }
 
-// Ensure model is copied to assets before compiling
-tasks.named('preBuild') {
-    dependsOn tasks.named('copyModelToAssets')
+// Hook into asset merging for all variants (debug, release, etc.)
+android.libraryVariants.all { variant ->
+    def mergeAssetsTaskName = "merge${variant.name.capitalize()}Assets"
+    tasks.named(mergeAssetsTaskName).configure {
+        dependsOn tasks.named('copyModelToAssets')
+    }
 }

@@ -1,5 +1,6 @@
 package net.yakavenka.cardscanner
 
+import android.content.Context
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,7 +28,7 @@ class OpenCVCardScannerServiceTest {
         // Load OpenCV native library
         OpenCVLoader.initLocal()
 
-        val context = ApplicationProvider.getApplicationContext<android.content.Context>()
+        val context = ApplicationProvider.getApplicationContext<Context>()
         scanner = OpenCVCardScannerService(context)
     }
 
