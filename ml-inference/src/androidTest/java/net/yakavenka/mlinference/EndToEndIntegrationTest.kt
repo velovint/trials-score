@@ -66,29 +66,35 @@ class EndToEndIntegrationTest {
         assertThat("Should extract 15 rows from score card", rows.size, equalTo(15))
         assertTrue("Should have at least one row to classify", rows.isNotEmpty())
 
-        // STEP 4: Resize first row to model's expected dimensions (640x66)
-        val firstRow = rows[0]
-        val resizedRow = Mat()
-        val targetSize = Size(640.0, 66.0)
-        Imgproc.resize(firstRow, resizedRow, targetSize)
-
-        // STEP 5: Classify resized row using real TFLiteScoreClassifier
+        // STEP 4: Classify rows and validate expected scores
+        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2)
         val classifier = TFLiteScoreClassifier(context, "score_classifier_model.tflite")
-        val classificationResult = classifier.classifyRow(resizedRow)
+        val classificationResults = mutableListOf<Int>()
 
-        // STEP 6: Assert final result is a valid score (0, 1, 2, 3, or 5)
-        assertThat("Real TFLite classifier should return valid score",
-            classificationResult, isIn(listOf(0, 1, 2, 3, 5)))
+        for (rowIndex in 0 until minOf(expectedScores.size, rows.size)) {
+            val row = rows[rowIndex]
+            val resizedRow = Mat()
+            val targetSize = Size(640.0, 66.0)
+            Imgproc.resize(row, resizedRow, targetSize)
 
-        // Verify resized row dimensions match model expectations
-        assertThat("Resized row width should be 640px", resizedRow.width(), equalTo(640))
-        assertThat("Resized row height should be 66px", resizedRow.height(), equalTo(66))
+            val classificationResult = classifier.classifyRow(resizedRow)
+            classificationResults.add(classificationResult)
+
+            // Verify each result is a valid score (0, 1, 2, 3, or 5)
+            assertThat("Row $rowIndex should return valid score",
+                classificationResult, isIn(listOf(0, 1, 2, 3, 5)))
+
+            resizedRow.release()
+        }
+
+        // STEP 5: Assert classification results match expected scores
+        assertThat("Classification results should match expected scores",
+            classificationResults, equalTo(expectedScores))
 
         // Cleanup
         classifier.close()
         grayMat.release()
         preprocessed.release()
         rows.forEach { it.release() }
-        resizedRow.release()
     }
 }
