@@ -38,7 +38,7 @@ class EndToEndIntegrationTest {
         OpenCVLoader.initLocal()
 
         // Disable debug mode to avoid file I/O during tests
-        CardImagePreprocessor.DEBUG_MODE = false
+        CardImagePreprocessor.DEBUG_MODE = true
     }
 
     @Test

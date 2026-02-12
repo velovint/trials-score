@@ -4,6 +4,7 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.services.storage.TestStorage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.After
@@ -197,6 +198,90 @@ class CardImagePreprocessorTest {
         assertThat(preprocessed.empty(), equalTo(true))
     }
 
+    @Test
+    fun extractRowImages_correctOrder_firstAndLastSectionsDetected() {
+        // Preprocess and extract rows
+        val preprocessed = CardImagePreprocessor.preprocessImage(testImage)
+        val rowImages = CardImagePreprocessor.extractRowImages(preprocessed)
+
+        assertThat("Should extract 15 rows", rowImages.size, equalTo(15))
+
+        // Load section number templates
+        val template1 = loadTestImageFromAssets("template_section_1.png")
+        val template15 = loadTestImageFromAssets("template_section_15.png")
+
+        // Save debug images using TestStorage
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val testStorage = TestStorage()
+
+        // Helper function to save Mat to TestStorage
+        fun saveMatToTestStorage(mat: Mat, filename: String) {
+            val tempFile = File(context.cacheDir, filename)
+            val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, mat)
+            if (writeSuccess) {
+                testStorage.openOutputFile(filename).use { outputStream ->
+                    tempFile.inputStream().use { inputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                tempFile.delete()
+            }
+        }
+
+        // Save extracted rows for debugging
+        saveMatToTestStorage(rowImages[0], "row_00_first.png")
+        saveMatToTestStorage(rowImages[14], "row_14_last.png")
+        saveMatToTestStorage(template1, "template_1.png")
+        saveMatToTestStorage(template15, "template_15.png")
+
+        // Verify first row contains section number "1"
+        val firstRowMatch = matchTemplate(rowImages[0], template1)
+        Log.i("CardImagePreprocessorTest", "First row (section 1) match score: $firstRowMatch")
+
+        // Verify last row contains section number "15"
+        val lastRowMatch = matchTemplate(rowImages[14], template15)
+        Log.i("CardImagePreprocessorTest", "Last row (section 15) match score: $lastRowMatch")
+
+        // Log match scores
+        val debugMessage = """
+            Row order validation completed:
+
+            Match scores:
+              - Section 1 (row 0): ${firstRowMatch.format(3)}
+              - Section 15 (row 14): ${lastRowMatch.format(3)}
+
+            Debug images saved to TestStorage:
+              - row_00_first.png (extracted first row)
+              - row_14_last.png (extracted last row)
+              - template_1.png (section 1 template)
+              - template_15.png (section 15 template)
+
+            Find outputs in: build/outputs/managed_device_android_test_additional_output/
+            or: build/outputs/androidTest-results/connected/
+        """.trimIndent()
+
+        Log.i("CardImagePreprocessorTest", debugMessage)
+        println(debugMessage)
+
+        assertThat(
+            "First row should contain section number '1' (match score: ${firstRowMatch.format(3)})",
+            firstRowMatch,
+            greaterThan(0.7)
+        )
+
+        assertThat(
+            "Last row should contain section number '15' (match score: ${lastRowMatch.format(3)})",
+            lastRowMatch,
+            greaterThan(0.7)
+        )
+
+        // Clean up
+        template1.release()
+        template15.release()
+        rowImages.forEach { it.release() }
+        preprocessed.release()
+    }
+
     /**
      * Load test image from androidTest/assets and convert to grayscale Mat.
      */
@@ -243,5 +328,32 @@ class CardImagePreprocessorTest {
         binaryImage.release()
 
         return whitePixelCount.toDouble() / totalPixels
+    }
+
+    /**
+     * Match a template image against a row image to detect section numbers.
+     * Searches across the entire row to handle cards with section numbers in different positions.
+     *
+     * @param rowImage Full row image (640xN pixels)
+     * @param template Template image of the section number to find
+     * @return Match confidence score (0.0 to 1.0, higher = better match)
+     */
+    private fun matchTemplate(rowImage: Mat, template: Mat): Double {
+        require(rowImage.type() == CvType.CV_8UC1) { "Row image must be grayscale" }
+        require(template.type() == CvType.CV_8UC1) { "Template must be grayscale" }
+
+        // Perform template matching across entire row
+        // Some cards have section numbers on the left, others in the middle
+        val result = Mat()
+        Imgproc.matchTemplate(rowImage, template, result, Imgproc.TM_CCOEFF_NORMED)
+
+        // Find best match location and score
+        val minMaxLoc = org.opencv.core.Core.minMaxLoc(result)
+        val matchScore = minMaxLoc.maxVal
+
+        // Clean up
+        result.release()
+
+        return matchScore
     }
 }

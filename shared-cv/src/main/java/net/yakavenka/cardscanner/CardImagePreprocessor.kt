@@ -72,7 +72,7 @@ object CardImagePreprocessor {
             Log.i("CardImagePreprocessor", "  Rotating landscape image to portrait: ${grayscale.width()}x${grayscale.height()}")
             val rotated = Mat()
             // Rotate 90 degrees clockwise
-            Core.rotate(grayscale, rotated, Core.ROTATE_90_CLOCKWISE)
+            Core.rotate(grayscale, rotated, Core.ROTATE_90_COUNTERCLOCKWISE)
             if (grayscale !== image) grayscale.release()
             rotated
         } else {

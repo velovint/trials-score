@@ -216,7 +216,7 @@ class DataPrepRealTest {
 
         // Simulated labels (in real workflow, user provides these)
         // Label 9 indicates "skip this row" (corrupted/unclear data)
-        val labels = listOf(0, 1, 2, 3, 5, 0, 1, 2, 3, 5, 0, 1, 9, 3, 5)
+        val labels = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 9, 9, 9, 9, 9,)
 
         // Create TestStorage instance
         val testStorage = TestStorage()
