@@ -32,7 +32,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_producesCorrectNumberOfRows() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_no_header.jpg")
         // Resize to 640px width (simulating card isolation output)
         val card = resizeToTargetWidth(rawCard, 640)
 
@@ -54,7 +54,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_rowsHaveValidCoordinates() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card = resizeToTargetWidth(rawCard, 640)
 
         val result = segmenter.segment(card)
@@ -79,7 +79,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_rowsAreWithinCardBounds() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card = resizeToTargetWidth(rawCard, 640)
         val cardHeight = card.rows()
 
@@ -110,7 +110,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_rowsAreInAscendingOrder() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card = resizeToTargetWidth(rawCard, 640)
 
         val result = segmenter.segment(card)
@@ -137,7 +137,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_rowsHaveReasonableHeights() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card = resizeToTargetWidth(rawCard, 640)
         val cardHeight = card.rows()
         val minExpectedHeight = cardHeight / 20  // At least 1/20th of card
@@ -171,9 +171,9 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_isConsistent() {
-        val rawCard1 = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard1 = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card1 = resizeToTargetWidth(rawCard1, 640)
-        val rawCard2 = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard2 = loadRawCardFromAssets("test_score_card_no_header.jpg")
         val card2 = resizeToTargetWidth(rawCard2, 640)
 
         val result1 = segmenter.segment(card1)
@@ -209,7 +209,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_handlesPrimaryCardImage() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_w_header.png")
         val card = resizeToTargetWidth(rawCard, 640)
 
         val result = segmenter.segment(card)
@@ -231,7 +231,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_logsRowInformation() {
-        val rawCard = loadRawCardFromAssets("test_score_card.jpg")
+        val rawCard = loadRawCardFromAssets("test_score_card_w_header.png")
         val card = resizeToTargetWidth(rawCard, 640)
         val cardHeight = card.rows()
 

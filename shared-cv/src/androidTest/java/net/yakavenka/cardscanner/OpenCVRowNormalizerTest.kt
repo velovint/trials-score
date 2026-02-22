@@ -24,7 +24,7 @@ class OpenCVRowNormalizerTest {
 
     @Test
     fun normalize_bufferHasCorrectSize() {
-        val card = loadGrayscaleCardFromAssets("test_score_card.jpg")
+        val card = loadGrayscaleCardFromAssets("test_score_card_no_header.jpg")
         val region = RowRegion(top = 0, bottom = 50)
 
         val results = OpenCVRowNormalizer().normalize(card, listOf(region))
@@ -37,7 +37,7 @@ class OpenCVRowNormalizerTest {
 
     @Test
     fun normalize_bufferHasNativeByteOrder() {
-        val card = loadGrayscaleCardFromAssets("test_score_card.jpg")
+        val card = loadGrayscaleCardFromAssets("test_score_card_no_header.jpg")
         val region = RowRegion(top = 0, bottom = 50)
 
         val results = OpenCVRowNormalizer().normalize(card, listOf(region))
@@ -49,7 +49,7 @@ class OpenCVRowNormalizerTest {
 
     @Test
     fun normalize_bufferPositionIsZero() {
-        val card = loadGrayscaleCardFromAssets("test_score_card.jpg")
+        val card = loadGrayscaleCardFromAssets("test_score_card_no_header.jpg")
         val region = RowRegion(top = 0, bottom = 50)
 
         val results = OpenCVRowNormalizer().normalize(card, listOf(region))
@@ -61,7 +61,7 @@ class OpenCVRowNormalizerTest {
 
     @Test
     fun normalize_allFloatValuesInUnitRange() {
-        val card = loadGrayscaleCardFromAssets("test_score_card.jpg")
+        val card = loadGrayscaleCardFromAssets("test_score_card_no_header.jpg")
         val region = RowRegion(top = 0, bottom = 50)
 
         val results = OpenCVRowNormalizer().normalize(card, listOf(region))
@@ -84,7 +84,7 @@ class OpenCVRowNormalizerTest {
 
     @Test
     fun normalize_multipleRegions_returnsOneBufferPerRegion() {
-        val card = loadGrayscaleCardFromAssets("test_score_card.jpg")
+        val card = loadGrayscaleCardFromAssets("test_score_card_no_header.jpg")
         val regions = listOf(
             RowRegion(top = 0, bottom = 50),
             RowRegion(top = 50, bottom = 100)

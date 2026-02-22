@@ -22,7 +22,7 @@ import java.io.File
 /**
  * Test data class representing a score card test case.
  *
- * @property filename Asset filename (e.g., "test_score_card.jpg")
+ * @property filename Asset filename (e.g., "test_score_card_no_header.jpg")
  * @property description Human-readable description of the test card
  * @property expectedRows Expected number of rows to extract (default: 15)
  * @property minWhitePixelRatio Minimum ratio of white pixels after card detection (default: 0.70)
@@ -45,7 +45,7 @@ class CardImagePreprocessorTest {
      */
     private val testCards = listOf(
         TestCard(
-            filename = "test_score_card.jpg",
+            filename = "test_score_card_no_header.jpg",
             description = "Standard score card"
         ),
         TestCard(
