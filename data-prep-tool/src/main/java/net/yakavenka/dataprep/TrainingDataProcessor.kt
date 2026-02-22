@@ -15,7 +15,7 @@ object TrainingDataProcessor {
     /**
      * Prepares a row Mat for training by resizing to standardized dimensions.
      *
-     * @param rowMat The input row Mat from CardImagePreprocessor
+     * @param rowMat The input row Mat from the card scanning pipeline
      * @return A new Mat resized to 640x66 pixels. Caller is responsible for releasing.
      */
     fun prepareRowForTraining(rowMat: Mat): Mat {

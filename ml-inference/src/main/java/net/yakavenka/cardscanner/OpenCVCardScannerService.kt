@@ -13,20 +13,21 @@ private const val TAG = "OpenCVCardScannerService"
  * Real implementation of CardScannerService using OpenCV + TensorFlow Lite.
  *
  * Delegates to CardScanningPipeline composed of:
- * - OpenCVCardIsolator (stub: pass-through)
- * - MorphologicalRowSegmenter (stub: equal-height rows)
- * - OpenCVRowNormalizer (fully implemented: crop, resize to 640×66, float32 [0,1])
- * - TFLiteRowClassifier (stub: returns 0; real inference wired in Slice 4.3)
+ * - OpenCVCardIsolator     (Canny edges → contour crop → portrait orientation → 640px resize)
+ * - MorphologicalRowSegmenter (adaptive threshold → morph open → contour filter → Y-cluster)
+ * - OpenCVRowNormalizer    (crop, resize to 640×66, float32 [0,1])
+ * - TFLiteRowClassifier    (TFLite inference, GPU delegate with CPU fallback)
  */
 class OpenCVCardScannerService(
     private val context: Context
 ) : CardScannerService {
 
+    private val rowClassifier = TFLiteRowClassifier(context)
     private val pipeline = CardScanningPipeline(
         isolator   = OpenCVCardIsolator(),
         segmenter  = MorphologicalRowSegmenter(),
         normalizer = OpenCVRowNormalizer(),
-        classifier = TFLiteRowClassifier(),
+        classifier = rowClassifier,
     )
 
     override suspend fun extractScores(image: Mat): ScanResult = withContext(Dispatchers.Default) {
@@ -40,6 +41,6 @@ class OpenCVCardScannerService(
     }
 
     fun cleanup() {
-        // TODO Phase 5: release any held resources (e.g. TFLite interpreter)
+        rowClassifier.close()
     }
 }

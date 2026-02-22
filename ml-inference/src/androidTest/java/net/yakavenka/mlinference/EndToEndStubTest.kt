@@ -55,7 +55,7 @@ class EndToEndStubTest {
             isolator   = OpenCVCardIsolator(),
             segmenter  = MorphologicalRowSegmenter(),
             normalizer = OpenCVRowNormalizer(),
-            classifier = TFLiteRowClassifier(),
+            classifier = TFLiteRowClassifier(context),
         )
 
         val result = pipeline.scan(grayMat)

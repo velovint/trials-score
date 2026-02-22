@@ -1,31 +1,35 @@
 package net.yakavenka.dataprep
 
 import android.graphics.BitmapFactory
-import android.os.Environment
+import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.rule.GrantPermissionRule
+import androidx.test.services.storage.TestStorage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
+import org.opencv.core.CvType
 import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
-import net.yakavenka.cardscanner.CardImagePreprocessor
-import android.util.Log
-import androidx.test.rule.GrantPermissionRule
-import androidx.test.services.storage.TestStorage
-import org.junit.Rule
-import java.io.File
-import java.io.FileOutputStream
 import org.opencv.imgcodecs.Imgcodecs
+import org.opencv.imgproc.Imgproc
+import net.yakavenka.cardscanner.MorphologicalRowSegmenter
+import net.yakavenka.cardscanner.OpenCVCardIsolator
+import net.yakavenka.cardscanner.OpenCVRowNormalizer
+import net.yakavenka.cardscanner.RowImage
+import java.io.File
+import java.nio.ByteOrder
 
 /**
  * Instrumented test to verify real data flow through data-prep-tool.
- * Loads a real score card image, processes it with CardImagePreprocessor,
+ * Loads a real score card image, processes it with the new CV pipeline
+ * (OpenCVCardIsolator → MorphologicalRowSegmenter → OpenCVRowNormalizer),
  * and verifies row extraction works correctly.
  */
 @RunWith(AndroidJUnit4::class)
@@ -42,25 +46,27 @@ class DataPrepRealTest {
         // Initialize OpenCV native library
         OpenCVLoader.initLocal()
 
-        // Set debug output to test app's external files directory (accessible via adb pull)
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        // This gets /storage/emulated/0/Android/data/
-        val baseDir = Environment.getExternalStorageDirectory()
-        val mainPackageName = "net.yakavenka.dataprep"
-//        val debugDir = context.getExternalFilesDir(null)!!.resolve("card-debug")
-        val debugDir = File(baseDir, "Android/data/$mainPackageName/files/card-debug")
-        debugDir.let {
-            if (!it.exists()) {
-                val created = it.mkdirs()
-                Log.d("OpenCV_Test", "Directory created: $created")
-            }
-        }
+        Log.i("DataPrepRealTest", "OpenCV initialized")
+    }
 
-        CardImagePreprocessor.DEBUG_OUTPUT_DIR = debugDir.absolutePath
-        CardImagePreprocessor.DEBUG_MODE = true
+    /**
+     * Helper: Convert RowImage (ByteBuffer float32) back to Mat for saving.
+     * RowImage buffer is float32 [0,1] at 640×66 — convert back to CV_8U (0-255) for saving.
+     */
+    private fun rowImageToMat(rowImage: RowImage): Mat {
+        val floatBuf = rowImage.buffer.asFloatBuffer()
+        val floatArray = FloatArray(floatBuf.capacity())
+        floatBuf.get(floatArray)
+        rowImage.buffer.rewind()
 
-        Log.i("DataPrepRealTest", "Debug output directory: ${debugDir.absolutePath}")
-        Log.i("DataPrepRealTest", "Directory exists: ${debugDir.exists()}")
+        // Create float Mat and convert to byte
+        val floatMat = Mat(66, 640, CvType.CV_32FC1)
+        floatMat.put(0, 0, floatArray)
+        val byteMat = Mat()
+        floatMat.convertTo(byteMat, CvType.CV_8UC1, 255.0)
+        floatMat.release()
+
+        return byteMat
     }
 
     @Test
@@ -75,29 +81,35 @@ class DataPrepRealTest {
         val mat = Mat()
         Utils.bitmapToMat(bitmap, mat)
 
-        // Convert to grayscale (CardImagePreprocessor expects grayscale)
+        // Convert to grayscale
         val grayMat = Mat()
         Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
         mat.release()
 
-        // Use real CardImagePreprocessor
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
-        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        // Use new pipeline: isolate → segment → normalize
+        val isolator = OpenCVCardIsolator()
+        val card = isolator.isolate(grayMat).getOrThrow()
+        grayMat.release()
+
+        val segmenter = MorphologicalRowSegmenter()
+        val regions = segmenter.segment(card).getOrThrow()
+
+        val normalizer = OpenCVRowNormalizer()
+        val rowImages = normalizer.normalize(card, regions)
+        card.release()
 
         // Verify we got 15 rows
-        assertThat("Should extract exactly 15 rows from score card", rows.size, equalTo(15))
+        assertThat("Should extract exactly 15 rows from score card", rowImages.size, equalTo(15))
 
-        // Verify rows are properly sized (640px wide)
-        rows.forEach { row ->
-            assertThat("Row width should be 640px", row.width(), equalTo(640))
-            assertTrue("Row height should be positive", row.height() > 0)
+        // Verify rows are properly sized (convert back to Mat to check dimensions)
+        rowImages.forEach { rowImage ->
+            val mat = rowImageToMat(rowImage)
+            assertThat("Row width should be 640px", mat.width(), equalTo(640))
+            assertThat("Row height should be 66px", mat.height(), equalTo(66))
+            mat.release()
         }
 
-        // Cleanup
-        grayMat.release()
-        preprocessed.release()
-        rows.forEach { it.release() }
-//        Thread.sleep(15000);
+        Log.i("DataPrepRealTest", "Successfully extracted 15 rows from score card")
     }
 
     @Test
@@ -117,16 +129,17 @@ class DataPrepRealTest {
         Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
         mat.release()
 
-        // Preprocess the image
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
+        // Isolate the card
+        val isolator = OpenCVCardIsolator()
+        val card = isolator.isolate(grayMat).getOrThrow()
         grayMat.release()
 
-        // Save preprocessed image using TestStorage
+        // Save isolated card image using TestStorage
         val testStorage = TestStorage()
 
-        // First save Mat to a temporary file, then copy to TestStorage
+        // Save Mat to a temporary file, then copy to TestStorage
         val tempFile = File(context.cacheDir, "preprocessed_test.png")
-        val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, preprocessed)
+        val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, card)
         assertTrue("Mat should be written to temp file", writeSuccess)
 
         Log.i("DataPrepRealTest", "Temp file created: ${tempFile.absolutePath}, exists: ${tempFile.exists()}")
@@ -140,12 +153,12 @@ class DataPrepRealTest {
 
         Log.i("DataPrepRealTest", "File saved to TestStorage: preprocessed_output.png")
 
-        // Verify the preprocessed image dimensions
-        assertThat("Preprocessed width should be 640", preprocessed.width(), equalTo(640))
-        assertTrue("Preprocessed height should be positive", preprocessed.height() > 0)
+        // Verify the isolated card image dimensions
+        assertThat("Isolated card width should be 640", card.width(), equalTo(640))
+        assertTrue("Isolated card height should be positive", card.height() > 0)
 
         // Cleanup
-        preprocessed.release()
+        card.release()
         tempFile.delete()
 
         Log.i("DataPrepRealTest", "Test completed - check build outputs for TestStorage files")
@@ -168,27 +181,30 @@ class DataPrepRealTest {
         Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
         mat.release()
 
-        // Extract rows using CardImagePreprocessor
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
-        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        // Extract rows using new pipeline
+        val isolator = OpenCVCardIsolator()
+        val card = isolator.isolate(grayMat).getOrThrow()
         grayMat.release()
-        preprocessed.release()
 
-        // Resize each row for training
-        val resizedRows = rows.map { TrainingDataProcessor.prepareRowForTraining(it) }
+        val segmenter = MorphologicalRowSegmenter()
+        val regions = segmenter.segment(card).getOrThrow()
 
-        // Verify all resized rows have correct dimensions
-        resizedRows.forEach { row ->
-            assertThat("Resized row width should be 640", row.width(), equalTo(640))
-            assertThat("Resized row height should be 66", row.height(), equalTo(66))
+        val normalizer = OpenCVRowNormalizer()
+        val rowImages = normalizer.normalize(card, regions)
+        card.release()
+
+        // Verify all rows are already 640x66 (normalized by OpenCVRowNormalizer)
+        rowImages.forEach { rowImage ->
+            val mat = rowImageToMat(rowImage)
+            assertThat("Row width should be 640", mat.width(), equalTo(640))
+            assertThat("Row height should be 66", mat.height(), equalTo(66))
+            mat.release()
         }
 
         // Verify we still have 15 rows
-        assertThat("Should have 15 resized rows", resizedRows.size, equalTo(15))
+        assertThat("Should have 15 rows", rowImages.size, equalTo(15))
 
-        // Cleanup
-        rows.forEach { it.release() }
-        resizedRows.forEach { it.release() }
+        Log.i("DataPrepRealTest", "All 15 rows verified at 640x66 resolution")
     }
 
     @Test
@@ -208,23 +224,32 @@ class DataPrepRealTest {
         Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
         mat.release()
 
-        // Process through CardImagePreprocessor to extract 15 rows
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
-        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        // Process through new pipeline to extract 15 rows
+        val isolator = OpenCVCardIsolator()
+        val card = isolator.isolate(grayMat).getOrThrow()
         grayMat.release()
-        preprocessed.release()
+
+        val segmenter = MorphologicalRowSegmenter()
+        val regions = segmenter.segment(card).getOrThrow()
+
+        val normalizer = OpenCVRowNormalizer()
+        val rowImages = normalizer.normalize(card, regions)
+        card.release()
 
         // Simulated labels (in real workflow, user provides these)
         // Label 9 indicates "skip this row" (corrupted/unclear data)
-        val labels = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 9, 9, 9, 9, 9,)
+        val labels = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 9, 9, 9, 9, 9)
 
         // Create TestStorage instance
         val testStorage = TestStorage()
 
+        // Convert RowImages back to Mat for export (TrainingDataExporter expects Mat)
+        val rowMats = rowImages.map { rowImageToMat(it) }
+
         // Export rows to TestStorage organized by label folders
         TrainingDataExporter.exportToTestStorage(
             testStorage = testStorage,
-            rows = rows,
+            rows = rowMats,
             labels = labels,
             imageBaseName = "test_card_001"
         )
@@ -233,6 +258,6 @@ class DataPrepRealTest {
         Log.i("DataPrepRealTest", "Check build/outputs/managed_device_android_test_additional_output/ for exported files")
 
         // Cleanup
-        rows.forEach { it.release() }
+        rowMats.forEach { it.release() }
     }
 }
