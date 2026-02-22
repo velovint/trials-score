@@ -9,6 +9,10 @@ class CardScanningPipeline(
     private val classifier: RowClassifier,
 ) {
     fun scan(image: Mat): Result<ScanResult> {
-        TODO()
+        val card    = isolator.isolate(image).getOrElse { return Result.failure(it) }
+        val regions = segmenter.segment(card).getOrElse { return Result.failure(it) }
+        val rows    = normalizer.normalize(card, regions)
+        val scores  = rows.mapIndexed { i, row -> (i + 1) to classifier.classify(row) }.toMap()
+        return Result.success(ScanResult.Success(scores))
     }
 }
