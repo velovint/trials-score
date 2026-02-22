@@ -51,6 +51,10 @@ class CardImagePreprocessorTest {
         TestCard(
             filename = "score-card-uncropped.jpg",
             description = "Score card with background (tests card detection)"
+        ),
+        TestCard(
+            filename = "score-card-sideways.jpg",
+            description = "Sideways card with header gap (tests robust grid detection)"
         )
         // Add more test cards here as needed
     )
