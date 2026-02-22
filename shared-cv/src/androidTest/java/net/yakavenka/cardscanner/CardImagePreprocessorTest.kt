@@ -78,7 +78,10 @@ class CardImagePreprocessorTest {
             Log.i("CardImagePreprocessorTest", "Testing: ${testCard.description}")
 
             val image = loadTestImageFromAssets(testCard.filename)
-            val preprocessed = CardImagePreprocessor.preprocessImage(image)
+
+            // Use OpenCVCardIsolator for card isolation
+            val isolatedResult = OpenCVCardIsolator().isolate(image)
+            val preprocessed = isolatedResult.getOrThrow()
 
             // Validate preprocessing
             assertThat("${testCard.description}: width", preprocessed.width(), equalTo(640))
@@ -119,7 +122,10 @@ class CardImagePreprocessorTest {
     fun preprocessImage_detectsAndCropsCard() {
         testCards.forEach { testCard ->
             val image = loadTestImageFromAssets(testCard.filename)
-            val preprocessed = CardImagePreprocessor.preprocessImage(image)
+
+            // Use OpenCVCardIsolator for card isolation
+            val isolatedResult = OpenCVCardIsolator().isolate(image)
+            val preprocessed = isolatedResult.getOrThrow()
 
             val whitePixelRatio = calculateWhitePixelPercentage(preprocessed, threshold = 200)
 
@@ -152,7 +158,9 @@ class CardImagePreprocessorTest {
 
         testCards.forEach { testCard ->
             val image = loadTestImageFromAssets(testCard.filename)
-            val preprocessed = CardImagePreprocessor.preprocessImage(image)
+
+            // Use OpenCVCardIsolator for card isolation
+            val preprocessed = OpenCVCardIsolator().isolate(image).getOrThrow()
             val rows = CardImagePreprocessor.extractRowImages(preprocessed)
 
             // Match first and last rows
@@ -219,7 +227,9 @@ class CardImagePreprocessorTest {
             val image = loadTestImageFromAssets(testCard.filename)
             Log.i("CardImagePreprocessorTest", "Input: ${image.width()}×${image.height()}")
 
-            val preprocessed = CardImagePreprocessor.preprocessImage(image)
+            // Use OpenCVCardIsolator for card isolation
+            val isolatedResult = OpenCVCardIsolator().isolate(image)
+            val preprocessed = isolatedResult.getOrThrow()
             Log.i("CardImagePreprocessorTest", "Output: ${preprocessed.width()}×${preprocessed.height()}")
 
             val whitePixelRatio = calculateWhitePixelPercentage(preprocessed, threshold = 200)

@@ -3,10 +3,13 @@ package net.yakavenka.mlinference
 import android.graphics.BitmapFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import net.yakavenka.cardscanner.CardImagePreprocessor
+import net.yakavenka.cardscanner.CardScanningPipeline
+import net.yakavenka.cardscanner.MorphologicalRowSegmenter
+import net.yakavenka.cardscanner.OpenCVCardIsolator
+import net.yakavenka.cardscanner.OpenCVRowNormalizer
+import net.yakavenka.cardscanner.ScanResult
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
-import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -16,137 +19,55 @@ import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
 
 /**
- * End-to-end stub pipeline tests verifying the complete data flow with stub classifier:
- * raw image → CV processing (shared-cv) → stub ML inference → result (always 0)
+ * Slice 3.3: End-to-end stub pipeline on a real card image.
  *
- * This test proves that ml-inference module can:
- * - Depend on shared-cv for image preprocessing
- * - Process real score card images
- * - Classify extracted rows using StubScoreClassifier
+ * Runs CardScanningPipeline (stubs 2.1–2.4) on a real score card image from assets
+ * and asserts that exactly 15 scores are returned, all equal to 0.
  *
- * Uses StubScoreClassifier which always returns 0 (Phase 2, Slice 2.4).
- * For real TFLite model tests, see EndToEndIntegrationTest.kt.
- *
- * Architecture: ml-inference depends on shared-cv (correct dependency direction)
+ * Pipeline composition:
+ *   - OpenCVCardIsolator  — passthrough stub (Slice 2.1)
+ *   - MorphologicalRowSegmenter — 15 equal-height rows stub (Slice 2.2)
+ *   - OpenCVRowNormalizer — full implementation (Slice 2.3)
+ *   - TFLiteRowClassifier — always returns 0 stub (Slice 2.4)
  */
 @RunWith(AndroidJUnit4::class)
 class EndToEndStubTest {
 
     @Before
     fun setUp() {
-        // Initialize OpenCV native library
         OpenCVLoader.initLocal()
-
-        // Disable debug mode to avoid file I/O during tests
-        CardImagePreprocessor.DEBUG_MODE = false
     }
 
     @Test
-    fun endToEndPipeline_processesImageAndClassifiesRow() {
-        // STEP 1: Load real score card image from assets
+    fun scan_onRealCardImage_returns15ScoresAllZero() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // STEP 2: Convert to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale (CardImagePreprocessor expects grayscale)
+        val colorMat = Mat()
+        Utils.bitmapToMat(bitmap, colorMat)
         val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
+        Imgproc.cvtColor(colorMat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        colorMat.release()
 
-        // STEP 3: Use CardImagePreprocessor from :shared-cv module
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
-        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
+        val pipeline = CardScanningPipeline(
+            isolator   = OpenCVCardIsolator(),
+            segmenter  = MorphologicalRowSegmenter(),
+            normalizer = OpenCVRowNormalizer(),
+            classifier = TFLiteRowClassifier(),
+        )
 
-        // Verify we got 15 rows from preprocessing
-        assertThat("Should extract 15 rows from score card", rows.size, equalTo(15))
-        assertTrue("Should have at least one row to classify", rows.isNotEmpty())
-
-        // STEP 4: Classify first row using StubScoreClassifier
-        val classifier = StubScoreClassifier()
-        val firstRow = rows[0]
-        val classificationResult = classifier.classifyRow(firstRow)
-
-        // STEP 5: Assert final result is 0 (stub always returns 0)
-        assertThat("Stub classifier should return 0", classificationResult, equalTo(0))
-
-        // Verify row dimensions are correct for classification (640x66 expected)
-        assertThat("Row width should be 640px", firstRow.width(), equalTo(640))
-        assertTrue("Row height should be positive", firstRow.height() > 0)
-
-        // Cleanup
+        val result = pipeline.scan(grayMat)
         grayMat.release()
-        preprocessed.release()
-        rows.forEach { it.release() }
-    }
 
-    @Test
-    fun endToEndPipeline_classifiesAllRowsFromRealImage() {
-        // Load and process real image
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
-        // Extract rows using CardImagePreprocessor
-        val preprocessed = CardImagePreprocessor.preprocessImage(grayMat)
-        val rows = CardImagePreprocessor.extractRowImages(preprocessed)
-
-        // Classify all rows
-        val classifier = StubScoreClassifier()
-        val results = rows.map { row ->
-            classifier.classifyRow(row)
+        assertThat("Pipeline should succeed", result.isSuccess, equalTo(true))
+        val scanResult = result.getOrThrow()
+        assertThat("Result should be ScanResult.Success", scanResult is ScanResult.Success, equalTo(true))
+        val scores = (scanResult as ScanResult.Success).scores
+        assertThat("Should return exactly 15 scores", scores.size, equalTo(15))
+        scores.forEach { (section, score) ->
+            assertThat("Score for section $section should be 0", score, equalTo(0))
         }
-
-        // Verify all results are 0 (stub behavior)
-        assertThat("Should classify all 15 rows", results.size, equalTo(15))
-        results.forEach { result ->
-            assertThat("Each classification should return 0", result, equalTo(0))
-        }
-
-        // Verify all rows have proper dimensions
-        rows.forEach { row ->
-            assertThat("Row width should be 640px", row.width(), equalTo(640))
-            assertTrue("Row height should be positive", row.height() > 0)
-        }
-
-        // Cleanup
-        grayMat.release()
-        preprocessed.release()
-        rows.forEach { it.release() }
-    }
-
-    @Test
-    fun endToEndPipeline_verifyModuleDependency() {
-        // This test verifies the architectural dependency is correct:
-        // ml-inference -> shared-cv (can import and use CardImagePreprocessor)
-
-        // Create a simple test Mat
-        val testMat = Mat(960, 640, org.opencv.core.CvType.CV_8UC1)
-        testMat.setTo(org.opencv.core.Scalar(128.0))
-
-        // Verify we can use CardImagePreprocessor from shared-cv
-        val preprocessed = CardImagePreprocessor.preprocessImage(testMat)
-        assertTrue("Should be able to preprocess image", preprocessed.width() > 0)
-
-        // Verify we can use StubScoreClassifier from ml-inference
-        val classifier = StubScoreClassifier()
-        val result = classifier.classifyRow(preprocessed)
-        assertThat("Should be able to classify", result, equalTo(0))
-
-        // Cleanup
-        testMat.release()
-        preprocessed.release()
     }
 }

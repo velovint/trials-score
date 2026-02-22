@@ -31,7 +31,9 @@ class OpenCVCardScannerService(
 
     override suspend fun extractScores(image: Mat): ScanResult = withContext(Dispatchers.Default) {
         Log.d(TAG, "Extracting scores from ${image.width()}x${image.height()} image")
-        pipeline.scan(image).fold(
+        val pipelineResult = runCatching { pipeline.scan(image) }
+            .getOrElse { Result.failure(it) }
+        pipelineResult.fold(
             onSuccess = { it },
             onFailure = { ScanResult.Failure(it.message ?: "Scan failed") }
         )
