@@ -1,9 +1,20 @@
-# Trials Card Scanning Approach (v2.0)
+# Trials Card Scanning Approach (v3.0)
 
 ## 1. Card Structure & Scoring
-- **Data Grid:** 15 rows (sections) × 5 columns (penalty scores: 0, 1, 2, 3, 5).
-- **Scoring Logic:** Exactly one mark per row.
+
+### Physical Layout
+
+- **Card Header:** Top ~25–30% of card height. Contains rider name, event metadata, and loop labels. Not part of the data grid.
+- **Data Grid:** Occupies the remaining ~70–75% of card height. Contains:
+  - **Grid Header Row:** The topmost row of the grid. Contains column labels (0, 1, 2, 3, 5) and possibly a section/notes column label. **Not a scored row.**
+  - **Scoring Rows:** 15 rows, each representing one section. Exactly one mark per row.
+  - **Non-Scoring Rows (optional):** Section-number rows or note-column header rows may appear interspersed — for example, a divider row or section-group label row between groups of sections.
+- **Grid Columns:** At minimum 5 score columns (0, 1, 2, 3, 5). Cards may include additional columns: a narrow section-number column and/or a wide notes column.
+
+### Scoring Logic
+
 - **Output:** An array of 15 integers `[score_1, ..., score_15]`.
+- Exactly one mark per scored row; the grid header row and any non-scoring rows are ignored during classification.
 
 ---
 
@@ -72,6 +83,20 @@ The approach is a two-phase process that balances predictable math with flexible
 
 The preprocessing pipeline uses structural grid properties (vertical/horizontal lines, aspect ratio) to reliably extract 15 row images from score cards regardless of orientation or background.
 
+### Component Overview
+
+The pipeline is composed of four components wired by `CardScanningPipeline`:
+
+```
+CardScanningPipeline
+├── OpenCVCardIsolator        (boundary detection + sideways rotation)       → Mat
+├── MorphologicalRowSegmenter (cell detection + orientation fix + cluster)   → List<RowRegion>
+├── OpenCVRowNormalizer       (crop + resize to 640×66)                      → List<RowImage>
+└── TFLiteRowClassifier       (LiteRT or pixel density)                      → Int
+```
+
+---
+
 ### 7.1 Camera Capture
 **Entry:** User taps camera icon in `LoopScoreEntryScreen.kt`
 - CameraX captures JPEG image via `CameraViewModel.captureImage()`
@@ -79,7 +104,7 @@ The preprocessing pipeline uses structural grid properties (vertical/horizontal 
 - Handles both YUV and JPEG formats with bitmap fallback
 
 ### 7.2 Phase 1: Card Boundary Detection & Isolation
-**File:** `CardImagePreprocessor.preprocessImage()`
+**Component:** `OpenCVCardIsolator.isolate()`
 
 **Steps:**
 1. Convert to grayscale (if needed)
@@ -114,7 +139,11 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 **Note:** Orientation is checked after Phase 1 card boundary detection rather than on the raw image. This is intentional — the photograph itself may be portrait or landscape regardless of how the card is held, so the raw image aspect ratio carries no information about card orientation. Only the isolated card crop has a meaningful aspect ratio.
 
 ### 7.4 Phase 2b: Grid Region Detection (Cell Detection)
+**Component:** `MorphologicalRowSegmenter` (internal step)
+
 **Strategy:** Use morphological operations to enhance grid line structure, detect enclosed rectangular cells, and compute grid bounding box from their positions. This approach is column-agnostic — cards with extra columns (section numbers, notes) are handled naturally since row detection depends only on Y positions.
+
+**Updated context:** The card header (~25–30% of card height) and grid header row are present above the 15 scoring rows. The filtering logic naturally handles the full card layout:
 
 **Steps:**
 1. **Apply adaptive threshold** to handle variable lighting:
@@ -136,7 +165,10 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
    - Compute median contour area → `median_area`
    - Keep contours where area ∈ `[median_area × 0.4, median_area × 2.5]`
    - Aspect ratio (width/height) ∈ `[0.6, 1.8]` (roughly square scoring cells)
-   - Extra columns (note, section numbers) are excluded naturally by size/shape
+   - **Grid header cells** (top row of grid) have the same size as scoring cells and will be detected — they are removed in Phase 3 (row extraction) by cluster analysis.
+   - **Section-number column cells** are narrow (aspect ratio < 0.6) — excluded by aspect ratio filter.
+   - **Notes column cells** are wide (aspect ratio > 1.8) — excluded by aspect ratio filter.
+   - **Non-scoring divider rows** (if any) have similar cell size to scoring cells; excluded in Phase 3 by cluster cell count.
 
 5. **Validate and compute grid bounding box**:
    ```
@@ -150,6 +182,8 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 **Debug:** Save image with valid cell contours drawn
 
 ### 7.5 Phase 2c: Upside-Down Detection
+**Component:** `MorphologicalRowSegmenter` (internal step)
+
 **Strategy:** Check if grid is in top or bottom of card (grid should be in bottom 50-70%). If upside-down, correct cell coordinates in-place rather than re-running Phase 2b.
 
 **Steps:**
@@ -172,10 +206,12 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 
 **Validation:** Grid should occupy 60-70% of card height
 
-### 7.6 Phase 3: Row Extraction from Cell Positions
-**File:** `CardImagePreprocessor.extractRowImages()`
+**Note:** With the card header occupying ~25–30% of card height and the grid header row adding a small additional offset, the scoring grid center will sit at roughly 55–85% of card height in a correctly-oriented portrait card. The threshold `relative_position < 0.45` reliably distinguishes upside-down cards (grid in the upper half) from normal ones.
 
-**Strategy:** Sort detected cells by Y coordinate, cluster into rows, and compute row boundaries directly from cell positions — no line detection required.
+### 7.6 Phase 3: Row Extraction from Cell Positions
+**Component:** `MorphologicalRowSegmenter` (produces `List<RowRegion>`)
+
+**Strategy:** Sort detected cells by Y coordinate, cluster into rows, classify clusters as scoring vs. non-scoring, and compute row boundaries directly from cell positions — no line detection required.
 
 **Steps:**
 1. **Sort cells** by Y coordinate (top → bottom)
@@ -184,40 +220,50 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 
 3. **Cluster into rows**:
    - Group consecutive cells where Y gap < `0.5 × estimated_cell_height`
-   - Each cluster represents one scored row
+   - Each cluster represents one candidate row
 
-4. **Validate cluster count**:
+4. **Classify clusters:**
+   - Clusters with ≥ 3 cells and area ratio consistent with scoring cells → **candidate scoring rows**
+   - The topmost cluster that aligns with the grid header position (top of grid bounding box) → **grid header row**, excluded
+   - Clusters with < 3 cells, or cell aspect ratios inconsistent with scoring cells → **non-scoring rows**, excluded
+
+5. **Validate scoring cluster count**:
    ```
-   if valid_clusters.count < 12 or any cluster has < 3 cells:
+   if scoring_clusters.count < 12 or any scoring_cluster has < 3 cells:
        ERROR: "Cannot extract 15 rows from detected cells"
    ```
 
-5. **Compute row bounds** for each cluster:
+6. **Compute row bounds** for each of the 15 scoring clusters:
    ```
    row_top    = min(cell.y for cell in cluster) - padding
    row_bottom = max(cell.y + cell.height for cell in cluster) + padding
    ```
 
-**Output:** 15 row Y-ranges (top, bottom coordinates)
+**Output:** Exactly 15 `RowRegion`s (top/bottom Y coordinates) corresponding to scoring rows only.
 
-**Note:** Column count does not affect row detection. Cards with 5–8 columns all produce the same 15-row result from the same Y-clustering logic.
+**Note:** The cluster count before filtering may be 16+ (15 scoring + grid header + any dividers). The algorithm tolerates this naturally via the classification step. Column count does not affect row detection — cards with 5–8 columns all produce the same 15-row result from the same Y-clustering logic.
 
 ### 7.7 Phase 4: Row Image Extraction
+**Component:** `OpenCVRowNormalizer.normalize(card, regions)`
+
 **Steps:**
 1. **Extract row regions** using top/bottom bounds from Phase 3 (full card width, 15 rows)
 2. **Resize for ML inference**: 640×66 pixels per row
 3. **Validate dimensions**: Row height should be 20-100px before resize
 
-**Output:** 15 row images (640×66 pixels each)
+Input `RowRegion` list already contains only the 15 scored rows — no further filtering needed here.
+
+**Output:** 15 row images (640×66 pixels each) as `List<RowImage>` (direct `ByteBuffer`, float32, normalized [0,1])
 
 ### 7.8 ML Classification
-**File:** `OpenCVCardScannerService.kt`
+**Component:** `TFLiteRowClassifier.classify(row: RowImage)`
+
 - Loads TFLite model (`score_classifier_model.tflite`)
 - For each row:
-  1. Convert Mat → Float32 ByteBuffer (normalized [0-1])
+  1. Pass `row.buffer` directly to `Interpreter.run()` (ByteBuffer is pre-normalized by `OpenCVRowNormalizer`)
   2. Run TFLite inference → 5-class probabilities
   3. Select class with highest probability
-  4. Map to score value: [0, 1, 2, 3, 5]
+  4. Map to score value: `[0→0, 1→1, 2→2, 3→3, 4→5]`
 
 **Output:** `Map<Int, Int>` (section number → score)
 
@@ -231,9 +277,21 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 - Room Flow emits updates → LiveData → Compose UI
 - Scores appear as selected radio buttons
 
-### 7.10 Key Files
+### 7.10 Key Components and Files
+
+| Component | Class | Module |
+|---|---|---|
+| Orchestrator | `CardScanningPipeline` | `:ml-inference` |
+| Boundary detection + rotation | `OpenCVCardIsolator` | `:shared-cv` |
+| Grid cell detection + clustering | `MorphologicalRowSegmenter` | `:shared-cv` |
+| Row normalization | `OpenCVRowNormalizer` | `:shared-cv` |
+| Score classification | `TFLiteRowClassifier` | `:ml-inference` |
+| App-facing API | `CardScannerService` (interface) | `:ml-inference` |
+| Service implementation | `OpenCVCardScannerService` | `:ml-inference` |
+| Data types | `CardScannerTypes.kt` | `:shared-cv` |
+
+**Supporting files:**
 - **Camera:** `CameraScreen.kt`, `CameraViewModel.kt`
-- **Processing:** `CardImagePreprocessor.kt`, `OpenCVCardScannerService.kt`
 - **Data:** `SectionScoreRepository.kt`, `RiderScoreDao.kt`, `SectionScore.kt`
 - **Display:** `ScoreCardViewModel.kt`, `LoopScoreEntryScreen.kt`
 
@@ -245,10 +303,10 @@ if aspect_ratio < 0.7 or aspect_ratio > 2.0:
 - ❌ Card boundary detection fails (no quadrilateral found)
 - ❌ Aspect ratio invalid (< 0.7 or > 2.0) - indicates bad crop
 - ❌ Insufficient grid cells detected (< 45 cells) - grid not visible or too damaged
-- ❌ Fewer than 12 row clusters with 3+ cells - cannot extract 15 rows
+- ❌ Fewer than 12 scoring row clusters with 3+ cells - cannot extract 15 rows
 
 ### Debug Mode
-Enable `CardImagePreprocessor.DEBUG_MODE = true` to save intermediate images:
+Enable via `FileScanDebugObserver` (injected into pipeline components) to save intermediate images:
 - `01_card_boundary.png` - Detected card contour
 - `02_enhanced_lines.png` - Combined vertical+horizontal morphological result
 - `03_detected_cells.png` - Valid cell contours with aspect ratio/area filter applied
@@ -285,15 +343,24 @@ Enable `CardImagePreprocessor.DEBUG_MODE = true` to save intermediate images:
 
 ## 10. Algorithm Properties
 
-✅ **Fast-fail validation** - Invalid aspect ratio stops processing immediately
-✅ **Structural detection** - Morphological cell detection; column count is not assumed
-✅ **Multi-stage orientation** - Sideways (Phase 2a) → Upside-down (Phase 2c)
-✅ **Clear error conditions** - No silent failures, explicit validation
-✅ **Debug support** - Intermediate images saved in DEBUG_MODE
+```
+✅ Fast-fail validation        - Invalid aspect ratio stops processing immediately
+✅ Structural detection        - Morphological cell detection; column count not assumed
+✅ Multi-stage orientation     - Sideways (Phase 2a) → Upside-down (Phase 2c)
+✅ Grid-header aware           - Topmost cluster excluded from scoring row output
+✅ Extra column tolerant       - Section-number and notes columns filtered by aspect ratio
+✅ Non-scoring row tolerant    - Interleaved divider rows excluded by cluster classification
+✅ Clear error conditions      - No silent failures, explicit validation
+✅ Debug support               - Intermediate images saved via FileScanDebugObserver
+```
 
 **Handles all test cases:**
 - Normal cards ✓
 - Cards with background ✓
 - Sideways cards (90° rotation) ✓
 - Upside-down cards (180° rotation) ✓
-- Cards with header gaps ✓
+- Cards with card header (~30% height) ✓
+- Cards with grid header row ✓
+- Cards with section-number column ✓
+- Cards with notes column ✓
+- Cards with interleaved non-scoring rows ✓
