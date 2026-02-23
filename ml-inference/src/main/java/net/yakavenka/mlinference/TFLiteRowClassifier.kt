@@ -25,18 +25,18 @@ class TFLiteRowClassifier(context: Context) : RowClassifier {
         val modelBuffer = loadModelFile(context, "score_classifier_model.tflite")
 
         // Try to use GPU delegate for better operation support
-        val compatList = CompatibilityList()
         val options = Interpreter.Options()
 
-        if (compatList.isDelegateSupportedOnThisDevice) {
-            try {
+        try {
+            val compatList = CompatibilityList()
+            if (compatList.isDelegateSupportedOnThisDevice) {
                 gpuDelegate = GpuDelegate()
                 options.addDelegate(gpuDelegate)
                 Log.d(TAG, "Using GPU delegate for TFLite inference")
-            } catch (e: Exception) {
-                Log.w(TAG, "Failed to create GPU delegate, falling back to CPU", e)
-                gpuDelegate = null
             }
+        } catch (e: Throwable) {
+            Log.w(TAG, "Failed to create GPU delegate, falling back to CPU", e)
+            gpuDelegate = null
         }
 
         // Set CPU options as fallback
