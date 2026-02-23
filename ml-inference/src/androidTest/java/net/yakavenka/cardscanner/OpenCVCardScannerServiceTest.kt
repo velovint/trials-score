@@ -1,6 +1,7 @@
 package net.yakavenka.cardscanner
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -13,10 +14,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
-import org.opencv.android.Utils
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
 
 @RunWith(AndroidJUnit4::class)
 class OpenCVCardScannerServiceTest {
@@ -35,34 +32,31 @@ class OpenCVCardScannerServiceTest {
     @Test
     fun extractScores_withRealScoreCard_returnsValidScores() = runTest {
         // Load actual score card image from test assets
-        val testImage = loadTestImageFromAssets("test_score_card.jpg")
+        val testImage = loadTestImageFromAssets("raw/PXL_100112010299999.jpg")
 
         val result = scanner.extractScores(testImage)
 
+        // Assert result is ScanResult.Success
         assertThat(result, instanceOf(ScanResult.Success::class.java))
-        val scores = (result as ScanResult.Success).scores
-        assertThat(scores.size, equalTo(15))
 
-        // Verify all scores are valid
-        scores.values.forEach { score ->
-            assertThat(score, isIn(listOf(0, 1, 2, 3, 5)))
+        // Assert 15 rows extracted
+        val successResult = result as ScanResult.Success
+        assertThat(successResult.scores.size, `is`(15))
+
+        // Assert all scores are valid (0, 1, 2, 3, or 5)
+        val validScores = setOf(0, 1, 2, 3, 5)
+        for (score in successResult.scores) {
+            assertThat(score, isIn(validScores))
         }
-
-        // Log the detected scores for debugging
-        println("Detected scores from real image: $scores")
-
-        testImage.release()
     }
 
     @Test
     fun extractScores_withEmptyImage_returnsFailure() = runTest {
-        val emptyMat = Mat()
+        val emptyBitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
 
-        val result = scanner.extractScores(emptyMat)
+        val result = scanner.extractScores(emptyBitmap)
 
         assertThat(result, instanceOf(ScanResult.Failure::class.java))
-
-        emptyMat.release()
     }
 
     @After
@@ -71,9 +65,9 @@ class OpenCVCardScannerServiceTest {
     }
 
     /**
-     * Load test image from androidTest/assets and convert to grayscale Mat.
+     * Load test image from androidTest/assets and return as Bitmap.
      */
-    private fun loadTestImageFromAssets(filename: String): Mat {
+    private fun loadTestImageFromAssets(filename: String): Bitmap {
         val context = InstrumentationRegistry.getInstrumentation().context
         val inputStream = context.assets.open(filename)
 
@@ -81,20 +75,6 @@ class OpenCVCardScannerServiceTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Convert bitmap to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale
-        val gray = Mat()
-        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
-        return gray
-    }
-
-    private fun createTestMat(width: Int, height: Int): Mat {
-        // Create grayscale Mat (CV_8UC1)
-        return Mat(height, width, CvType.CV_8UC1)
+        return bitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
     }
 }

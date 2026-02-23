@@ -26,10 +26,6 @@ import net.yakavenka.trialsscore.data.SectionScoreRepository
 import javax.inject.Inject
 import androidx.core.content.ContextCompat
 import androidx.camera.lifecycle.awaitInstance
-import org.opencv.android.Utils
-import org.opencv.core.CvType
-import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
 import java.util.concurrent.Executor
 
 private const val TAG = "CameraViewModel"
@@ -111,18 +107,6 @@ class CameraViewModel @Inject constructor(
     /**
      * Capture image from camera, process with scanner, and apply scores to database.
      *
-     * Flow:
-     * 1. Capture image to memory via callback (no disk storage)
-     * 2. Extract grayscale Y plane from ImageProxy (zero-copy)
-     * 3. Pass ByteBuffer directly to CardScannerService
-     * 4. Apply scores directly to database via applyScanResult()
-     * 5. Navigate back (score entry screen will show scores from database)
-     *
-     * Optimized to minimize memory copies:
-     * - Extracts Y plane (grayscale) directly from YUV ImageProxy
-     * - Passes ByteBuffer to scanner (no Bitmap intermediate)
-     * - Scanner wraps ByteBuffer into Mat (zero-copy operation)
-     *
      * Executor is set during bindCamera() and stored to avoid context leaks.
      */
     fun captureImage() {
@@ -146,18 +130,11 @@ class CameraViewModel @Inject constructor(
                     // Launch coroutine only for processing (where suspend work is needed)
                     viewModelScope.launch {
                         try {
-                            // Convert ImageProxy to grayscale Mat
-                            // Keep ImageProxy open until conversion completes
-                            val grayscaleMat = imageProxyToGrayscaleMat(image)
-
                             // Transition to processing state
                             _uiState.value = CameraUiState.Processing
 
-                            // Extract scores from Mat
-                            val scanResult = cardScanner.extractScores(grayscaleMat)
-
-                            // Release Mat after processing
-                            grayscaleMat.release()
+                            // Extract scores from Bitmap
+                            val scanResult = cardScanner.extractScores(image.toBitmap())
 
                             // Apply scores directly to database
                             applyScanResult(scanResult)
@@ -204,112 +181,6 @@ class CameraViewModel @Inject constructor(
                 _uiState.value = CameraUiState.Error(scanResult.error)
             }
         }
-    }
-
-    /**
-     * Convert ImageProxy to grayscale OpenCV Mat.
-     *
-     * Extracts Y plane (luminance) from YUV_420_888 format and creates CV_8UC1 Mat.
-     * Handles row padding/strides efficiently.
-     *
-     * @param image ImageProxy from camera (must remain open during this call)
-     * @return Grayscale Mat (CV_8UC1) - caller must release when done
-     */
-    private fun imageProxyToGrayscaleMat(image: ImageProxy): Mat {
-        val width = image.width
-        val height = image.height
-
-        // Debug: Log ImageProxy details
-        Log.d(TAG, "ImageProxy format: ${image.format}, width=$width, height=$height")
-        Log.d(TAG, "ImageProxy planes: ${image.planes.size}")
-
-        // 1. Get the Y-plane (the first plane in YUV_420_888)
-        val plane = image.planes[0]
-        val buffer = plane.buffer
-        val rowStride = plane.rowStride
-        val pixelStride = plane.pixelStride
-
-        Log.d(TAG, "Plane[0]: rowStride=$rowStride, pixelStride=$pixelStride, buffer.remaining=${buffer.remaining()}")
-        Log.d(TAG, "Expected size: ${width * height}, actual buffer: ${buffer.capacity()}")
-
-        // 2. Handle invalid stride values (fallback to bitmap conversion)
-        if (rowStride == 0 || pixelStride == 0) {
-            Log.w(TAG, "Invalid plane strides, using bitmap conversion fallback")
-            return imageProxyToBitmap(image)
-        }
-
-        // 3. Create the destination Mat
-        val grayscaleMat = Mat(height, width, CvType.CV_8UC1)
-
-        // 4. Optimized Copy: Handle padding/strides
-        // If pixelStride is 1 and no row padding, we can do a bulk put
-        if (pixelStride == 1 && rowStride == width) {
-            val data = ByteArray(width * height)
-            buffer.get(data)
-            grayscaleMat.put(0, 0, data)
-        } else if (pixelStride == 1) {
-            // Pixels are contiguous within rows, just handle row padding
-            val rowData = ByteArray(width)
-            for (row in 0 until height) {
-                buffer.position(row * rowStride)
-                buffer.get(rowData, 0, width)
-                grayscaleMat.put(row, 0, rowData)
-            }
-        } else {
-            // Pixels are not contiguous (pixelStride > 1) - extract pixel-by-pixel
-            val rowData = ByteArray(width)
-            for (row in 0 until height) {
-                for (col in 0 until width) {
-                    val index = row * rowStride + col * pixelStride
-                    rowData[col] = buffer.get(index)
-                }
-                grayscaleMat.put(row, 0, rowData)
-            }
-        }
-
-        return grayscaleMat
-    }
-
-    /**
-     * Fallback: Convert ImageProxy to grayscale Mat via Bitmap.
-     * Less efficient but more compatible.
-     */
-    private fun imageProxyToBitmap(image: ImageProxy): Mat {
-        // Convert to bitmap first
-        val bitmap = image.toBitmap()
-
-        // Convert bitmap to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale based on channels
-        val grayscale = when (mat.channels()) {
-            4 -> {
-                // RGBA -> Grayscale
-                val gray = Mat()
-                Imgproc.cvtColor(mat, gray, Imgproc.COLOR_RGBA2GRAY)
-                mat.release()
-                gray
-            }
-            3 -> {
-                // BGR -> Grayscale
-                val gray = Mat()
-                Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
-                mat.release()
-                gray
-            }
-            1 -> {
-                // Already grayscale
-                mat
-            }
-            else -> {
-                mat.release()
-                throw IllegalStateException("Unexpected image channels: ${mat.channels()}")
-            }
-        }
-
-        Log.d(TAG, "Converted via bitmap: ${grayscale.width()}x${grayscale.height()}, channels=${grayscale.channels()}")
-        return grayscale
     }
 
     /**
