@@ -15,10 +15,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
-import org.opencv.core.Core
-import org.opencv.core.MatOfDouble
-import org.opencv.core.Scalar
-import org.opencv.imgproc.Imgproc
 
 @RunWith(AndroidJUnit4::class)
 class OpenCVCardScannerServiceTest {
@@ -51,7 +47,7 @@ class OpenCVCardScannerServiceTest {
         // Assert all scores are valid (0, 1, 2, 3, or 5)
         val validScores = setOf(0, 1, 2, 3, 5)
         for (score in successResult.scores) {
-            assertThat(score, isIn(validScores))
+            assertThat(score.value, isIn(validScores))
         }
     }
 
