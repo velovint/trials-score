@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.instanceOf
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -16,7 +15,7 @@ import org.opencv.core.Mat
 import java.nio.ByteBuffer
 
 @RunWith(AndroidJUnit4::class)
-class CardScanningPipelineTest {
+class OpenCVCardPreprocessorTest {
 
     // A small fake Bitmap for testing.
     // All test stubs ignore the Bitmap argument entirely, so its contents don't matter.
@@ -29,45 +28,21 @@ class CardScanningPipelineTest {
     }
 
     // ---------------------------------------------------------------------------
-    // Happy path: all rows classified as 3, 15 rows returned
+    // Happy path: all steps succeed, 15 rows returned
     // ---------------------------------------------------------------------------
 
     @Test
-    fun scan_returnsSuccess_whenAllStepsSucceed() {
-        val result = happyPathPipeline().scan(fakeImage)
+    fun preprocess_returnsSuccess_whenAllStepsSucceed() {
+        val result = happyPathPreprocessor().preprocess(fakeImage)
 
         assertTrue("Expected Result.success but got failure", result.isSuccess)
     }
 
     @Test
-    fun scan_returnsSuccessWithCorrectType_whenAllStepsSucceed() {
-        val scanResult = happyPathPipeline().scan(fakeImage).getOrNull()
+    fun preprocess_returns15Rows_whenAllStepsSucceed() {
+        val rows = happyPathPreprocessor().preprocess(fakeImage).getOrNull()
 
-        assertThat(scanResult, instanceOf(ScanResult.Success::class.java))
-    }
-
-    @Test
-    fun scan_returns15Scores_whenAllStepsSucceed() {
-        val scores = (happyPathPipeline().scan(fakeImage).getOrThrow() as ScanResult.Success).scores
-
-        assertThat(scores.size, equalTo(15))
-    }
-
-    @Test
-    fun scan_returnsAllThrees_whenClassifierAlwaysReturnsThree() {
-        val scores = (happyPathPipeline().scan(fakeImage).getOrThrow() as ScanResult.Success).scores
-
-        assertTrue(
-            "Expected all scores to equal 3",
-            scores.values.all { it == 3 }
-        )
-    }
-
-    @Test
-    fun scan_usesSectionKeys1To15_whenClassifierAlwaysReturnsThree() {
-        val scores = (happyPathPipeline().scan(fakeImage).getOrThrow() as ScanResult.Success).scores
-
-        assertThat(scores.keys.sorted(), equalTo((1..15).toList()))
+        assertThat("Should return exactly 15 rows", rows?.size, equalTo(15))
     }
 
     // ---------------------------------------------------------------------------
@@ -75,19 +50,18 @@ class CardScanningPipelineTest {
     // ---------------------------------------------------------------------------
 
     @Test
-    fun scan_returnsFailure_whenIsolatorFails() {
-        val result = failingIsolatorPipeline().scan(fakeImage)
+    fun preprocess_returnsFailure_whenIsolatorFails() {
+        val result = failingIsolatorPreprocessor().preprocess(fakeImage)
 
         assertFalse("Expected Result.failure but got success", result.isSuccess)
     }
 
     @Test
-    fun scan_doesNotCallDownstreamSteps_whenIsolatorFails() {
+    fun preprocess_doesNotCallSegmenterOrNormalizer_whenIsolatorFails() {
         var segmenterCalled = false
         var normalizerCalled = false
-        var classifierCalled = false
 
-        val pipeline = CardScanningPipeline(
+        val preprocessor = OpenCVCardPreprocessor(
             isolator   = { _ -> Result.failure(RuntimeException("Card not detected")) },
             segmenter  = { _ ->
                 segmenterCalled = true
@@ -97,31 +71,25 @@ class CardScanningPipelineTest {
                 normalizerCalled = true
                 emptyList()
             },
-            classifier = { _ ->
-                classifierCalled = true
-                0
-            },
         )
 
-        pipeline.scan(fakeImage)
+        preprocessor.preprocess(fakeImage)
 
         assertFalse("Segmenter should not have been called", segmenterCalled)
         assertFalse("Normalizer should not have been called", normalizerCalled)
-        assertFalse("Classifier should not have been called", classifierCalled)
     }
 
     @Test
-    fun scan_propagatesOriginalException_whenIsolatorFails() {
+    fun preprocess_propagatesOriginalException_whenIsolatorFails() {
         val isolatorError = RuntimeException("Card not detected")
 
-        val pipeline = CardScanningPipeline(
+        val preprocessor = OpenCVCardPreprocessor(
             isolator   = { _ -> Result.failure(isolatorError) },
             segmenter  = { _ -> Result.success(emptyList()) },
             normalizer = { _, _ -> emptyList() },
-            classifier = { _ -> 0 },
         )
 
-        val result = pipeline.scan(fakeImage)
+        val result = preprocessor.preprocess(fakeImage)
 
         assertThat(result.exceptionOrNull(), equalTo(isolatorError))
     }
@@ -130,7 +98,7 @@ class CardScanningPipelineTest {
     // Helpers
     // ---------------------------------------------------------------------------
 
-    private fun happyPathPipeline() = CardScanningPipeline(
+    private fun happyPathPreprocessor() = OpenCVCardPreprocessor(
         isolator   = { _ -> Result.success(Mat(10, 10, CvType.CV_8UC1)) },
         segmenter  = { _ ->
             Result.success(List(15) { i -> RowRegion(i * 10, (i + 1) * 10) })
@@ -138,13 +106,11 @@ class CardScanningPipelineTest {
         normalizer = { _, _ ->
             List(15) { RowImage(ByteBuffer.allocateDirect(66 * 640 * 4)) }
         },
-        classifier = { _ -> 3 },
     )
 
-    private fun failingIsolatorPipeline() = CardScanningPipeline(
+    private fun failingIsolatorPreprocessor() = OpenCVCardPreprocessor(
         isolator   = { _ -> Result.failure(RuntimeException("Card not detected")) },
         segmenter  = { _ -> Result.success(emptyList()) },
         normalizer = { _, _ -> emptyList() },
-        classifier = { _ -> 0 },
     )
 }

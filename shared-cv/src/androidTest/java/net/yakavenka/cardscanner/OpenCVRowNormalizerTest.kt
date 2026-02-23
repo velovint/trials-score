@@ -178,9 +178,7 @@ class OpenCVRowNormalizerTest {
         errorMessage: String
     ) {
         val bitmap = loadBitmapFromAssets("score-card-sideways.jpg")
-        val card = OpenCVCardIsolator().isolate(bitmap).getOrThrow()
-        val regions = MorphologicalRowSegmenter().segment(card).getOrThrow()
-        val rows = OpenCVRowNormalizer().normalize(card, regions)
+        val rows = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
 
         val row = rowSelector(rows)
         val rowMatConverted = convertRowToTemplateFormat(row)
@@ -193,7 +191,6 @@ class OpenCVRowNormalizerTest {
         assertThat(errorMessage, minMax.maxVal, greaterThanOrEqualTo(0.4))
 
         // Cleanup
-        card.release()
         rowMatConverted.release()
         template.release()
         result.release()

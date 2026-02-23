@@ -12,37 +12,31 @@ private const val TAG = "OpenCVCardScannerService"
 /**
  * Real implementation of CardScannerService using OpenCV + TensorFlow Lite.
  *
- * Delegates to CardScanningPipeline composed of:
- * - OpenCVCardIsolator     (Canny edges → contour crop → portrait orientation → 640px resize)
- * - MorphologicalRowSegmenter (adaptive threshold → morph open → contour filter → Y-cluster)
- * - OpenCVRowNormalizer    (crop, resize to 640×66, float32 [0,1])
+ * Coordinates preprocessing and classification:
+ * - OpenCVCardPreprocessor (card isolation, row segmentation, normalization)
  * - TFLiteRowClassifier    (TFLite inference, GPU delegate with CPU fallback)
  */
 class OpenCVCardScannerService(
     private val context: Context
 ) : CardScannerService {
 
-    private val rowClassifier = TFLiteRowClassifier(context)
-    private val pipeline = CardScanningPipeline(
-        isolator   = OpenCVCardIsolator(),
-        segmenter  = MorphologicalRowSegmenter(),
-        normalizer = OpenCVRowNormalizer(),
-        classifier = rowClassifier,
-    )
+    private val classifier = TFLiteRowClassifier(context)
+    private val preprocessor = OpenCVCardPreprocessor()
 
     override suspend fun extractScores(image: Bitmap): ScanResult {
         return withContext(Dispatchers.Default) {
             Log.d(TAG, "Extracting scores from ${image.width}x${image.height} image")
-            val pipelineResult = runCatching { pipeline.scan(image) }
-                .getOrElse { Result.failure(it) }
-            pipelineResult.fold(
-                onSuccess = { it },
-                onFailure = { ScanResult.Failure(it.message ?: "Scan failed") }
-            )
+            val rows = runCatching { preprocessor.preprocess(image) }
+                .getOrElse { return@withContext ScanResult.Failure(it.message ?: "Scan failed") }
+                .getOrElse { return@withContext ScanResult.Failure(it.message ?: "Scan failed") }
+            val scores = rows.mapIndexed { i, row ->
+                (i + 1) to classifier.classify(row)
+            }.toMap()
+            ScanResult.Success(scores)
         }
     }
 
     fun cleanup() {
-        rowClassifier.close()
+        classifier.close()
     }
 }
