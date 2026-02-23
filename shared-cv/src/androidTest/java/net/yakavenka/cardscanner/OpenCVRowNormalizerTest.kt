@@ -177,7 +177,7 @@ class OpenCVRowNormalizerTest {
         templateName: String,
         errorMessage: String
     ) {
-        val bitmap = loadBitmapFromAssets("test_score_card_w_header_1.png")
+        val bitmap = loadBitmapFromAssets("score-card-sideways.jpg")
         val card = OpenCVCardIsolator().isolate(bitmap).getOrThrow()
         val regions = MorphologicalRowSegmenter().segment(card).getOrThrow()
         val rows = OpenCVRowNormalizer().normalize(card, regions)
