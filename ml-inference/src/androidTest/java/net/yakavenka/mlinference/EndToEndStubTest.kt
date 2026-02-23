@@ -14,9 +14,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
-import org.opencv.android.Utils
-import org.opencv.core.Mat
-import org.opencv.imgproc.Imgproc
 
 /**
  * Slice 3.3: End-to-end stub pipeline on a real card image.
@@ -45,12 +42,6 @@ class EndToEndStubTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        val colorMat = Mat()
-        Utils.bitmapToMat(bitmap, colorMat)
-        val grayMat = Mat()
-        Imgproc.cvtColor(colorMat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        colorMat.release()
-
         val pipeline = CardScanningPipeline(
             isolator   = OpenCVCardIsolator(),
             segmenter  = MorphologicalRowSegmenter(),
@@ -58,8 +49,7 @@ class EndToEndStubTest {
             classifier = TFLiteRowClassifier(context),
         )
 
-        val result = pipeline.scan(grayMat)
-        grayMat.release()
+        val result = pipeline.scan(bitmap)
 
         assertThat("Pipeline should succeed", result.isSuccess, equalTo(true))
         val scanResult = result.getOrThrow()

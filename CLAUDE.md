@@ -42,6 +42,25 @@ Reference this file when planning features related to user workflows, data impor
 ./gradlew connectedAndroidTest
 ```
 
+### Run a specific instrumented test class
+```bash
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="net.yakavenka.cardscanner.CardScanningPipelineTest"
+```
+
+### Run a specific instrumented test method
+```bash
+./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="net.yakavenka.cardscanner.CardScanningPipelineTest#scan_returnsSuccess_whenAllStepsSucceed"
+```
+
+### Retrieve logcat from instrumented tests
+Each instrumented test gets its own logcat file at:
+`<module>/build/outputs/androidTest-results/connected/debug/<device>/logcat-<ClassName>-<methodName>.txt`
+
+Example — filter for a specific tag:
+```bash
+grep "MorphologicalRowSegmenter" "shared-cv/build/outputs/androidTest-results/connected/debug/Pixel_5_API_33(AVD) - 13/logcat-net.yakavenka.cardscanner.MorphologicalRowSegmenterTest-segment_producesCorrectNumberOfRows.txt"
+```
+
 ### Commit messages
 Use concise commit messages and include only a summary for simple changes.
 

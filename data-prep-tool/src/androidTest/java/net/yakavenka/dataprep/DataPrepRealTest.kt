@@ -77,19 +77,9 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Convert to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale
-        val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
         // Use new pipeline: isolate → segment → normalize
         val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(grayMat).getOrThrow()
-        grayMat.release()
+        val card = isolator.isolate(bitmap).getOrThrow()
 
         val segmenter = MorphologicalRowSegmenter()
         val regions = segmenter.segment(card).getOrThrow()
@@ -120,19 +110,9 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Convert to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale
-        val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
         // Isolate the card
         val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(grayMat).getOrThrow()
-        grayMat.release()
+        val card = isolator.isolate(bitmap).getOrThrow()
 
         // Save isolated card image using TestStorage
         val testStorage = TestStorage()
@@ -172,19 +152,10 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Convert to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale
-        val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
 
         // Extract rows using new pipeline
         val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(grayMat).getOrThrow()
-        grayMat.release()
+        val card = isolator.isolate(bitmap).getOrThrow()
 
         val segmenter = MorphologicalRowSegmenter()
         val regions = segmenter.segment(card).getOrThrow()
@@ -215,19 +186,10 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Convert to Mat
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        // Convert to grayscale
-        val grayMat = Mat()
-        Imgproc.cvtColor(mat, grayMat, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
         // Process through new pipeline to extract 15 rows
         val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(grayMat).getOrThrow()
-        grayMat.release()
+        val card = isolator.isolate(bitmap).getOrThrow()
+
 
         val segmenter = MorphologicalRowSegmenter()
         val regions = segmenter.segment(card).getOrThrow()

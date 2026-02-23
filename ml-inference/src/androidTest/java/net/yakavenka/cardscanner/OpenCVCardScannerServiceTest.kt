@@ -3,6 +3,7 @@ package net.yakavenka.cardscanner
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -14,6 +15,10 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
+import org.opencv.core.Core
+import org.opencv.core.MatOfDouble
+import org.opencv.core.Scalar
+import org.opencv.imgproc.Imgproc
 
 @RunWith(AndroidJUnit4::class)
 class OpenCVCardScannerServiceTest {

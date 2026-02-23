@@ -1,5 +1,6 @@
 package net.yakavenka.cardscanner
 
+import android.graphics.Bitmap
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
@@ -17,14 +18,14 @@ import java.nio.ByteBuffer
 @RunWith(AndroidJUnit4::class)
 class CardScanningPipelineTest {
 
-    // A small real Mat constructed with the default constructor on device.
-    // All test stubs ignore the Mat argument entirely, so its contents don't matter.
-    private lateinit var fakeImage: Mat
+    // A small fake Bitmap for testing.
+    // All test stubs ignore the Bitmap argument entirely, so its contents don't matter.
+    private lateinit var fakeImage: Bitmap
 
     @Before
     fun setUp() {
         OpenCVLoader.initLocal()
-        fakeImage = Mat(10, 10, CvType.CV_8UC1)
+        fakeImage = Bitmap.createBitmap(640, 480, Bitmap.Config.ARGB_8888)
     }
 
     // ---------------------------------------------------------------------------
@@ -130,7 +131,7 @@ class CardScanningPipelineTest {
     // ---------------------------------------------------------------------------
 
     private fun happyPathPipeline() = CardScanningPipeline(
-        isolator   = { img -> Result.success(img) },
+        isolator   = { _ -> Result.success(Mat(10, 10, CvType.CV_8UC1)) },
         segmenter  = { _ ->
             Result.success(List(15) { i -> RowRegion(i * 10, (i + 1) * 10) })
         },

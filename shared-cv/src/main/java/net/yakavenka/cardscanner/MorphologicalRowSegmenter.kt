@@ -27,11 +27,15 @@ class MorphologicalRowSegmenter : RowSegmenter {
         val horizontal = Mat()
         val combined = Mat()
 
-        val vKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 30.0))
-        val hKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(30.0, 1.0))
+        val vKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 20.0))
+        val hKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(20.0, 1.0))
+        val vGapKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 80.0))
+        val hGapKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(80.0, 1.0))
 
         Imgproc.morphologyEx(binary, vertical, Imgproc.MORPH_OPEN, vKernel)
+        Imgproc.morphologyEx(vertical, vertical, Imgproc.MORPH_CLOSE, vGapKernel)
         Imgproc.morphologyEx(binary, horizontal, Imgproc.MORPH_OPEN, hKernel)
+        Imgproc.morphologyEx(horizontal, horizontal, Imgproc.MORPH_CLOSE, hGapKernel)
         Core.bitwise_or(vertical, horizontal, combined)
 
         // Step 3: MORPH_CLOSE with 3×3 kernel to bridge broken segments
@@ -72,6 +76,21 @@ class MorphologicalRowSegmenter : RowSegmenter {
                 area >= medianArea * 0.4 && area <= medianArea * 2.5 &&
                 aspectRatio >= 0.6 && aspectRatio <= 1.8
             }
+        if (validCells.isEmpty()) {
+            binary.release()
+            vertical.release()
+            horizontal.release()
+            combined.release()
+            closed.release()
+            inverted.release()
+            vKernel.release()
+            hKernel.release()
+            vGapKernel.release()
+            hGapKernel.release()
+            closeKernel.release()
+            contours.forEach { it.release() }
+            return Result.failure(ScanError.InsufficientCells(0))
+        }
         Log.i("MorphologicalRowSegmenter", "After filtering: ${validCells.size} valid cells, Y range: ${validCells.minOf { it.y }}-${validCells.maxOf { it.y + it.height }}, card dimensions: ${card.width()}x${card.rows()}")
         val cellHeights = validCells.map { it.height }.sorted()
         Log.i("MorphologicalRowSegmenter", "Cell heights - min: ${cellHeights.first()}, max: ${cellHeights.last()}, median: ${cellHeights[cellHeights.size / 2]}")
@@ -87,6 +106,8 @@ class MorphologicalRowSegmenter : RowSegmenter {
             inverted.release()
             vKernel.release()
             hKernel.release()
+            vGapKernel.release()
+            hGapKernel.release()
             closeKernel.release()
             contours.forEach { it.release() }
             Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${validCells.size} < 45")
@@ -149,6 +170,8 @@ class MorphologicalRowSegmenter : RowSegmenter {
             inverted.release()
             vKernel.release()
             hKernel.release()
+            vGapKernel.release()
+            hGapKernel.release()
             closeKernel.release()
             contours.forEach { it.release() }
             Log.e("MorphologicalRowSegmenter", "InsufficientRows: ${validClusters.size} < 12")
@@ -175,6 +198,8 @@ class MorphologicalRowSegmenter : RowSegmenter {
         inverted.release()
         vKernel.release()
         hKernel.release()
+        vGapKernel.release()
+        hGapKernel.release()
         closeKernel.release()
         contours.forEach { it.release() }
 
