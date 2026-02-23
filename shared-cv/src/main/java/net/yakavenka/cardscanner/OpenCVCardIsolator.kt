@@ -1,63 +1,67 @@
 package net.yakavenka.cardscanner
 
+import android.graphics.Bitmap
 import android.util.Log
+import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgproc.Imgproc
 import kotlin.math.max
 
-class OpenCVCardIsolator : CardIsolator {
+class OpenCVCardIsolator(
+    private val targetWidth: Int? = 640
+) : CardIsolator {
 
     companion object {
         private const val MIN_CARD_AREA_RATIO = 0.15
         private const val CANNY_THRESHOLD1 = 50.0
         private const val CANNY_THRESHOLD2 = 150.0
         private const val GAUSSIAN_BLUR_SIZE = 5
-        private const val TARGET_WIDTH = 640.0
         private const val MIN_PORTRAIT_ASPECT_RATIO = 1.5
     }
 
-    override fun isolate(image: Mat): Result<Mat> {
+    override fun isolate(image: Bitmap): Result<Mat> {
         try {
-            // Step 1: Convert to grayscale if needed
-            val grayscale = if (image.channels() != 1) {
-                val gray = Mat()
-                Imgproc.cvtColor(image, gray, Imgproc.COLOR_BGR2GRAY)
-                gray
-            } else {
-                image
-            }
+            // Step 0: Convert Bitmap to grayscale Mat
+            val rgbaMat = Mat()
+            Utils.bitmapToMat(image, rgbaMat)                            // ARGB_8888 → RGBA CV_8UC4
+            val grayscale = Mat()
+            Imgproc.cvtColor(rgbaMat, grayscale, Imgproc.COLOR_RGBA2GRAY) // → CV_8UC1
+            rgbaMat.release()
 
-            // Step 2: Auto-rotate to portrait if landscape (width > height)
+            // Step 1: Auto-rotate to portrait if landscape (width > height)
             val oriented = if (grayscale.width() > grayscale.height()) {
                 Log.i("OpenCVCardIsolator", "Rotating landscape to portrait: ${grayscale.width()}x${grayscale.height()}")
                 val rotated = Mat()
                 Core.rotate(grayscale, rotated, Core.ROTATE_90_COUNTERCLOCKWISE)
-                if (grayscale !== image) grayscale.release()
+                grayscale.release()
                 rotated
             } else {
                 grayscale
             }
 
-            // Step 3: Card boundary detection
+            // Step 2: Card boundary detection
             val card = detectAndCropCard(oriented)
 
-            // Release oriented if it was created from grayscale conversion/rotation
-            if (oriented !== grayscale && grayscale !== image) {
+            // Release oriented if it was created from rotation
+            if (oriented !== grayscale) {
                 oriented.release()
             }
 
             return card.fold(
                 onSuccess = { cardMat ->
-                    // Continue to Step 4: Resize to 640px width
-                    val resized = Mat()
-                    val aspectRatio = cardMat.height().toDouble() / cardMat.width().toDouble()
-                    val targetHeight = (TARGET_WIDTH * aspectRatio).toInt()
-                    val size = Size(TARGET_WIDTH, targetHeight.toDouble())
-                    Imgproc.resize(cardMat, resized, size)
-                    cardMat.release()
+                    // Continue to Step 3: Optionally resize to target width
+                    val output = if (targetWidth != null) {
+                        val resized = Mat()
+                        val aspectRatio = cardMat.height().toDouble() / cardMat.width()
+                        Imgproc.resize(cardMat, resized, Size(targetWidth.toDouble(), targetWidth * aspectRatio))
+                        cardMat.release()
+                        resized
+                    } else {
+                        cardMat   // return at natural crop resolution
+                    }
 
-                    Log.i("OpenCVCardIsolator", "Card isolated and resized: ${resized.width()}×${resized.height()}")
-                    Result.success(resized)
+                    Log.i("OpenCVCardIsolator", "Card isolated: ${output.width()}×${output.height()}")
+                    Result.success(output)
                 },
                 onFailure = { error ->
                     if (oriented !== grayscale) {

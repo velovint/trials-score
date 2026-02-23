@@ -1,5 +1,6 @@
 package net.yakavenka.cardscanner
 
+import android.graphics.Bitmap
 import org.opencv.core.Mat
 
 class CardScanningPipeline(
@@ -8,7 +9,7 @@ class CardScanningPipeline(
     private val normalizer: RowNormalizer,
     private val classifier: RowClassifier,
 ) {
-    fun scan(image: Mat): Result<ScanResult> {
+    fun scan(image: Bitmap): Result<ScanResult> {
         val card    = isolator.isolate(image).getOrElse { return Result.failure(it) }
         val regions = segmenter.segment(card).getOrElse { return Result.failure(it) }
         val rows    = normalizer.normalize(card, regions)
