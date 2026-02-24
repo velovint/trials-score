@@ -8,7 +8,7 @@ import org.opencv.core.Rect
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
-class MorphologicalRowSegmenter : RowSegmenter {
+class MorphologicalRowSegmenter(val stripHeader: Boolean = true) : RowSegmenter {
     override fun segment(card: Mat): Result<List<RowRegion>> {
         // Phase 2b: Cell Detection
         // Step 1: Adaptive threshold
@@ -158,36 +158,18 @@ class MorphologicalRowSegmenter : RowSegmenter {
         }
         clusters.add(currentCluster)
 
-        // Validate: need at least 12 clusters with >= 3 cells each
         val validClusters = clusters.filter { it.size >= 3 }
         Log.i("MorphologicalRowSegmenter", "Found ${clusters.size} clusters, ${validClusters.size} valid (>= 3 cells)")
-        if (validClusters.size < 12) {
-            binary.release()
-            vertical.release()
-            horizontal.release()
-            combined.release()
-            closed.release()
-            inverted.release()
-            vKernel.release()
-            hKernel.release()
-            vGapKernel.release()
-            hGapKernel.release()
-            closeKernel.release()
-            contours.forEach { it.release() }
-            Log.e("MorphologicalRowSegmenter", "InsufficientRows: ${validClusters.size} < 12")
-            return Result.failure(ScanError.InsufficientRows(validClusters.size))
-        }
 
         // Compute RowRegion for each cluster with small padding
         val padding = 2
-        val rowRegions = validClusters.map { cluster ->
+        val allRowRegions = validClusters.map { cluster ->
             val top = (cluster.minOf { it.y } - padding).coerceAtLeast(0)
             val bottom = (cluster.maxOf { it.y + it.height } + padding).coerceAtMost(card.rows())
             RowRegion(top, bottom)
         }
 
-        // Return up to 15 rows (take first 15 if more found, or all if <= 15)
-        val result = rowRegions.take(15)
+        val scoringRows = if (stripHeader && allRowRegions.isNotEmpty()) allRowRegions.drop(1) else allRowRegions
 
         // Cleanup
         binary.release()
@@ -203,6 +185,11 @@ class MorphologicalRowSegmenter : RowSegmenter {
         closeKernel.release()
         contours.forEach { it.release() }
 
-        return Result.success(result)
+        if (scoringRows.size < 10) {
+            Log.e("MorphologicalRowSegmenter", "InsufficientRows after header strip: ${scoringRows.size} < 10")
+            return Result.failure(ScanError.InsufficientRows(scoringRows.size))
+        }
+
+        return Result.success(scoringRows)
     }
 }
