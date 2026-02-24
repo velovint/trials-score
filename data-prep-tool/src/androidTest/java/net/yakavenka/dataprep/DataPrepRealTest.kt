@@ -19,17 +19,15 @@ import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
-import net.yakavenka.cardscanner.MorphologicalRowSegmenter
 import net.yakavenka.cardscanner.OpenCVCardIsolator
-import net.yakavenka.cardscanner.OpenCVRowNormalizer
+import net.yakavenka.cardscanner.OpenCVCardPreprocessor
 import net.yakavenka.cardscanner.RowImage
 import java.io.File
 import java.nio.ByteOrder
 
 /**
  * Instrumented test to verify real data flow through data-prep-tool.
- * Loads a real score card image, processes it with the new CV pipeline
- * (OpenCVCardIsolator → MorphologicalRowSegmenter → OpenCVRowNormalizer),
+ * Loads a real score card image, processes it via OpenCVCardPreprocessor,
  * and verifies row extraction works correctly.
  */
 @RunWith(AndroidJUnit4::class)
@@ -77,16 +75,7 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Use new pipeline: isolate → segment → normalize
-        val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(bitmap).getOrThrow()
-
-        val segmenter = MorphologicalRowSegmenter()
-        val regions = segmenter.segment(card).getOrThrow()
-
-        val normalizer = OpenCVRowNormalizer()
-        val rowImages = normalizer.normalize(card, regions)
-        card.release()
+        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
 
         // Verify we got 15 rows
         assertThat("Should extract exactly 15 rows from score card", rowImages.size, equalTo(15))
@@ -153,16 +142,7 @@ class DataPrepRealTest {
         inputStream.close()
 
 
-        // Extract rows using new pipeline
-        val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(bitmap).getOrThrow()
-
-        val segmenter = MorphologicalRowSegmenter()
-        val regions = segmenter.segment(card).getOrThrow()
-
-        val normalizer = OpenCVRowNormalizer()
-        val rowImages = normalizer.normalize(card, regions)
-        card.release()
+        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
 
         // Verify all rows are already 640x66 (normalized by OpenCVRowNormalizer)
         rowImages.forEach { rowImage ->
@@ -186,17 +166,7 @@ class DataPrepRealTest {
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
-        // Process through new pipeline to extract 15 rows
-        val isolator = OpenCVCardIsolator()
-        val card = isolator.isolate(bitmap).getOrThrow()
-
-
-        val segmenter = MorphologicalRowSegmenter()
-        val regions = segmenter.segment(card).getOrThrow()
-
-        val normalizer = OpenCVRowNormalizer()
-        val rowImages = normalizer.normalize(card, regions)
-        card.release()
+        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
 
         // Simulated labels (in real workflow, user provides these)
         // Label 9 indicates "skip this row" (corrupted/unclear data)

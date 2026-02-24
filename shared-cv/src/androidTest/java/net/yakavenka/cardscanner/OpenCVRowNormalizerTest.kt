@@ -188,7 +188,7 @@ class OpenCVRowNormalizerTest {
         Imgproc.matchTemplate(rowMatConverted, template, result, Imgproc.TM_CCOEFF_NORMED)
         val minMax = Core.minMaxLoc(result)
 
-        assertThat(errorMessage, minMax.maxVal, greaterThanOrEqualTo(0.4))
+        assertThat(errorMessage, minMax.maxVal, greaterThanOrEqualTo(0.7))
 
         // Cleanup
         rowMatConverted.release()
