@@ -32,7 +32,7 @@ object TrainingDataExporter {
             val label = labels[index]
 
             // Skip rows labeled as 9 (corrupted/unclear data)
-//            if (label == 9) return@forEachIndexed
+            if (label == 9) return@forEachIndexed
 
             // Resize to training dimensions
             val resized = TrainingDataProcessor.prepareRowForTraining(row)

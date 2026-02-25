@@ -103,6 +103,7 @@ class OpenCVCardPreprocessorTest {
 
     // ---------------------------------------------------------------------------
     // Integration tests: full preprocessing pipeline
+    // (Parameterized tests moved to OpenCVCardPreprocessorParameterizedTest)
     // ---------------------------------------------------------------------------
 
     @Test

@@ -14,16 +14,13 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
-import org.opencv.android.Utils
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgcodecs.Imgcodecs
-import org.opencv.imgproc.Imgproc
 import net.yakavenka.cardscanner.OpenCVCardIsolator
 import net.yakavenka.cardscanner.OpenCVCardPreprocessor
 import net.yakavenka.cardscanner.RowImage
 import java.io.File
-import java.nio.ByteOrder
 
 /**
  * Instrumented test to verify real data flow through data-prep-tool.
@@ -71,7 +68,7 @@ class DataPrepRealTest {
     fun processRealScoreCard_extracts15Rows() {
         // Load real score card image from assets
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
@@ -95,7 +92,7 @@ class DataPrepRealTest {
     fun testStorage_savesPreprocessedImage() {
         // Load real score card image from assets
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
@@ -137,7 +134,7 @@ class DataPrepRealTest {
     fun prepareRowForTraining_resizesTo640x66() {
         // Load real score card image from assets
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
@@ -162,7 +159,7 @@ class DataPrepRealTest {
     fun exportTrainingData_organizesIntoLabelFolders() {
         // Load real score card image from assets
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL_100112010299999.jpg")
+        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
         val bitmap = BitmapFactory.decodeStream(inputStream)
         inputStream.close()
 
