@@ -107,6 +107,35 @@ tasks.register('packageTrainingData', Tar) {
  */
 // TODO old pipeline
 
+tasks.register('downloadRawImages') {
+    group = 'ml-pipeline'
+    description = 'Download raw score card images from Kaggle (vitaliyakavenka/raw-card-pictures)'
+
+    def rawDir = file("${buildDir}/raw-pictures/raw")
+
+    outputs.dir(rawDir)
+
+    doLast {
+        def downloadDir = file("${buildDir}/raw-pictures")
+        downloadDir.mkdirs()
+
+        exec {
+            commandLine 'kaggle', 'datasets', 'download',
+                'vitaliyakavenka/raw-card-pictures',
+                '--unzip', '--path', downloadDir.absolutePath
+        }
+
+        // Kaggle extracts into a 'training-data/' subdirectory.
+        // Copy to 'raw/' to match 'assets/raw/<filename>' path used by DataPrepRealTest.
+        rawDir.mkdirs()
+        project.copy {
+            from file("${downloadDir}/training-data")
+            into rawDir
+        }
+        logger.lifecycle("Downloaded ${rawDir.list()?.length ?: 0} raw images to ${rawDir}")
+    }
+}
+
 tasks.register('verifyPipeline') {
     group = 'verification'
     description = 'Run all ML pipeline validation tests'
@@ -169,6 +198,7 @@ tasks.register('triggerKaggleTrain') {
 tasks.register('buildProductionModel') {
     group = 'ml-pipeline'
     description = 'Full ML pipeline: prep → train → validate → deploy'
+    dependsOn 'downloadRawImages'
     dependsOn ':data-prep-tool:connectedAndroidTest'
     dependsOn 'uploadTrainingData'
     dependsOn 'triggerKaggleTrain'

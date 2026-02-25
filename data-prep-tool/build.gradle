@@ -41,6 +41,12 @@ android {
             enableForTestFailures = false
         }
     }
+
+    sourceSets {
+        androidTest {
+            assets.srcDirs += ["${rootProject.buildDir}/raw-pictures"]
+        }
+    }
 }
 
 dependencies {
@@ -73,4 +79,10 @@ dependencies {
     androidTestImplementation "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.10.2"
     androidTestImplementation "org.hamcrest:hamcrest-library:3.0"
     androidTestUtil "androidx.test:orchestrator:1.6.1"
+}
+
+afterEvaluate {
+    tasks.named('mergeDebugAndroidTestAssets') {
+        dependsOn rootProject.tasks.named('downloadRawImages')
+    }
 }
