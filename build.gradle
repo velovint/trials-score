@@ -146,9 +146,61 @@ tasks.register('verifyPipeline') {
 
 tasks.register('uploadTrainingData') {
     group = 'ml-pipeline'
-    description = 'Upload processed data to Kaggle (STUB)'
+    description = 'Upload processed training data to Kaggle (vitaliyakavenka/trials-score-training-data)'
+
+    def connectedBase = file("data-prep-tool/build/outputs/connected_android_test_additional_output/debugAndroidTest/connected")
+    def stagingDir    = file("${buildDir}/training-data-upload")
+    def metadataFile  = file("kaggle/training-data/dataset-metadata.json")
+
+    inputs.dir(connectedBase)
+    inputs.file(metadataFile)
+    outputs.upToDateWhen { false }   // always re-upload when task runs
+
+    mustRunAfter ':data-prep-tool:connectedAndroidTest'
+
     doLast {
-        println 'STUB: Would upload training data to Kaggle'
+        // Find the device sub-directory (name varies by AVD/device)
+        def deviceDir = connectedBase.listFiles()?.find { it.isDirectory() }
+        if (!deviceDir) {
+            throw new GradleException(
+                "No device output found under ${connectedBase}.\n" +
+                "Run :data-prep-tool:connectedAndroidTest first."
+            )
+        }
+        logger.lifecycle("Packaging training data from: ${deviceDir}")
+
+        // Stage: clear and recreate
+        stagingDir.deleteDir()
+        stagingDir.mkdirs()
+
+        // Copy only valid label folders (TrainingDataExporter skips 9, but be explicit)
+        ['0', '1', '2', '3', '5'].each { label ->
+            def src = new File(deviceDir, label)
+            if (src.exists()) {
+                project.copy {
+                    from src
+                    into new File(stagingDir, label)
+                }
+                logger.lifecycle("  label ${label}: ${src.list()?.length ?: 0} files")
+            } else {
+                logger.warn("  label ${label}: directory not found in test output, skipping")
+            }
+        }
+
+        // Include Kaggle dataset metadata
+        project.copy {
+            from metadataFile
+            into stagingDir
+        }
+
+        // Upload new version to Kaggle
+        exec {
+            commandLine 'kaggle', 'datasets', 'version',
+                '--path', stagingDir.absolutePath,
+                '--dir-mode', 'tar',
+                '--message', "Pipeline update: ${new Date().format('yyyy-MM-dd')}"
+        }
+        logger.lifecycle("Training data uploaded to vitaliyakavenka/trials-score-training-data")
     }
 }
 
