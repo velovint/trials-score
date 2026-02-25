@@ -301,6 +301,20 @@ class MorphologicalRowSegmenterTest {
 
 
     @Test
+    fun segment_gridGapCard_withHeaderIncluded_returns16Rows() {
+        val segmenter = MorphologicalRowSegmenter(stripHeader = false)
+        // test_score_card_grid_gap may result in 2 rectangles above header
+        val rawCard = loadRawCardFromAssets("test_score_card_grid_gap.png")
+        val card = resizeToTargetWidth(rawCard, 640)
+
+        val result = segmenter.segment(card)
+
+        assertThat("Result should be success", result.isSuccess)
+        assertThat(result.getOrNull(), hasSize(16))
+        card.release(); rawCard.release()
+    }
+
+    @Test
     fun segment_withHeaderStripped_returns15Rows() {
         val segmenter = MorphologicalRowSegmenter(stripHeader = true)
         val rawCard = loadRawCardFromAssets("test_score_card_w_header_1.png")

@@ -98,11 +98,16 @@ class MorphologicalRowSegmenter(
         }
         Log.i("MorphologicalRowSegmenter", "After filtering: ${validCells.size} valid cells, Y range: ${validCells.minOf { it.y }}-${validCells.maxOf { it.y + it.height }}, card dimensions: ${card.width()}x${card.rows()}")
         val cellHeights = validCells.map { it.height }.sorted()
-        Log.i("MorphologicalRowSegmenter", "Cell heights - min: ${cellHeights.first()}, max: ${cellHeights.last()}, median: ${cellHeights[cellHeights.size / 2]}")
+        val medianCellHeight = cellHeights[cellHeights.size / 2]
+        Log.i("MorphologicalRowSegmenter", "Cell heights - min: ${cellHeights.first()}, max: ${cellHeights.last()}, median: $medianCellHeight")
+
+        // Remove anomalously short cells (e.g. noise fragments above the header row)
+        val normalCells = validCells.filter { it.height >= medianCellHeight * 0.6 }
+        Log.i("MorphologicalRowSegmenter", "After height filter: ${normalCells.size} cells (removed ${validCells.size - normalCells.size})")
 
         // Step 6: Validate minimum cell count
-        Log.i("MorphologicalRowSegmenter", "Detected ${validCells.size} valid cells (need >= 45)")
-        if (validCells.size < 45) {
+        Log.i("MorphologicalRowSegmenter", "Detected ${normalCells.size} valid cells (need >= 45)")
+        if (normalCells.size < 45) {
             binary.release()
             vertical.release()
             horizontal.release()
@@ -115,32 +120,30 @@ class MorphologicalRowSegmenter(
             hGapKernel.release()
             closeKernel.release()
             contours.forEach { it.release() }
-            Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${validCells.size} < 45")
-            return Result.failure(ScanError.InsufficientCells(validCells.size))
+            Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${normalCells.size} < 45")
+            return Result.failure(ScanError.InsufficientCells(normalCells.size))
         }
 
         // Phase 2c: Upside-Down Detection
         val cardHeight = card.rows()
-        val gridMinY = validCells.minOf { it.y }
-        val gridMaxY = validCells.maxOf { it.y + it.height }
+        val gridMinY = normalCells.minOf { it.y }
+        val gridMaxY = normalCells.maxOf { it.y + it.height }
         val gridCenterY = (gridMinY + gridMaxY) / 2.0
         val relativePosition = gridCenterY / cardHeight
 
         val cells: List<Rect> = if (relativePosition < 0.45) {
             // Card is upside down — invert Y coordinates
-            validCells.map { rect ->
+            normalCells.map { rect ->
                 Rect(rect.x, cardHeight - (rect.y + rect.height), rect.width, rect.height)
             }
         } else {
-            validCells
+            normalCells
         }
 
         // Phase 3: Y-Clustering into rows
         // Sort cells by Y coordinate (top to bottom)
         val sortedCells = cells.sortedWith(compareBy<Rect> { it.y }.thenBy { it.x })
 
-        // Estimate cell height from median
-        val medianCellHeight = sortedCells.map { it.height }.sorted().let { it[it.size / 2] }
         // Use median cell height * 0.5 as gap threshold.
         // Cells in same row: tops may differ, but gap between last cell bottom and next cell top should be small
         // Cells in different rows: gap should be larger
@@ -179,7 +182,7 @@ class MorphologicalRowSegmenter(
         // Debug observer calls (before cleanup while Mats are still valid)
         debugObserver.onImage("02_enhanced_lines.png", closed)
         val cellDebug = card.clone()
-        for (rect in validCells) {
+        for (rect in normalCells) {
             Imgproc.rectangle(cellDebug, rect.tl(), rect.br(), Scalar(255.0), 2)
         }
         debugObserver.onImage("03_detected_cells.png", cellDebug)
