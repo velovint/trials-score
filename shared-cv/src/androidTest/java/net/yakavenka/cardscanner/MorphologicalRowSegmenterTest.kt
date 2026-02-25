@@ -4,7 +4,6 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.services.storage.TestStorage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Before
@@ -15,7 +14,6 @@ import org.opencv.android.Utils
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.Size
-import org.opencv.imgcodecs.Imgcodecs
 import org.opencv.imgproc.Imgproc
 import java.io.File
 
@@ -301,71 +299,6 @@ class MorphologicalRowSegmenterTest {
         card.release()
     }
 
-    /**
-     * Diagnostic test: saves intermediate pipeline images for both working and failing images
-     * to TestStorage for visual comparison.
-     * Pull results: adb pull /sdcard/googletest/test_outputfiles/ ./debug-output/
-     */
-    @Test
-    fun segment_debugIntermediates_savesImagesToTestStorage() {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        val testStorage = TestStorage()
-
-        listOf(
-            "working" to "test_score_card_w_header.png",
-            "failing" to "test_score_card_w_header_1.png"
-        ).forEach { (label, filename) ->
-            val raw = loadRawCardFromAssets(filename)
-            val card = resizeToTargetWidth(raw, 640)
-            raw.release()
-
-            val binary = Mat()
-            Imgproc.adaptiveThreshold(card, binary, 255.0,
-                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C, Imgproc.THRESH_BINARY_INV, 11, 2.0)
-
-            val vKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 20.0))
-            val hKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(20.0, 1.0))
-            val vertical = Mat()
-            val horizontal = Mat()
-            Imgproc.morphologyEx(binary, vertical, Imgproc.MORPH_OPEN, vKernel)
-            Imgproc.morphologyEx(binary, horizontal, Imgproc.MORPH_OPEN, hKernel)
-
-            val combined = Mat()
-            Core.bitwise_or(vertical, horizontal, combined)
-
-            val closeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(10.0, 10.0))
-            val closed = Mat()
-            Imgproc.morphologyEx(combined, closed, Imgproc.MORPH_CLOSE, closeKernel)
-
-            val inverted = Mat()
-            Core.bitwise_not(closed, inverted)
-
-            listOf(
-                "1_input" to card,
-                "2_adaptive_threshold" to binary,
-                "3_morph_open_vertical" to vertical,
-                "4_morph_open_horizontal" to horizontal,
-                "5_combined" to combined,
-                "6_morph_close" to closed,
-                "7_inverted" to inverted
-            ).forEach { (step, mat) ->
-                saveMat(context.cacheDir, testStorage, "${label}_${step}.png", mat)
-            }
-
-            listOf(binary, vertical, horizontal, combined, closed, inverted,
-                   card, vKernel, hKernel, closeKernel).forEach { it.release() }
-        }
-    }
-
-    private fun saveMat(cacheDir: File, testStorage: TestStorage, name: String, mat: Mat) {
-        val tmp = File(cacheDir, name)
-        Imgcodecs.imwrite(tmp.absolutePath, mat)
-        testStorage.openOutputFile(name).use { out ->
-            tmp.inputStream().use { it.copyTo(out) }
-        }
-        tmp.delete()
-        Log.i("MorphologicalRowSegmenterTest", "Saved $name (${mat.width()}x${mat.height()})")
-    }
 
     @Test
     fun segment_withHeaderStripped_returns15Rows() {

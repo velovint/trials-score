@@ -8,7 +8,8 @@ import org.opencv.imgproc.Imgproc
 import kotlin.math.max
 
 class OpenCVCardIsolator(
-    private val targetWidth: Int? = 640
+    private val targetWidth: Int? = 640,
+    private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
 ) : CardIsolator {
 
     companion object {
@@ -60,6 +61,7 @@ class OpenCVCardIsolator(
                         cardMat   // return at natural crop resolution
                     }
 
+                    debugObserver.onImage("01_card_boundary.png", output)
                     Log.i("OpenCVCardIsolator", "Card isolated: ${output.width()}×${output.height()}")
                     Result.success(output)
                 },

@@ -4,11 +4,16 @@ import android.util.Log
 import org.opencv.core.Core
 import org.opencv.core.Mat
 import org.opencv.core.MatOfPoint
+import org.opencv.core.Point
 import org.opencv.core.Rect
+import org.opencv.core.Scalar
 import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
-class MorphologicalRowSegmenter(val stripHeader: Boolean = true) : RowSegmenter {
+class MorphologicalRowSegmenter(
+    val stripHeader: Boolean = true,
+    private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
+) : RowSegmenter {
     override fun segment(card: Mat): Result<List<RowRegion>> {
         // Phase 2b: Cell Detection
         // Step 1: Adaptive threshold
@@ -170,6 +175,27 @@ class MorphologicalRowSegmenter(val stripHeader: Boolean = true) : RowSegmenter 
         }
 
         val scoringRows = if (stripHeader && allRowRegions.isNotEmpty()) allRowRegions.drop(1) else allRowRegions
+
+        // Debug observer calls (before cleanup while Mats are still valid)
+        debugObserver.onImage("02_enhanced_lines.png", closed)
+        val cellDebug = card.clone()
+        for (rect in validCells) {
+            Imgproc.rectangle(cellDebug, rect.tl(), rect.br(), Scalar(255.0), 2)
+        }
+        debugObserver.onImage("03_detected_cells.png", cellDebug)
+        cellDebug.release()
+        val rowDebug = card.clone()
+        for (row in scoringRows) {
+            Imgproc.rectangle(
+                rowDebug,
+                Point(0.0, row.top.toDouble()),
+                Point(card.cols().toDouble(), row.bottom.toDouble()),
+                Scalar(255.0),
+                2
+            )
+        }
+        debugObserver.onImage("04_row_bounds.png", rowDebug)
+        rowDebug.release()
 
         // Cleanup
         binary.release()

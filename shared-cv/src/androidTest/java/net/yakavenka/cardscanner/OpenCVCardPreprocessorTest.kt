@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import androidx.test.services.storage.TestStorage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Assert.assertFalse
@@ -189,8 +190,8 @@ class OpenCVCardPreprocessorTest {
         templateName: String,
         errorMessage: String
     ) {
-        val bitmap = loadBitmapFromAssets("score-card-sideways.jpg")
-        val rows = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
+        val bitmap = loadBitmapFromAssets("test_score_card_grid_gap.png")
+        val rows = OpenCVCardPreprocessor(FileScanDebugObserver(TestStorage(), InstrumentationRegistry.getInstrumentation().targetContext)).preprocess(bitmap).getOrThrow()
 
         val row = rowSelector(rows)
         val rowMatConverted = convertRowToTemplateFormat(row)

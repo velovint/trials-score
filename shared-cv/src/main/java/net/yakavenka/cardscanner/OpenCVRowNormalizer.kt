@@ -7,10 +7,13 @@ import org.opencv.imgproc.Imgproc
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class OpenCVRowNormalizer : RowNormalizer {
+class OpenCVRowNormalizer(
+    private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
+) : RowNormalizer {
     override fun normalize(card: Mat, regions: List<RowRegion>): List<RowImage> {
-        return regions.map { region ->
+        return regions.mapIndexed { index, region ->
             val crop = card.submat(region.top, region.bottom, 0, card.cols())
+            debugObserver.onImage("05_row_%02d.png".format(index), crop)
             val resized = Mat()
             Imgproc.resize(crop, resized, Size(640.0, 66.0))
             val float32 = Mat()
