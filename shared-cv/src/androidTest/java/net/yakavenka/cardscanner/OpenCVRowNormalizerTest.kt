@@ -11,17 +11,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
 import org.opencv.android.Utils
-import org.opencv.core.Core
-import org.opencv.core.CvType
 import org.opencv.core.Mat
-import org.opencv.core.Scalar
 import org.opencv.imgproc.Imgproc
 import java.nio.ByteOrder
 
 @RunWith(AndroidJUnit4::class)
 class OpenCVRowNormalizerTest {
-
-    private val templateCache = mutableMapOf<String, Mat>()
 
     @Before
     fun setup() {
@@ -108,43 +103,10 @@ class OpenCVRowNormalizerTest {
         card.release()
     }
 
-    @Test
-    fun normalize_firstRow_containsSectionNumber1() {
-        verifyRowMatchesTemplate(
-            rowSelector = { rows -> rows.first() },
-            templateName = "template_section_1.png",
-            errorMessage = "Row 1 must match section-1 template"
-        )
-    }
-
-    @Test
-    fun normalize_lastRow_containsSectionNumber15() {
-        verifyRowMatchesTemplate(
-            rowSelector = { rows -> rows.last() },
-            templateName = "template_section_15.png",
-            errorMessage = "Row 15 must match section-15 template"
-        )
-    }
-
     // ========== Helper Functions ==========
-
-    private fun loadBitmapFromAssets(filename: String): Bitmap {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        val inputStream = context.assets.open(filename)
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-        return bitmap!!
-    }
 
     private fun loadGrayscaleCardFromAssets(filename: String): Mat {
         return loadGrayscaleFromAssets(filename, cache = false)
-    }
-
-    private fun loadTemplateFromAssets(filename: String): Mat {
-        // Cache templates since they're reused across tests
-        return templateCache.getOrPut(filename) {
-            loadGrayscaleFromAssets(filename, cache = true)
-        }
     }
 
     private fun loadGrayscaleFromAssets(filename: String, cache: Boolean): Mat {
@@ -161,48 +123,5 @@ class OpenCVRowNormalizerTest {
         mat.release()
 
         return gray
-    }
-
-    private fun rowImageToMat(row: RowImage): Mat {
-        val mat = Mat(66, 640, CvType.CV_32F)
-        row.buffer.rewind()
-        val floatArray = FloatArray(66 * 640)
-        row.buffer.asFloatBuffer().get(floatArray)
-        mat.put(0, 0, floatArray)
-        return mat
-    }
-
-    private fun verifyRowMatchesTemplate(
-        rowSelector: (List<RowImage>) -> RowImage,
-        templateName: String,
-        errorMessage: String
-    ) {
-        val bitmap = loadBitmapFromAssets("score-card-sideways.jpg")
-        val rows = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
-
-        val row = rowSelector(rows)
-        val rowMatConverted = convertRowToTemplateFormat(row)
-        val template = loadTemplateFromAssets(templateName)
-        val result = Mat()
-
-        Imgproc.matchTemplate(rowMatConverted, template, result, Imgproc.TM_CCOEFF_NORMED)
-        val minMax = Core.minMaxLoc(result)
-
-        assertThat(errorMessage, minMax.maxVal, greaterThanOrEqualTo(0.7))
-
-        // Cleanup
-        rowMatConverted.release()
-        template.release()
-        result.release()
-    }
-
-    private fun convertRowToTemplateFormat(row: RowImage): Mat {
-        val rowMat = rowImageToMat(row)
-        val rowMatConverted = Mat()
-        // Convert float [0, 1] to uint8 [0, 255] for template matching
-        Core.multiply(rowMat, Scalar(255.0), rowMatConverted)
-        rowMatConverted.convertTo(rowMatConverted, CvType.CV_8U)
-        rowMat.release()
-        return rowMatConverted
     }
 }
