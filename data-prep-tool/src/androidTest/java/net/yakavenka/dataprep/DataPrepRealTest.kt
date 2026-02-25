@@ -157,36 +157,55 @@ class DataPrepRealTest {
 
     @Test
     fun exportTrainingData_organizesIntoLabelFolders() {
-        // Load real score card image from assets
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-
-        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
-
-        // Simulated labels (in real workflow, user provides these)
-        // Label 9 indicates "skip this row" (corrupted/unclear data)
-        val labels = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 9, 9, 9, 9, 9)
-
-        // Create TestStorage instance
         val testStorage = TestStorage()
+        val assetFiles = context.assets.list("raw") ?: emptyArray()
 
-        // Convert RowImages back to Mat for export (TrainingDataExporter expects Mat)
-        val rowMats = rowImages.map { rowImageToMat(it) }
+        for (filename in assetFiles) {
+            // Parse: "PXL001_100112010299999.jpg" → base="PXL001", labelStr="100112010299999"
+            val nameWithoutExt = filename.substringBeforeLast(".")
+            val parts = nameWithoutExt.split("_")
+            if (parts.size < 2) {
+                Log.w("DataPrepRealTest", "Skipping $filename: filename does not match pattern")
+                continue
+            }
 
-        // Export rows to TestStorage organized by label folders
-        TrainingDataExporter.exportToTestStorage(
-            testStorage = testStorage,
-            rows = rowMats,
-            labels = labels,
-            imageBaseName = "test_card_001"
-        )
+            val imageBaseName = parts[0]
+            val labelStr = parts[1]
+            val labels = labelStr.map { it.digitToInt() }
+
+            // Load image from assets
+            val bitmap = context.assets.open("raw/$filename").use {
+                BitmapFactory.decodeStream(it)
+            }
+
+            // Preprocess and check for errors
+            val result = OpenCVCardPreprocessor().preprocess(bitmap)
+            if (result.isFailure) {
+                Log.w("DataPrepRealTest", "Skipping $filename: ${result.exceptionOrNull()?.message}")
+                continue
+            }
+
+            val rowImages = result.getOrThrow()
+            assertThat("Detected 15 rows [$filename]", rowImages.size, equalTo(15))
+
+            // Convert RowImages back to Mat for export (TrainingDataExporter expects Mat)
+            val rowMats = rowImages.map { rowImageToMat(it) }
+
+            // Export rows to TestStorage organized by label folders
+            TrainingDataExporter.exportToTestStorage(
+                testStorage = testStorage,
+                rows = rowMats,
+                labels = labels,
+                imageBaseName = imageBaseName
+            )
+
+            rowMats.forEach { it.release() }
+
+            Log.i("DataPrepRealTest", "Exported $filename (${rowImages.size} rows)")
+        }
 
         Log.i("DataPrepRealTest", "Training data exported to TestStorage")
         Log.i("DataPrepRealTest", "Check build/outputs/managed_device_android_test_additional_output/ for exported files")
-
-        // Cleanup
-        rowMats.forEach { it.release() }
     }
 }

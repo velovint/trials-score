@@ -104,7 +104,8 @@ tasks.register('packageTrainingData', Tar) {
         println "  Size: ${String.format('%.2f', sizeMB)} MB"
     }
 }
-*/
+ */
+// TODO old pipeline
 
 tasks.register('verifyPipeline') {
     group = 'verification'

@@ -214,7 +214,7 @@ class MorphologicalRowSegmenterTest {
      */
     @Test
     fun segment_handlesPrimaryCardImage() {
-        val rawCard = loadRawCardFromAssets("test_score_card_w_header_1.png")
+        val rawCard = loadRawCardFromAssets("test_score_card_grid_gap.png")
         val card = resizeToTargetWidth(rawCard, 640)
 
         val result = segmenter.segment(card)
