@@ -33,9 +33,10 @@ class OpenCVCardScannerServiceTest {
     @Test
     fun extractScores_withRealScoreCard_returnsValidScores() = runTest {
         // Load actual score card image from test assets
-        val testImage = loadTestImageFromAssets("raw/PXL_100112010299999.jpg")
+        val testImage = loadTestImageFromAssets("raw/PXL_3302032333999999.jpg")
 
         val result = scanner.extractScores(testImage)
+        Log.d("net.yakavenka.test", "Image scanned successfully: $result")
 
         // Assert result is ScanResult.Success
         assertThat(result, instanceOf(ScanResult.Success::class.java))

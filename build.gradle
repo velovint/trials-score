@@ -20,93 +20,6 @@ tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
 }
 
-// FIXME: Legacy training data tasks - These were designed for a JVM :training-tool module
-// but :training-tool was renamed to :data-prep-tool and converted to an Android library.
-// These tasks are temporarily disabled until the module structure is finalized.
-// For now, training data preparation is done via instrumented tests in :data-prep-tool.
-/*
-// Training data preparation configuration
-ext {
-    trainingDataUrl = project.findProperty('trainingDataUrl') ?:
-                      System.getenv('TRAINING_DATA_URL') ?:
-                      'https://example.com/training-data.tgz'
-    trainingDataSourceDir = "$buildDir/training-data-source"
-    trainingDataOutputDir = "$buildDir/training-data"
-}
-
-tasks.register('downloadTrainingData') {
-    def destFile = file("$buildDir/training-data.tgz")
-    inputs.property('trainingDataUrl', trainingDataUrl)
-    outputs.file(destFile)
-    onlyIf { !destFile.exists() }
-    doLast {
-        println "Downloading training data from: $trainingDataUrl"
-        ant.get(src: trainingDataUrl, dest: destFile)
-        println "Downloaded to: ${destFile.absolutePath}"
-    }
-}
-
-tasks.register('unpackTrainingData', Copy) {
-    dependsOn 'downloadTrainingData'
-    from tarTree("$buildDir/training-data.tgz")
-    into trainingDataSourceDir
-    onlyIf {
-        !file(trainingDataSourceDir).exists() ||
-        file(trainingDataSourceDir).list().length == 0
-    }
-    doFirst {
-        println "Unpacking training data to: $trainingDataSourceDir"
-    }
-}
-
-tasks.register('prepareTrainingData', JavaExec) {
-    dependsOn 'unpackTrainingData', ':data-prep-tool:build'
-    classpath = project(':data-prep-tool').sourceSets.main.runtimeClasspath
-    mainClass = 'net.yakavenka.trialsscore.training.MainKt'
-    args = [
-        '--input-dir', trainingDataSourceDir,
-        '--output-dir', trainingDataOutputDir
-    ]
-    doFirst {
-        println "Preparing training data..."
-        println "  Input:  $trainingDataSourceDir"
-        println "  Output: $trainingDataOutputDir"
-        file(trainingDataOutputDir).mkdirs()
-    }
-}
-
-tasks.register('packageTrainingData', Tar) {
-    dependsOn 'prepareTrainingData'
-    description = 'Package prepared training data into a .tgz archive'
-    group = 'build'
-
-    compression = Compression.GZIP
-    archiveFileName = 'training-data.tgz'
-    destinationDirectory = file("$buildDir/distributions")
-
-    from(trainingDataOutputDir) {
-        // Score categories at top level: /0/, /1/, /2/, /3/, /5/
-        // Exclude debug directory if present
-        exclude 'debug/**'
-    }
-
-    doFirst {
-        println "Packaging training data..."
-        println "  Source: $trainingDataOutputDir"
-        println "  Output: ${destinationDirectory.get()}/${archiveFileName.get()}"
-    }
-
-    doLast {
-        def outputFile = file("${destinationDirectory.get()}/${archiveFileName.get()}")
-        def sizeMB = outputFile.length() / (1024 * 1024)
-        println "Archive created successfully!"
-        println "  File: ${outputFile.absolutePath}"
-        println "  Size: ${String.format('%.2f', sizeMB)} MB"
-    }
-}
- */
-// TODO old pipeline
-
 tasks.register('downloadRawImages') {
     group = 'ml-pipeline'
     description = 'Download raw score card images from Kaggle (vitaliyakavenka/raw-card-pictures)'
@@ -201,49 +114,94 @@ tasks.register('uploadTrainingData') {
                 '--message', "Pipeline update: ${new Date().format('yyyy-MM-dd')}"
         }
         logger.lifecycle("Training data uploaded to vitaliyakavenka/trials-score-training-data")
+
+        // Capture dataset version for downstream caching
+        def versionOutput = new ByteArrayOutputStream()
+        exec {
+            commandLine 'kaggle', 'datasets', 'status',
+                'vitaliyakavenka/trials-score-training-data'
+            standardOutput = versionOutput
+        }
+        def versionFile = file("${buildDir}/training-data-version.txt")
+        versionFile.text = versionOutput.toString().trim()
+        logger.lifecycle("Training data version recorded: ${versionFile.text}")
     }
 }
 
-tasks.register('downloadModel', Copy) {
+tasks.register('downloadModel') {
     group = 'ml-pipeline'
-    description = 'Download trained model from Kaggle (STUB: copies from local source)'
+    description = 'Download trained model from Kaggle kernel output'
+    mustRunAfter 'triggerKaggleTrain'
+    outputs.upToDateWhen { false }
 
-    def sourceModel = file("$projectDir/ml-inference/src/kaggle/score_classifier_model.tflite")
     def destDir = file("$buildDir/ml-models")
 
-    from sourceModel
-    into destDir
+    doLast {
+        destDir.mkdirs()
 
-    inputs.file(sourceModel)
-    outputs.file(new File(destDir, sourceModel.name))
+        exec {
+            commandLine 'kaggle', 'kernels', 'output',
+                'vitaliyakavenka/trials-score-trainer',
+                '--path', destDir.absolutePath
+        }
 
-    doFirst {
-        if (!sourceModel.exists()) {
+        def modelFile = new File(destDir, 'score_classifier_model.tflite')
+        if (!modelFile.exists()) {
             throw new GradleException(
-                "Model source not found: ${sourceModel.absolutePath}\n" +
-                "Expected model file in ml-inference/src/kaggle/\n" +
-                "In production, this would download from Kaggle instead."
+                "Model not found at: ${modelFile}\n" +
+                "Ensure the notebook saves to /kaggle/working/score_classifier_model.tflite"
             )
         }
-        destDir.mkdirs()
-    }
-
-    doLast {
-        def outputFile = new File(destDir, sourceModel.name)
-        def modelSize = outputFile.length() / 1024  // KB
-        println "✓ Model downloaded to build directory"
-        println "  Source: ${sourceModel.absolutePath}"
-        println "  Output: ${outputFile.absolutePath}"
-        println "  Size: ${String.format('%.2f', modelSize)} KB"
-        println "  (STUB: In production, would download from Kaggle API)"
+        logger.lifecycle("Model downloaded: ${modelFile} (${modelFile.length() / 1024} KB)")
     }
 }
 
 tasks.register('triggerKaggleTrain') {
     group = 'ml-pipeline'
-    description = 'Trigger Kaggle training job (STUB)'
+    description = 'Push notebook to Kaggle and wait for training completion'
+    mustRunAfter 'uploadTrainingData'
+    inputs.file("${buildDir}/training-data-version.txt")
+
     doLast {
-        println 'STUB: Would trigger Kaggle training'
+        def notebookDir = file("kaggle/notebooks")
+        def slug = 'vitaliyakavenka/trials-score-trainer'
+        def maxWaitMinutes = 60
+        def pollIntervalSeconds = 30
+
+        // Push notebook to Kaggle (creates or updates the kernel)
+        exec {
+            commandLine 'kaggle', 'kernels', 'push', '-p', notebookDir.absolutePath
+        }
+        logger.lifecycle("Notebook pushed. Waiting for training to complete (up to ${maxWaitMinutes} min)...")
+
+        def maxPolls = (maxWaitMinutes * 60) / pollIntervalSeconds
+        def polls = 0
+        def completed = false
+
+        while (!completed && polls < maxPolls) {
+            Thread.sleep(pollIntervalSeconds * 1000L)
+            polls++
+
+            def statusOutput = new ByteArrayOutputStream()
+            exec {
+                commandLine 'kaggle', 'kernels', 'status', slug
+                standardOutput = statusOutput
+            }
+            def statusText = statusOutput.toString().trim()
+            def statusLower = statusText.toLowerCase()
+            logger.lifecycle("  [${polls}] ${statusText}")
+
+            if (statusLower.contains('complete')) {
+                completed = true
+            } else if (statusLower.contains('error') || statusLower.contains('cancel')) {
+                throw new GradleException("Kaggle training failed:\n${statusText}")
+            }
+        }
+
+        if (!completed) {
+            throw new GradleException("Kaggle training timed out after ${maxWaitMinutes} minutes")
+        }
+        logger.lifecycle("Training complete.")
     }
 }
 
