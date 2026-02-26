@@ -133,9 +133,12 @@ class MorphologicalRowSegmenter(
 
         val cells: List<Rect> = if (relativePosition < 0.45) {
             // Card is upside down — invert Y coordinates
-            normalCells.map { rect ->
+            val invertedCells = normalCells.map { rect ->
                 Rect(rect.x, cardHeight - (rect.y + rect.height), rect.width, rect.height)
             }
+            // Rotate the card Mat 180° in-place to match the inverted coordinates
+            Core.rotate(card, card, Core.ROTATE_180)
+            invertedCells
         } else {
             normalCells
         }

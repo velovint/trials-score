@@ -340,6 +340,41 @@ class MorphologicalRowSegmenterTest {
         card.release(); rawCard.release()
     }
 
+    /**
+     * Test that when a card is upside-down, after rotation by the segmenter,
+     * RowRegion coordinates describe correct positions in right-side-up space.
+     * First row top should be 30-50% down, last row bottom 90-100% down (near end).
+     */
+    @Test
+    fun segment_upsideDownCard_rowsAreInCorrectPositions() {
+        val rawCard = loadRawCardFromAssets("test_score_card_upside_down.png")
+        val card = resizeToTargetWidth(rawCard, 640)
+        val cardHeight = card.rows()
+
+        val result = segmenter.segment(card)
+
+        assertThat("Result should be success", result.isSuccess)
+        val rows = result.getOrNull()!!
+        assertThat("Should return exactly 15 rows", rows, hasSize(15))
+
+        val firstRowTopRatio = rows.first().top / cardHeight.toDouble()
+        assertThat(
+            "First row top should be between 30% and 50% of card height",
+            firstRowTopRatio,
+            allOf(greaterThanOrEqualTo(0.30), lessThanOrEqualTo(0.50))
+        )
+
+        val lastRowBottomRatio = rows.last().bottom / cardHeight.toDouble()
+        assertThat(
+            "Last row bottom should be between 90% and 99% of card height",
+            lastRowBottomRatio,
+            allOf(greaterThanOrEqualTo(0.90), lessThanOrEqualTo(0.99))
+        )
+
+        card.release()
+        rawCard.release()
+    }
+
     // ========== Helper Functions ==========
 
     private fun loadBitmapFromAssets(filename: String): android.graphics.Bitmap {
