@@ -42,17 +42,11 @@ class OpenCVCardScannerServiceTest {
         assertThat(result, instanceOf(ScanResult.Success::class.java))
 
         val successResult = result as ScanResult.Success
-        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 3, 3, 3, 3, 3) // TODO model falls back to 3s. need to fix at some point
+        // TODO model falls back to 3s for unpunched sections. need to fix at some point
+        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 3, 3, 3, 3, 3)
         val actualScores = successResult.scores.map { it.value }
 
-        // TODO disabled until row shifting is fixed
         assertThat(actualScores, `is`(expectedScores))
-
-        // Assert all scores are valid (0, 1, 2, 3, or 5)
-//        val validScores = setOf(0, 1, 2, 3, 5)
-//        for (score in successResult.scores) {
-//            assertThat(score.value, isIn(validScores))
-//        }
     }
 
     @Test
