@@ -58,16 +58,8 @@ class MorphologicalRowSegmenter(
         // Step 5: Filter contours by area (median ± ratio) and aspect ratio
         val areas = contours.map { Imgproc.contourArea(it) }.sorted()
         if (areas.isEmpty()) {
-            binary.release()
-            vertical.release()
-            horizontal.release()
-            combined.release()
-            closed.release()
-            inverted.release()
-            vKernel.release()
-            hKernel.release()
-            closeKernel.release()
-            contours.forEach { it.release() }
+            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
             return Result.failure(ScanError.InsufficientCells(0))
         }
 
@@ -82,18 +74,8 @@ class MorphologicalRowSegmenter(
                 aspectRatio >= 0.6 && aspectRatio <= 1.8
             }
         if (validCells.isEmpty()) {
-            binary.release()
-            vertical.release()
-            horizontal.release()
-            combined.release()
-            closed.release()
-            inverted.release()
-            vKernel.release()
-            hKernel.release()
-            vGapKernel.release()
-            hGapKernel.release()
-            closeKernel.release()
-            contours.forEach { it.release() }
+            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
             return Result.failure(ScanError.InsufficientCells(0))
         }
         Log.i("MorphologicalRowSegmenter", "After filtering: ${validCells.size} valid cells, Y range: ${validCells.minOf { it.y }}-${validCells.maxOf { it.y + it.height }}, card dimensions: ${card.width()}x${card.rows()}")
@@ -108,18 +90,8 @@ class MorphologicalRowSegmenter(
         // Step 6: Validate minimum cell count
         Log.i("MorphologicalRowSegmenter", "Detected ${normalCells.size} valid cells (need >= 45)")
         if (normalCells.size < 45) {
-            binary.release()
-            vertical.release()
-            horizontal.release()
-            combined.release()
-            closed.release()
-            inverted.release()
-            vKernel.release()
-            hKernel.release()
-            vGapKernel.release()
-            hGapKernel.release()
-            closeKernel.release()
-            contours.forEach { it.release() }
+            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
             Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${normalCells.size} < 45")
             return Result.failure(ScanError.InsufficientCells(normalCells.size))
         }
@@ -204,18 +176,8 @@ class MorphologicalRowSegmenter(
         rowDebug.release()
 
         // Cleanup
-        binary.release()
-        vertical.release()
-        horizontal.release()
-        combined.release()
-        closed.release()
-        inverted.release()
-        vKernel.release()
-        hKernel.release()
-        vGapKernel.release()
-        hGapKernel.release()
-        closeKernel.release()
-        contours.forEach { it.release() }
+        cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
+                            vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
 
         if (scoringRows.size < 10) {
             Log.e("MorphologicalRowSegmenter", "InsufficientRows after header strip: ${scoringRows.size} < 10")
@@ -223,5 +185,29 @@ class MorphologicalRowSegmenter(
         }
 
         return Result.success(scoringRows)
+    }
+
+    /**
+     * Release all OpenCV Mat resources.
+     * Centralizes cleanup logic to prevent resource leaks and ensure all Mats are released.
+     */
+    private fun cleanupMatResources(
+        binary: Mat,
+        vertical: Mat,
+        horizontal: Mat,
+        combined: Mat,
+        closed: Mat,
+        inverted: Mat,
+        vKernel: Mat,
+        hKernel: Mat,
+        vGapKernel: Mat,
+        hGapKernel: Mat,
+        closeKernel: Mat,
+        contours: List<MatOfPoint>
+    ) {
+        listOf(binary, vertical, horizontal, combined, closed, inverted,
+               vKernel, hKernel, vGapKernel, hGapKernel, closeKernel)
+            .forEach { it.release() }
+        contours.forEach { it.release() }
     }
 }

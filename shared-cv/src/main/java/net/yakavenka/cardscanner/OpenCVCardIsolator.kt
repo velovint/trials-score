@@ -30,7 +30,8 @@ class OpenCVCardIsolator(
             rgbaMat.release()
 
             // Step 1: Auto-rotate to portrait if landscape (width > height)
-            val oriented = if (grayscale.width() > grayscale.height()) {
+            val wasRotated = grayscale.width() > grayscale.height()
+            val oriented = if (wasRotated) {
                 Log.i("OpenCVCardIsolator", "Rotating landscape to portrait: ${grayscale.width()}x${grayscale.height()}")
                 val rotated = Mat()
                 Core.rotate(grayscale, rotated, Core.ROTATE_90_COUNTERCLOCKWISE)
@@ -44,7 +45,7 @@ class OpenCVCardIsolator(
             val card = detectAndCropCard(oriented)
 
             // Release oriented if it was created from rotation
-            if (oriented !== grayscale) {
+            if (wasRotated) {
                 oriented.release()
             }
 
@@ -66,8 +67,8 @@ class OpenCVCardIsolator(
                     Result.success(output)
                 },
                 onFailure = { error ->
-                    if (oriented !== grayscale) {
-                        grayscale.release()
+                    if (wasRotated) {
+                        oriented.release()
                     }
                     Result.failure(error)
                 }
@@ -137,7 +138,7 @@ class OpenCVCardIsolator(
 
             // Check aspect ratio first
             if (!isPortraitish) {
-                Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid aspect ratio ${aspectRatio.toFloat()}")
+                Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid aspect ratio ${"%.2f".format(aspectRatio)}")
                 return Result.failure(ScanError.InvalidAspectRatio(aspectRatio.toFloat()))
             }
 
