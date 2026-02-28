@@ -26,8 +26,7 @@ class OpenCVCardScannerService(
     override suspend fun extractScores(image: Bitmap): ScanResult {
         return withContext(Dispatchers.Default) {
             Log.d(TAG, "Extracting scores from ${image.width}x${image.height} image")
-            val rows = runCatching { preprocessor.preprocess(image) }
-                .getOrElse { return@withContext ScanResult.Failure(it.message ?: "Scan failed") }
+            val rows = preprocessor.preprocess(image)
                 .getOrElse { return@withContext ScanResult.Failure(it.message ?: "Scan failed") }
             val scores = rows.mapIndexed { i, row ->
                 (i + 1) to classifier.classify(row)

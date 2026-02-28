@@ -31,6 +31,7 @@ class MorphologicalRowSegmenter(
         val vertical = Mat()
         val horizontal = Mat()
         val combined = Mat()
+        val hierarchy = Mat()
 
         val vKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 20.0))
         val hKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(20.0, 1.0))
@@ -53,13 +54,13 @@ class MorphologicalRowSegmenter(
         Core.bitwise_not(closed, inverted)
 
         val contours = mutableListOf<MatOfPoint>()
-        Imgproc.findContours(inverted, contours, Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+        Imgproc.findContours(inverted, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
 
         // Step 5: Filter contours by area (median ± ratio) and aspect ratio
         val areas = contours.map { Imgproc.contourArea(it) }.sorted()
         if (areas.isEmpty()) {
             cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
             return Result.failure(ScanError.InsufficientCells(0))
         }
 
@@ -75,7 +76,7 @@ class MorphologicalRowSegmenter(
             }
         if (validCells.isEmpty()) {
             cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
             return Result.failure(ScanError.InsufficientCells(0))
         }
         Log.i("MorphologicalRowSegmenter", "After filtering: ${validCells.size} valid cells, Y range: ${validCells.minOf { it.y }}-${validCells.maxOf { it.y + it.height }}, card dimensions: ${card.width()}x${card.rows()}")
@@ -91,7 +92,7 @@ class MorphologicalRowSegmenter(
         Log.i("MorphologicalRowSegmenter", "Detected ${normalCells.size} valid cells (need >= 45)")
         if (normalCells.size < 45) {
             cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
+                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
             Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${normalCells.size} < 45")
             return Result.failure(ScanError.InsufficientCells(normalCells.size))
         }
@@ -177,7 +178,7 @@ class MorphologicalRowSegmenter(
 
         // Cleanup
         cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                            vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, contours)
+                            vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
 
         if (scoringRows.size < 10) {
             Log.e("MorphologicalRowSegmenter", "InsufficientRows after header strip: ${scoringRows.size} < 10")
@@ -203,10 +204,11 @@ class MorphologicalRowSegmenter(
         vGapKernel: Mat,
         hGapKernel: Mat,
         closeKernel: Mat,
+        hierarchy: Mat,
         contours: List<MatOfPoint>
     ) {
         listOf(binary, vertical, horizontal, combined, closed, inverted,
-               vKernel, hKernel, vGapKernel, hGapKernel, closeKernel)
+               vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy)
             .forEach { it.release() }
         contours.forEach { it.release() }
     }

@@ -44,10 +44,8 @@ class OpenCVCardIsolator(
             // Step 2: Card boundary detection
             val card = detectAndCropCard(oriented)
 
-            // Release oriented if it was created from rotation
-            if (wasRotated) {
-                oriented.release()
-            }
+            // Release oriented now — detectAndCropCard always clones its result
+            oriented.release()
 
             return card.fold(
                 onSuccess = { cardMat ->
@@ -67,9 +65,6 @@ class OpenCVCardIsolator(
                     Result.success(output)
                 },
                 onFailure = { error ->
-                    if (wasRotated) {
-                        oriented.release()
-                    }
                     Result.failure(error)
                 }
             )
@@ -83,6 +78,7 @@ class OpenCVCardIsolator(
         val blurred = Mat()
         val edges = Mat()
         val closed = Mat()
+        val hierarchy = Mat()
         val contours = ArrayList<MatOfPoint>()
 
         return try {
@@ -98,7 +94,7 @@ class OpenCVCardIsolator(
             kernel.release()
 
             // Find contours on the closed edge image
-            Imgproc.findContours(closed, contours, Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+            Imgproc.findContours(closed, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
 
             // Find largest contour that could be the card
             val imageArea = image.width() * image.height()
@@ -166,6 +162,7 @@ class OpenCVCardIsolator(
             blurred.release()
             edges.release()
             closed.release()
+            hierarchy.release()
             contours.forEach { it.release() }
         }
     }
