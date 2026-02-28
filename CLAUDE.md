@@ -1,228 +1,26 @@
-# CLAUDE.md
+# Project Overview
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+TrialsScore is a motorcycle trials scoring application for Android. Riders compete in multiple sections across multiple loops, accumulating points from 0 (clean) to 5 (failure) per section. Lower total score wins.
 
-## Project Overview
+**User Documentation**: See `docs/index.md` for complete usage instructions. Reference this when planning features related to user workflows, data import/export, or end-user experience.
+**Technical documentation**: 
+- `tech-docs/training-pipeline-with-kaggle.md` - ML pipeline
+- `tech-docs/trials-card-scanning-approach.md` - camera picture -> card extraction using opencv -> ML to list of scores  
 
-TrialsScore is a motorcycle trials scoring application for Android.
-Riders compete in multiple sections across multiple loops,
-accumulating points from 0 (clean) to 5 (failure) per section.
-Lower total score wins.
+# Module Structure
 
-## User Documentation
+- **`:app`** - Main Android application (MVVM, Jetpack Compose, Room).
+- **`:shared-cv`** - Computer vision components (OpenCV card scanning, row segmentation).
+- **`:ml-inference`** - Score classification (TensorFlow Lite inference).
+- **`:data-prep-tool`** - Training data preparation. 
 
-For complete usage instructions, see `docs/index.md`. This includes:
-- Application setup and configuration
-- Event workflow (configure event → import riders → enter scores → share/export results)
-- CSV import/export format details
-- Screenshot sharing instructions
-- Device recommendations
+Each module has a dedicated README.md with detailed architecture, dependencies, and implementation notes.
 
-Reference this file when planning features related to user workflows, data import/export formats, or understanding the end-user experience.
-
-## Build Commands
-
-### Build the app
-```bash
-./gradlew build
-```
-
-### Run unit tests
-```bash
-./gradlew test
-```
-
-### Run a specific test class
-```bash
-./gradlew testDebugUnitTest --tests "net.yakavenka.trialsscore.viewmodel.RiderStandingTransformationTest"
-```
-
-### Run instrumented tests (requires emulator/device)
-```bash
-./gradlew connectedAndroidTest
-```
-
-### Run a specific instrumented test class
-```bash
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="net.yakavenka.cardscanner.CardScanningPipelineTest"
-```
-
-### Run a specific instrumented test method
-```bash
-./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class="net.yakavenka.cardscanner.CardScanningPipelineTest#scan_returnsSuccess_whenAllStepsSucceed"
-```
-
-### Retrieve logcat from instrumented tests
-Each instrumented test gets its own logcat file at:
-`<module>/build/outputs/androidTest-results/connected/debug/<device>/logcat-<ClassName>-<methodName>.txt`
-
-Example — filter for a specific tag:
-```bash
-grep "MorphologicalRowSegmenter" "shared-cv/build/outputs/androidTest-results/connected/debug/Pixel_5_API_33(AVD) - 13/logcat-net.yakavenka.cardscanner.MorphologicalRowSegmenterTest-segment_producesCorrectNumberOfRows.txt"
-```
-
-### Commit messages
-Use concise commit messages and include only a summary for simple changes.
-
-### ML Pipeline (Proof of Concept)
-
-The ML pipeline for CV-based card scanning (Issue #30) uses instrumented tests for data preparation and validation:
-
-**Modules:**
-- `:shared-cv` - Contains `CardImagePreprocessor` (OpenCV-based card detection, grid line extraction, row segmentation)
-- `:data-prep-tool` - Android library for training data preparation via instrumented tests
-- `:ml-inference` - TensorFlow Lite model inference and validation
-
-**Training Data Preparation (POC Approach):**
-```bash
-# Prepare training data using instrumented tests
-./gradlew :data-prep-tool:connectedAndroidTest
-```
-
-Training data preparation runs as instrumented tests on device/emulator:
-1. Load score card images from test assets
-2. Use `CardImagePreprocessor` to detect card, extract grid lines, segment into 15 rows
-3. Resize rows to 640x66 pixels
-4. Export to device storage organized by label (0/, 1/, 2/, 3/, 5/)
-5. Pull data from device: `adb pull /storage/emulated/0/Android/data/net.yakavenka.dataprep/files/training-data/`
-
-Row labels are provided manually (via CSV or inspection). Label 9 indicates "skip this row" (corrupted/unclear data).
-
-**ML Pipeline Validation:**
-```bash
-# Run all ML pipeline tests
-./gradlew :shared-cv:connectedAndroidTest :ml-inference:connectedAndroidTest
-```
-
-See `tech-docs/IMPLEMENTATION_PLAN.md` for complete POC implementation details.
-
-**Note:** Legacy command-line tasks (`prepareTrainingData`, `packageTrainingData`) are temporarily disabled during POC development as the `:training-tool` module was converted to an Android library (`:data-prep-tool`).
-
-## Architecture
-
-### Module Structure
-
-**Core Modules:**
-- `:app` - Main Android application (MVVM architecture, see Layer Structure below)
-- `:shared-cv` - Shared computer vision library using OpenCV
-- `:ml-inference` - TensorFlow Lite model inference for score classification
-- `:data-prep-tool` - Training data preparation tools (instrumented tests)
-
-**Module Dependencies:**
-```
-:app → :ml-inference → :shared-cv
-:app → :shared-cv
-:data-prep-tool → :shared-cv
-```
-
-**ML Pipeline Modules (POC):**
-- **:shared-cv**: Contains `CardImagePreprocessor` for score card image processing:
-  - Card boundary detection (Canny edges + contour detection)
-  - Hough Transform grid line detection
-  - Row extraction (15 rows per card)
-  - Image preprocessing (grayscale, resize to 640px width)
-  - Debug mode with intermediate image saving
-
-- **:ml-inference**: TFLite-based score classifier:
-  - `ScoreClassifier` interface for row image classification
-  - Model loading and inference execution
-  - Golden dataset validation tests
-  - Depends on `:shared-cv` for preprocessing
-
-- **:data-prep-tool**: Training data preparation via instrumented tests:
-  - Loads raw score card images from assets
-  - Processes via `CardImagePreprocessor`
-  - Exports labeled row images to device storage
-  - Depends on `:shared-cv` for preprocessing
-
-### Layer Structure
-
-The application code in `:app` module follows MVVM architecture with three main layers:
-
-**Data Layer** (`/data/`):
-- Room database with `ScoreDatabase` as single source of truth
-- `RiderScoreDao` provides reactive Flow-based queries
-- Repositories abstract data operations:
-  - `SectionScoreRepository` - CRUD for riders and section scores. Most operations return partial/as-entered data that needs to be normalized to fill gaps for not entered sections. 
-  - `ScoreSummaryRepository` - Aggregated leaderboard data
-  - `UserPreferencesRepository` - Event settings via DataStore
-  - `CsvExchangeRepository` - CSV Import/export functionality
-
-**ViewModel Layer** (`/viewmodel/`):
-- All ViewModels are `@HiltViewModel` with constructor-injected dependencies
-- Key classes: `EventScoreViewModel`, `ScoreCardViewModel`, `EditRiderViewModel`, `EventSettingsViewModel`
-- `RiderStandingTransformation` handles leaderboard sorting logic
-
-**UI Layer** (`/components/`):
-- Pure Jetpack Compose with Material 3
-- Navigation defined in `TrialsScoreApplicationComponent.kt` (see UI Entry Points below)
-
-### UI Entry Points
-
-Map of key use cases to UI components (all in `/app/src/main/java/net/yakavenka/trialsscore/components/`):
-
-| Use Case                              | Entry Point                    | Navigation Route                | Notes                                                       |
-|---------------------------------------|--------------------------------|---------------------------------|-------------------------------------------------------------|
-| View leaderboard                      | `LeaderboardScreen.kt`         | `leaderboard`                   | Start destination; displays all riders grouped by class     |
-| Configure event (sections/loops/classes) | `EventSettingsScreen.kt`    | `settings`                      | Accessed via menu from `LeaderboardScreen`                  |
-| Import riders from CSV                | `LeaderboardScreen.kt`         | `leaderboard`                   | Import action in menu, handled by `EventScoreViewModel`     |
-| Add new rider                         | `EditRiderScreen.kt`           | `add_rider`                     | Accessed via FAB on `LeaderboardScreen`                     |
-| Edit rider info                       | `EditRiderScreen.kt`           | `edit_rider/{riderId}`          | Accessed via pencil icon from `LoopScoreEntryScreen`        |
-| Enter/view rider scores               | `LoopScoreEntryScreen.kt`      | `points_entry/{riderId}/{loop}` | Tap rider name from `LeaderboardScreen`                     |
-| Share scores (screenshot)             | `ScreenshotLeaderboardScreen.kt` | `screenshot_view`             | Compact view for Android screenshots                        |
-| Export results to CSV                 | `LeaderboardScreen.kt`         | `leaderboard`                   | Export action in menu, handled by `EventScoreViewModel`     |
-
-When implementing features, consult `docs/index.md` for user workflow context and expected behavior.
-
-### Dependency Injection
-
-Hilt provides all dependency injection:
-- `TrialsScoreApplication` is `@HiltAndroidApp`
-- `DatabaseModule` (`/data/DatabaseModule.kt`) provides:
-  - `ScoreDatabase` (Singleton)
-  - `RiderScoreDao`
-  - `DataStore<Preferences>` with SharedPreferences migration
-- All repositories are `@Singleton` with `@Inject` constructors
-- ViewModels use `@HiltViewModel` with injected repositories
-
-### Database Schema
-
-**Core Tables**:
-- `rider_score`: id (PK), name, riderClass
-- `section_score`: Composite PK [riderId, loopNumber, sectionNumber], points (-1 to 5)
-
-**Key DTOs**: `RiderScoreAggregate`, `RiderScoreSummary`, `SectionScore.Set`
-
-Database pre-populated from `assets/score_database.db` with destructive migration fallback.
-
-### Leaderboard Sorting Logic
-
-`RiderStandingTransformation` sorts by: class → finished/unfinished → points (asc) → cleans (desc) → name (alpha). Standings calculated per class. Special symbols (⠂, ⠅, ⠇, ⠭) indicate incomplete loops.
-
-### Data Flow
-
-`Room DB → Repository (Flow) → ViewModel (LiveData) → UI (Compose State)`
-
-UI observes LiveData with `observeAsState()`. Updates propagate automatically via Flow streams.
-
-## Testing
+# Testing
 
 **Naming conventions**:
 - Test methods: `<methodBeingTested>_<expectation>_<optionalConditions>`
-- Test fakes: `Fake<InterfaceName>` in same package as interface under `/app/src/test/java/`
+- Test fakes: `Fake<InterfaceName>` in same package under `/test/java/`
 
-**Unit tests** (`/test/`): JUnit with Hamcrest assertions, JavaFaker for data generation
-**Instrumented tests** (`/androidTest/`): Compose testing with `ANDROIDX_TEST_ORCHESTRATOR` and `clearPackageData: true`
-
-## Key Implementation Details
-
-- **Score Entry**: Scores are lazily initialized (created in-memory, persisted only when scored). Loop navigation via tabs.
-- **CSV Import/Export**: Uses OpenCSV. Export includes full results with per-section scores. Import adds riders (name, class only). See `docs/index.md` for format details.
-- **Preferences**: DataStore with SharedPreferences migration on first launch
-- **Room Schema**: Stored in `app/schemas/` (KSP arg `room.schemaLocation`)
-
-## Technology Stack
-
-Kotlin (JVM 17) • Jetpack Compose + Material 3 • Room + KSP • Dagger Hilt • DataStore • Coroutines/Flow • Gradle version catalog • SDK: Min 26, Target/Compile 35
-
-**Release builds**: R8 with `minifyEnabled` and `shrinkResources`, custom rules in `proguard-rules.pro`
+**Unit tests** (`/test/`): JUnit with Hamcrest, JavaFaker
+**Instrumented tests** (`/androidTest/`): Compose testing with `ANDROIDX_TEST_ORCHESTRATOR`
