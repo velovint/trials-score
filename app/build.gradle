@@ -71,9 +71,7 @@ android {
 }
 
 dependencies {
-    implementation(project(':shared-cv')) {
-        exclude group: 'org.openpnp', module: 'opencv'
-    }
+    implementation project(':shared-cv')
     implementation project(':ml-inference')
 
     implementation platform(libs.androidx.compose.bom)
@@ -105,7 +103,7 @@ dependencies {
     implementation libs.opencsv
 
     // OpenCV for Android (required for Bitmap→Mat conversion and native operations)
-    implementation "org.opencv:opencv:4.10.0"
+    implementation libs.opencv
 
     // CameraX
     implementation libs.androidx.camera.core

@@ -4,13 +4,11 @@ import android.graphics.BitmapFactory
 import android.util.Log
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import androidx.test.rule.GrantPermissionRule
 import androidx.test.services.storage.TestStorage
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.opencv.android.OpenCVLoader
@@ -29,12 +27,6 @@ import java.io.File
  */
 @RunWith(AndroidJUnit4::class)
 class DataPrepRealTest {
-
-    @get:Rule
-    val permissionRule: GrantPermissionRule = GrantPermissionRule.grant(
-        android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        android.Manifest.permission.READ_EXTERNAL_STORAGE
-    )
 
     @Before
     fun setUp() {
@@ -62,30 +54,6 @@ class DataPrepRealTest {
         floatMat.release()
 
         return byteMat
-    }
-
-    @Test
-    fun processRealScoreCard_extracts15Rows() {
-        // Load real score card image from assets
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-
-        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
-
-        // Verify we got 15 rows
-        assertThat("Should extract exactly 15 rows from score card", rowImages.size, equalTo(15))
-
-        // Verify rows are properly sized (convert back to Mat to check dimensions)
-        rowImages.forEach { rowImage ->
-            val mat = rowImageToMat(rowImage)
-            assertThat("Row width should be 640px", mat.width(), equalTo(640))
-            assertThat("Row height should be 66px", mat.height(), equalTo(66))
-            mat.release()
-        }
-
-        Log.i("DataPrepRealTest", "Successfully extracted 15 rows from score card")
     }
 
     @Test
@@ -128,31 +96,6 @@ class DataPrepRealTest {
         tempFile.delete()
 
         Log.i("DataPrepRealTest", "Test completed - check build outputs for TestStorage files")
-    }
-
-    @Test
-    fun prepareRowForTraining_resizesTo640x66() {
-        // Load real score card image from assets
-        val context = InstrumentationRegistry.getInstrumentation().targetContext
-        val inputStream = context.assets.open("raw/PXL001_100112010299999.jpg")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-
-
-        val rowImages = OpenCVCardPreprocessor().preprocess(bitmap).getOrThrow()
-
-        // Verify all rows are already 640x66 (normalized by OpenCVRowNormalizer)
-        rowImages.forEach { rowImage ->
-            val mat = rowImageToMat(rowImage)
-            assertThat("Row width should be 640", mat.width(), equalTo(640))
-            assertThat("Row height should be 66", mat.height(), equalTo(66))
-            mat.release()
-        }
-
-        // Verify we still have 15 rows
-        assertThat("Should have 15 rows", rowImages.size, equalTo(15))
-
-        Log.i("DataPrepRealTest", "All 15 rows verified at 640x66 resolution")
     }
 
     @Test

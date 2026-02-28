@@ -56,7 +56,6 @@ dependencies {
 
     // TensorFlow Lite (LiteRT) - Version 2.17.0 for FULLY_CONNECTED v12 support
     implementation "org.tensorflow:tensorflow-lite:2.17.0"
-    implementation "org.tensorflow:tensorflow-lite-gpu:2.17.0"
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
         exclude group: "org.tensorflow", module: "tensorflow-lite-api"
     }
