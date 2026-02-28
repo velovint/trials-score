@@ -35,7 +35,7 @@ class OpenCVCardScannerService(
         }
     }
 
-    fun cleanup() {
+    override fun cleanup() {
         classifier.close()
     }
 }

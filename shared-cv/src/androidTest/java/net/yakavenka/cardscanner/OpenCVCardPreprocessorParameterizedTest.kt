@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.google.testing.junit.testparameterinjector.TestParameter
 import com.google.testing.junit.testparameterinjector.TestParameterInjector
+import com.google.testing.junit.testparameterinjector.TestParameterValuesProvider
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
 import org.junit.Before
@@ -157,9 +158,8 @@ data class TestCase(
     val errorMessage: String
 )
 
-@Suppress("DEPRECATION")
-class TestCaseProvider : TestParameter.TestParameterValuesProvider {
-    override fun provideValues(): List<TestCase> {
+class TestCaseProvider : TestParameterValuesProvider() {
+    override fun provideValues(context: TestParameterValuesProvider.Context): List<TestCase> {
         return OpenCVCardPreprocessorParameterizedTest.provideTestCases().toList()
     }
 }

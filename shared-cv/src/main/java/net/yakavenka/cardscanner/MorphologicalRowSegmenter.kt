@@ -15,8 +15,32 @@ class MorphologicalRowSegmenter(
     private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
 ) : RowSegmenter {
     override fun segment(card: Mat): Result<List<RowRegion>> {
-        // Phase 2b: Cell Detection
-        // Step 1: Adaptive threshold
+        val binary = binarize(card)
+        val closed = enhanceGridLines(binary)
+        val contours = findCells(closed)
+        val filterResult = filterCells(contours, card)
+        if (filterResult.isFailure) {
+            closed.release()
+            @Suppress("UNCHECKED_CAST")
+            return filterResult as Result<List<RowRegion>>
+        }
+        val normalCells = filterResult.getOrThrow()
+        val medianCellHeight = normalCells.map { it.height }.sorted().let { it[it.size / 2] }
+        val cells = correctOrientation(card, normalCells)
+        val allRowRegions = clusterIntoRows(cells, medianCellHeight, card.rows())
+        val scoringRows = if (stripHeader && allRowRegions.isNotEmpty()) allRowRegions.drop(1) else allRowRegions
+        emitDebugImages(card, normalCells, scoringRows, closed)
+        closed.release()
+
+        if (scoringRows.size < 10) {
+            Log.e("MorphologicalRowSegmenter", "InsufficientRows after header strip: ${scoringRows.size} < 10")
+            return Result.failure(ScanError.InsufficientRows(scoringRows.size))
+        }
+
+        return Result.success(scoringRows)
+    }
+
+    private fun binarize(card: Mat): Mat {
         val binary = Mat()
         Imgproc.adaptiveThreshold(
             card, binary,
@@ -26,12 +50,13 @@ class MorphologicalRowSegmenter(
             11,  // blockSize
             2.0  // C
         )
+        return binary
+    }
 
-        // Step 2: Enhance grid lines with morphological OPEN
+    private fun enhanceGridLines(binary: Mat): Mat {
         val vertical = Mat()
         val horizontal = Mat()
         val combined = Mat()
-        val hierarchy = Mat()
 
         val vKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(1.0, 20.0))
         val hKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(20.0, 1.0))
@@ -44,23 +69,41 @@ class MorphologicalRowSegmenter(
         Imgproc.morphologyEx(horizontal, horizontal, Imgproc.MORPH_CLOSE, hGapKernel)
         Core.bitwise_or(vertical, horizontal, combined)
 
-        // Step 3: MORPH_CLOSE with 3×3 kernel to bridge broken segments
         val closed = Mat()
         val closeKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(3.0, 3.0))
         Imgproc.morphologyEx(combined, closed, Imgproc.MORPH_CLOSE, closeKernel)
 
-        // Step 4: Detect cells
+        binary.release()
+        vertical.release()
+        horizontal.release()
+        combined.release()
+        vKernel.release()
+        hKernel.release()
+        vGapKernel.release()
+        hGapKernel.release()
+        closeKernel.release()
+
+        return closed
+    }
+
+    private fun findCells(closed: Mat): List<MatOfPoint> {
         val inverted = Mat()
         Core.bitwise_not(closed, inverted)
 
         val contours = mutableListOf<MatOfPoint>()
+        val hierarchy = Mat()
         Imgproc.findContours(inverted, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
 
-        // Step 5: Filter contours by area (median ± ratio) and aspect ratio
+        inverted.release()
+        hierarchy.release()
+
+        return contours
+    }
+
+    private fun filterCells(contours: List<MatOfPoint>, card: Mat): Result<List<Rect>> {
         val areas = contours.map { Imgproc.contourArea(it) }.sorted()
         if (areas.isEmpty()) {
-            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
+            contours.forEach { it.release() }
             return Result.failure(ScanError.InsufficientCells(0))
         }
 
@@ -75,8 +118,7 @@ class MorphologicalRowSegmenter(
                 aspectRatio >= 0.6 && aspectRatio <= 1.8
             }
         if (validCells.isEmpty()) {
-            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
+            contours.forEach { it.release() }
             return Result.failure(ScanError.InsufficientCells(0))
         }
         Log.i("MorphologicalRowSegmenter", "After filtering: ${validCells.size} valid cells, Y range: ${validCells.minOf { it.y }}-${validCells.maxOf { it.y + it.height }}, card dimensions: ${card.width()}x${card.rows()}")
@@ -88,16 +130,19 @@ class MorphologicalRowSegmenter(
         val normalCells = validCells.filter { it.height >= medianCellHeight * 0.6 }
         Log.i("MorphologicalRowSegmenter", "After height filter: ${normalCells.size} cells (removed ${validCells.size - normalCells.size})")
 
-        // Step 6: Validate minimum cell count
+        // Validate minimum cell count
         Log.i("MorphologicalRowSegmenter", "Detected ${normalCells.size} valid cells (need >= 45)")
         if (normalCells.size < 45) {
-            cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                                vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
+            contours.forEach { it.release() }
             Log.e("MorphologicalRowSegmenter", "InsufficientCells: ${normalCells.size} < 45")
             return Result.failure(ScanError.InsufficientCells(normalCells.size))
         }
 
-        // Phase 2c: Upside-Down Detection
+        contours.forEach { it.release() }
+        return Result.success(normalCells)
+    }
+
+    private fun correctOrientation(card: Mat, normalCells: List<Rect>): List<Rect> {
         val cardHeight = card.rows()
         val gridMinY = normalCells.minOf { it.y }
         val gridMaxY = normalCells.maxOf { it.y + it.height }
@@ -109,7 +154,7 @@ class MorphologicalRowSegmenter(
         //  Fixing this requires a `RowSegmenter` interface change (e.g. return a data class
         //  that carries both the RowRegions and the (possibly rotated) card Mat).
         //  See: https://github.com/velovint/trials-score/issues/48
-        val cells: List<Rect> = if (relativePosition < 0.45) {
+        return if (relativePosition < 0.45) {
             // Card is upside down — invert Y coordinates
             val invertedCells = normalCells.map { rect ->
                 Rect(rect.x, cardHeight - (rect.y + rect.height), rect.width, rect.height)
@@ -120,8 +165,9 @@ class MorphologicalRowSegmenter(
         } else {
             normalCells
         }
+    }
 
-        // Phase 3: Y-Clustering into rows
+    private fun clusterIntoRows(cells: List<Rect>, medianCellHeight: Int, cardRows: Int): List<RowRegion> {
         // Sort cells by Y coordinate (top to bottom)
         val sortedCells = cells.sortedWith(compareBy<Rect> { it.y }.thenBy { it.x })
 
@@ -152,15 +198,14 @@ class MorphologicalRowSegmenter(
 
         // Compute RowRegion for each cluster with small padding
         val padding = 2
-        val allRowRegions = validClusters.map { cluster ->
+        return validClusters.map { cluster ->
             val top = (cluster.minOf { it.y } - padding).coerceAtLeast(0)
-            val bottom = (cluster.maxOf { it.y + it.height } + padding).coerceAtMost(card.rows())
+            val bottom = (cluster.maxOf { it.y + it.height } + padding).coerceAtMost(cardRows)
             RowRegion(top, bottom)
         }
+    }
 
-        val scoringRows = if (stripHeader && allRowRegions.isNotEmpty()) allRowRegions.drop(1) else allRowRegions
-
-        // Debug observer calls (before cleanup while Mats are still valid)
+    private fun emitDebugImages(card: Mat, normalCells: List<Rect>, scoringRows: List<RowRegion>, closed: Mat) {
         debugObserver.onImage("02_enhanced_lines.png", closed)
         val cellDebug = card.clone()
         for (rect in normalCells) {
@@ -180,41 +225,5 @@ class MorphologicalRowSegmenter(
         }
         debugObserver.onImage("04_row_bounds.png", rowDebug)
         rowDebug.release()
-
-        // Cleanup
-        cleanupMatResources(binary, vertical, horizontal, combined, closed, inverted,
-                            vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy, contours)
-
-        if (scoringRows.size < 10) {
-            Log.e("MorphologicalRowSegmenter", "InsufficientRows after header strip: ${scoringRows.size} < 10")
-            return Result.failure(ScanError.InsufficientRows(scoringRows.size))
-        }
-
-        return Result.success(scoringRows)
-    }
-
-    /**
-     * Release all OpenCV Mat resources.
-     * Centralizes cleanup logic to prevent resource leaks and ensure all Mats are released.
-     */
-    private fun cleanupMatResources(
-        binary: Mat,
-        vertical: Mat,
-        horizontal: Mat,
-        combined: Mat,
-        closed: Mat,
-        inverted: Mat,
-        vKernel: Mat,
-        hKernel: Mat,
-        vGapKernel: Mat,
-        hGapKernel: Mat,
-        closeKernel: Mat,
-        hierarchy: Mat,
-        contours: List<MatOfPoint>
-    ) {
-        listOf(binary, vertical, horizontal, combined, closed, inverted,
-               vKernel, hKernel, vGapKernel, hGapKernel, closeKernel, hierarchy)
-            .forEach { it.release() }
-        contours.forEach { it.release() }
     }
 }
