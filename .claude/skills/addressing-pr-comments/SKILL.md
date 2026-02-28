@@ -37,6 +37,7 @@ gh api graphql -f query='
           isResolved
           comments(first: 1) {
             nodes {
+              databaseId
               path
               originalLine
               body
@@ -52,10 +53,18 @@ gh api graphql -f query='
 
 Filter to only unresolved threads (`isResolved: false`). Display the list to the user before proceeding.
 
-### Step 2: For each unresolved comment — Plan
+### Step 2: For each unresolved comment — Assess legitimacy, then plan
 
 Launch a **general-purpose subagent with the sonnet model** to:
+
+**First — Is the reported issue legitimate?**
 - Read the relevant file(s) at and around the flagged line
+- Determine whether the concern is valid given the actual code: Is it a real problem? Is it based on a correct reading of the code? Is it within scope of this PR?
+- Make a legitimacy call: **legitimate** or **invalid**
+
+Common reasons a comment may be invalid: the issue was already fixed elsewhere, the reviewer misread the code, the concern is based on incorrect assumptions, or the comment is purely stylistic with no objective basis.
+
+**If legitimate — continue planning:**
 - Understand what the reviewer is asking for
 - Research what changes would be required
 - Assess complexity: **Low / Medium / High**
@@ -65,9 +74,17 @@ Launch a **general-purpose subagent with the sonnet model** to:
 - Fix in this PR: self-contained change, Low-Medium complexity, no external blockers, no scope creep risk
 - Separate issue: requires architectural decisions, missing infrastructure/data, High complexity, or orthogonal to PR scope
 
-Present the analysis and recommendation to the user before acting.
+Present the full analysis (legitimacy + recommendation) to the user before acting.
 
 ### Step 3: Act on the recommendation
+
+**If comment is invalid (not legitimate):**
+- Leave a reply in the PR thread explaining why the concern does not apply, using:
+  ```bash
+  gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies \
+    -f body="<explanation>"
+  ```
+- Do NOT resolve the thread — leave that to the reviewer
 
 **If recommendation is "fix in this PR":**
 - Launch a **general-purpose subagent with the haiku model** to implement the fix
@@ -77,6 +94,11 @@ Present the analysis and recommendation to the user before acting.
 **If recommendation is "create a separate issue":**
 - Launch a **general-purpose subagent with the haiku model** to create a GitHub issue using `gh issue create`
 - The issue body should include: problem description, proposed solution, specific tasks as a checklist, and a reference to the PR comment (file#line)
+- After the issue is created, leave a reply in the PR thread with the issue URL:
+  ```bash
+  gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies \
+    -f body="Tracked as ISSUE_URL"
+  ```
 - Print the resulting issue URL
 
 ### Step 4: Mark comment as resolved (only for fixes applied in this PR)
@@ -92,7 +114,7 @@ mutation {
 }'
 ```
 
-Do NOT resolve threads where a GitHub issue was created instead — those remain open until the issue is addressed.
+Do NOT resolve threads where a GitHub issue was created or where the comment was deemed invalid — those remain open for the reviewer to follow up.
 
 ### Step 5: Continue to next comment
 
@@ -107,3 +129,4 @@ After each comment is handled, ask the user whether to continue to the next comm
 - The planning subagent does research only (no code changes)
 - The fixing subagent makes code changes only (no GitHub API calls)
 - The issue-creation subagent makes GitHub API calls only (no code changes)
+- Leave a thread reply for both invalid comments and separate-issue cases so the reviewer knows the outcome

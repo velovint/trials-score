@@ -109,9 +109,3 @@ android.libraryVariants.all { variant ->
     }
 }
 
-// Ensure all lint tasks wait for model generation
-tasks.configureEach { task ->
-    if (task.name.toLowerCase().contains('lint')) {
-        task.dependsOn 'copyModelToAssets'
-    }
-}
