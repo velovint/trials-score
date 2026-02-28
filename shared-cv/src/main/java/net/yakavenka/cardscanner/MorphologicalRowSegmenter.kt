@@ -104,6 +104,11 @@ class MorphologicalRowSegmenter(
         val gridCenterY = (gridMinY + gridMaxY) / 2.0
         val relativePosition = gridCenterY / cardHeight
 
+        // TODO: Bug — mutates caller-owned `card` Mat in-place. The rotated Mat must be
+        //  returned to the caller so it can be used for subsequent row image extraction.
+        //  Fixing this requires a `RowSegmenter` interface change (e.g. return a data class
+        //  that carries both the RowRegions and the (possibly rotated) card Mat).
+        //  See: https://github.com/velovint/trials-score/issues/48
         val cells: List<Rect> = if (relativePosition < 0.45) {
             // Card is upside down — invert Y coordinates
             val invertedCells = normalCells.map { rect ->

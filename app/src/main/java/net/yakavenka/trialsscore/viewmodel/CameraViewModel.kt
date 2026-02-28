@@ -20,7 +20,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import net.yakavenka.cardscanner.CardScannerService
-import net.yakavenka.cardscanner.OpenCVCardScannerService
 import net.yakavenka.cardscanner.ScanResult
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
@@ -193,10 +192,10 @@ class CameraViewModel @Inject constructor(
 
     /**
      * Cleanup resources when ViewModel is destroyed.
-     * Closes GPU delegate and TFLite interpreter held by CardScannerService.
+     * Closes TFLite interpreter and any native resources held by CardScannerService.
      */
     override fun onCleared() {
         super.onCleared()
-        (cardScanner as? OpenCVCardScannerService)?.cleanup()
+        cardScanner.cleanup()
     }
 }
