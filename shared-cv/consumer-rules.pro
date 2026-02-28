@@ -1,9 +1,4 @@
-# Consumer ProGuard rules for card-scanner library
+# Consumer ProGuard rules for shared-cv library
 
-# Keep public API
--keep public interface net.yakavenka.cardscanner.CardScannerService { *; }
--keep public class net.yakavenka.cardscanner.ScanResult { *; }
--keep public class net.yakavenka.cardscanner.ScanResult$* { *; }
--keep public class net.yakavenka.cardscanner.OpenCVCardScannerService {
-    public <init>(android.content.Context);
-}
+# No classes need to be explicitly kept for consumers.
+# OpenCV classes are kept by the module's proguard-rules.pro.

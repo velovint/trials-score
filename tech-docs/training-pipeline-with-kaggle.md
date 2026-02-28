@@ -147,7 +147,7 @@ Pipeline tasks declare inputs/outputs, and Gradle automatically chains them:
 - `downloadModel` waits for training completion, outputs model file
 - `connectedCheck` consumes model file (via asset merging)
 
-```kotlin
+```groovy
 task("buildProductionModel") {
     description = "Full ML pipeline: prep → train → validate"
     group = "ml-pipeline"

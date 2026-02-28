@@ -5,14 +5,14 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Keep TensorFlow Lite classes
--keep class org.tensorflow.lite.** { *; }
--keep class com.google.ai.edge.litert.** { *; }
-
-# Keep OpenCV classes
--keep class org.opencv.** { *; }
-
-# Keep card scanner service interface
--keep interface net.yakavenka.cardscanner.CardScannerService { *; }
--keep class net.yakavenka.cardscanner.ScanResult { *; }
--keep class net.yakavenka.cardscanner.ScanResult$* { *; }
+# Keep OpenCV classes that are actually used
+-keep class org.opencv.core.Mat { *; }
+-keep class org.opencv.core.Core { *; }
+-keep class org.opencv.core.MatOfPoint { *; }
+-keep class org.opencv.core.Point { *; }
+-keep class org.opencv.core.Rect { *; }
+-keep class org.opencv.core.Scalar { *; }
+-keep class org.opencv.core.Size { *; }
+-keep class org.opencv.core.CvType { *; }
+-keep class org.opencv.imgproc.Imgproc { *; }
+-keep class org.opencv.android.Utils { *; }
