@@ -107,7 +107,7 @@ class RegressionTest {
 
         // Handle system file picker using UIAutomator
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        val filename = "test_export_${System.currentTimeMillis()}"
+        val filename = "test_export_${System.currentTimeMillis()}.csv"
 
         // Wait for document picker to appear
         device.wait(Until.hasObject(By.pkg("com.android.documentsui")), 5000)
@@ -140,7 +140,7 @@ class RegressionTest {
         val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
             android.os.Environment.DIRECTORY_DOWNLOADS
         )
-        val file = File(downloadsDir, "$filename.csv")
+        val file = File(downloadsDir, filename)
         assert(file.exists()) { "Exported CSV file should exist at ${file.absolutePath}" }
         assert(file.length() > 0) { "Exported CSV file should not be empty" }
 
