@@ -74,96 +74,103 @@ class OpenCVCardIsolator(
         }
     }
 
+    private data class ContourMatch(val rect: Rect, val contourArea: Double)
+
     private fun detectAndCropCard(image: Mat): Result<Mat> {
+        val imageArea = image.width().toDouble() * image.height()
+
+        val edgeMap = buildEdgeMap(image)
+        val match = findLargestContourRect(edgeMap, imageArea)
+        edgeMap.release()
+
+        if (match == null) {
+            Log.i("OpenCVCardIsolator", "No card boundary detected (no contour > ${(MIN_CARD_AREA_RATIO * 100).toInt()}% of image)")
+            return Result.failure(ScanError.CardNotFound)
+        }
+
+        val validation = validateRect(match.rect, match.contourArea, imageArea)
+        if (validation.isFailure) {
+            return Result.failure(validation.exceptionOrNull()!!)
+        }
+
+        return Result.success(cropWithPadding(image, match.rect))
+    }
+
+    private fun buildEdgeMap(image: Mat): Mat {
         val blurred = Mat()
         val edges = Mat()
+
+        Imgproc.GaussianBlur(image, blurred, Size(GAUSSIAN_BLUR_SIZE.toDouble(), GAUSSIAN_BLUR_SIZE.toDouble()), 0.0)
+        Imgproc.Canny(blurred, edges, CANNY_THRESHOLD1, CANNY_THRESHOLD2)
+        blurred.release()
+
+        val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(15.0, 15.0))
         val closed = Mat()
-        val hierarchy = Mat()
+        Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE, kernel)
+        kernel.release()
+        edges.release()
+
+        return closed
+    }
+
+    private fun findLargestContourRect(edgeMap: Mat, imageArea: Double): ContourMatch? {
         val contours = ArrayList<MatOfPoint>()
+        val hierarchy = Mat()
+        Imgproc.findContours(edgeMap, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
+        hierarchy.release()
 
-        return try {
-            // Apply Gaussian blur to reduce noise
-            Imgproc.GaussianBlur(image, blurred, Size(GAUSSIAN_BLUR_SIZE.toDouble(), GAUSSIAN_BLUR_SIZE.toDouble()), 0.0)
+        val minArea = imageArea * MIN_CARD_AREA_RATIO
+        Log.i("OpenCVCardIsolator", "Card detection: imageArea=$imageArea, minArea=$minArea, contours=${contours.size}")
 
-            // Detect edges
-            Imgproc.Canny(blurred, edges, CANNY_THRESHOLD1, CANNY_THRESHOLD2)
+        var largestContour: MatOfPoint? = null
+        var largestArea = minArea
 
-            // Apply morphological closing to connect nearby edges and fill gaps
-            val kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(15.0, 15.0))
-            Imgproc.morphologyEx(edges, closed, Imgproc.MORPH_CLOSE, kernel)
-            kernel.release()
-
-            // Find contours on the closed edge image
-            Imgproc.findContours(closed, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE)
-
-            // Find largest contour that could be the card
-            val imageArea = image.width() * image.height()
-            val minArea = imageArea * MIN_CARD_AREA_RATIO
-
-            Log.i("OpenCVCardIsolator", "Card detection: imageArea=$imageArea, minArea=$minArea, contours=${contours.size}")
-
-            var largestContour: MatOfPoint? = null
-            var largestArea = minArea
-
-            for ((index, contour) in contours.withIndex()) {
-                val area = Imgproc.contourArea(contour)
-                Log.i("OpenCVCardIsolator", "  Contour $index: area=$area (${(area / imageArea * 100).toInt()}% of image)")
-                if (area > largestArea) {
-                    largestArea = area
-                    largestContour = contour
-                }
+        for ((index, contour) in contours.withIndex()) {
+            val area = Imgproc.contourArea(contour)
+            Log.i("OpenCVCardIsolator", "  Contour $index: area=$area (${(area / imageArea * 100).toInt()}% of image)")
+            if (area > largestArea) {
+                largestArea = area
+                largestContour = contour
             }
-
-            // If no suitable contour found, return failure
-            if (largestContour == null) {
-                Log.i("OpenCVCardIsolator", "No card boundary detected (no contour > ${(MIN_CARD_AREA_RATIO * 100).toInt()}% of image)")
-                return Result.failure(ScanError.CardNotFound)
-            }
-
-            val boundingRect = Imgproc.boundingRect(largestContour)
-
-            // Validation: Check if detected region makes sense
-            val aspectRatio = boundingRect.height.toDouble() / boundingRect.width.toDouble()
-            val areaRatio = largestArea / imageArea
-            val isReasonableSize = areaRatio < 0.9  // Not almost entire image
-            val isPortraitish = aspectRatio > MIN_PORTRAIT_ASPECT_RATIO  // Score cards are tall
-
-            Log.i("OpenCVCardIsolator", "  Validation: rect=(${boundingRect.x}, ${boundingRect.y}, ${boundingRect.width}×${boundingRect.height})")
-            Log.i("OpenCVCardIsolator", "  aspectRatio=${"%.2f".format(aspectRatio)}, areaRatio=${"%.2f".format(areaRatio)}")
-            Log.i("OpenCVCardIsolator", "  isReasonableSize=$isReasonableSize, isPortraitish=$isPortraitish")
-
-            // Check aspect ratio first
-            if (!isPortraitish) {
-                Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid aspect ratio ${"%.2f".format(aspectRatio)}")
-                return Result.failure(ScanError.InvalidAspectRatio(aspectRatio.toFloat()))
-            }
-
-            val isValidDetection = isReasonableSize && isPortraitish
-
-            if (!isValidDetection) {
-                Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid dimensions")
-                return Result.failure(ScanError.CardNotFound)
-            }
-
-            // Add small padding (2% on each side) to avoid cutting off edges
-            val padding = max((boundingRect.width * 0.02).toInt(), (boundingRect.height * 0.02).toInt())
-            val paddedRect = Rect(
-                max(0, boundingRect.x - padding),
-                max(0, boundingRect.y - padding),
-                (boundingRect.width + 2 * padding).coerceAtMost(image.width() - max(0, boundingRect.x - padding)),
-                (boundingRect.height + 2 * padding).coerceAtMost(image.height() - max(0, boundingRect.y - padding))
-            )
-
-            Log.i("OpenCVCardIsolator", "Card detected: ${paddedRect.width}×${paddedRect.height} at (${paddedRect.x}, ${paddedRect.y})")
-            Result.success(Mat(image, paddedRect).clone())
-
-        } finally {
-            // Clean up intermediate Mats
-            blurred.release()
-            edges.release()
-            closed.release()
-            hierarchy.release()
-            contours.forEach { it.release() }
         }
+
+        val result = largestContour?.let { ContourMatch(Imgproc.boundingRect(it), largestArea) }
+        contours.forEach { it.release() }
+        return result
+    }
+
+    private fun validateRect(rect: Rect, contourArea: Double, imageArea: Double): Result<Unit> {
+        val aspectRatio = rect.height.toDouble() / rect.width.toDouble()
+        val areaRatio = contourArea / imageArea
+        val isReasonableSize = areaRatio < 0.9
+        val isPortraitish = aspectRatio > MIN_PORTRAIT_ASPECT_RATIO
+
+        Log.i("OpenCVCardIsolator", "  Validation: rect=(${rect.x}, ${rect.y}, ${rect.width}×${rect.height})")
+        Log.i("OpenCVCardIsolator", "  aspectRatio=${"%.2f".format(aspectRatio)}, areaRatio=${"%.2f".format(areaRatio)}")
+        Log.i("OpenCVCardIsolator", "  isReasonableSize=$isReasonableSize, isPortraitish=$isPortraitish")
+
+        if (!isPortraitish) {
+            Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid aspect ratio ${"%.2f".format(aspectRatio)}")
+            return Result.failure(ScanError.InvalidAspectRatio(aspectRatio.toFloat()))
+        }
+
+        if (!isReasonableSize) {
+            Log.i("OpenCVCardIsolator", "Card detection rejected: Invalid dimensions")
+            return Result.failure(ScanError.CardNotFound)
+        }
+
+        return Result.success(Unit)
+    }
+
+    private fun cropWithPadding(image: Mat, rect: Rect): Mat {
+        val padding = max((rect.width * 0.02).toInt(), (rect.height * 0.02).toInt())
+        val paddedRect = Rect(
+            max(0, rect.x - padding),
+            max(0, rect.y - padding),
+            (rect.width + 2 * padding).coerceAtMost(image.width() - max(0, rect.x - padding)),
+            (rect.height + 2 * padding).coerceAtMost(image.height() - max(0, rect.y - padding))
+        )
+        Log.i("OpenCVCardIsolator", "Card detected: ${paddedRect.width}×${paddedRect.height} at (${paddedRect.x}, ${paddedRect.y})")
+        return Mat(image, paddedRect).clone()
     }
 }

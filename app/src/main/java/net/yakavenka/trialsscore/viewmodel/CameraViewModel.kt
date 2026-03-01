@@ -18,11 +18,13 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.yakavenka.cardscanner.CardScannerService
 import net.yakavenka.cardscanner.ScanResult
 import net.yakavenka.trialsscore.data.SectionScore
 import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import javax.inject.Inject
 import androidx.core.content.ContextCompat
 import androidx.camera.lifecycle.awaitInstance
@@ -42,6 +44,7 @@ sealed class CameraUiState {
 class CameraViewModel @Inject constructor(
     private val cardScanner: CardScannerService,
     private val sectionScoreRepository: SectionScoreRepository,
+    private val userPreferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -168,8 +171,9 @@ class CameraViewModel @Inject constructor(
     private suspend fun applyScanResult(scanResult: ScanResult) {
         when (scanResult) {
             is ScanResult.Success -> {
+                val numSections = userPreferencesRepository.userPreferencesFlow.first().numSections
                 scanResult.scores.forEach { (sectionNumber, points) ->
-                    if (sectionNumber > 0) {
+                    if (sectionNumber in 1..numSections) {
                         val sectionScore = SectionScore(riderId, loopNumber, sectionNumber, points)
                         sectionScoreRepository.updateSectionScore(sectionScore)
                     }

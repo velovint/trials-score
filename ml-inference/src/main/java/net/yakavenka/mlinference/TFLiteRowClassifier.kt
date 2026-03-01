@@ -5,6 +5,7 @@ import android.util.Log
 import net.yakavenka.cardscanner.RowClassifier
 import net.yakavenka.cardscanner.RowImage
 import org.tensorflow.lite.Interpreter
+import java.io.Closeable
 import java.io.FileInputStream
 import java.nio.channels.FileChannel
 
@@ -14,7 +15,7 @@ import java.nio.channels.FileChannel
  *
  * Score map: [0→0, 1→1, 2→2, 3→3, 4→5] (Trials scoring uses 0,1,2,3,5; no score of 4)
  */
-class TFLiteRowClassifier(context: Context) : RowClassifier {
+class TFLiteRowClassifier(context: Context) : RowClassifier, Closeable {
     private val interpreter: Interpreter
 
     init {
@@ -55,7 +56,7 @@ class TFLiteRowClassifier(context: Context) : RowClassifier {
         }
     }
 
-    fun close() {
+    override fun close() {
         interpreter.close()
     }
 }

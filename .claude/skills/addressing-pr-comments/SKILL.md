@@ -5,7 +5,7 @@ description: Work through unresolved GitHub PR review comments one by one. Fetch
 
 # Addressing PR Review Comments
 
-This skill processes unresolved GitHub PR review comments systematically. For each comment it plans a solution, evaluates complexity, and either fixes the code or tracks it as a GitHub issue.
+This skill processes unresolved GitHub PR review comments systematically. The main agent orchestrates a multi-subagent workflow: sonnet for planning, haiku for implementation, and haiku for generating responses. Each comment gets assessed, implemented (if needed), and replied to in sequence.
 
 ## Usage
 
@@ -51,82 +51,48 @@ gh api graphql -f query='
 }'
 ```
 
-Filter to only unresolved threads (`isResolved: false`). Display the list to the user before proceeding.
+Filter to only unresolved threads. Display the list to the user before proceeding.
 
-### Step 2: For each unresolved comment — Assess legitimacy, then plan
+### Step 2: For each unresolved comment — Main agent coordinates subagent handoff
+
+**Main agent orchestrates the following handoff:**
+
+#### 2a. Plan (Sonnet subagent)
 
 Launch a **general-purpose subagent with the sonnet model** to:
+- Read relevant code and assess legitimacy: Is the concern valid or should it be dismissed?
+- If legitimate, recommend action: "fix in this PR" (self-contained, Low-Medium complexity) or "create a separate issue" (architectural decisions, High complexity, orthogonal scope)
+- Return: legitimacy assessment + recommendation + analysis
 
-**First — Is the reported issue legitimate?**
-- Read the relevant file(s) at and around the flagged line
-- Determine whether the concern is valid given the actual code: Is it a real problem? Is it based on a correct reading of the code? Is it within scope of this PR?
-- Make a legitimacy call: **legitimate** or **invalid**
+Present the analysis to the user before proceeding to implementation.
 
-Common reasons a comment may be invalid: the issue was already fixed elsewhere, the reviewer misread the code, the concern is based on incorrect assumptions, or the comment is purely stylistic with no objective basis.
+#### 2b. Implement (Haiku subagent)
 
-**If legitimate — continue planning:**
-- Understand what the reviewer is asking for
-- Research what changes would be required
-- Assess complexity: **Low / Medium / High**
-- Make a recommendation: **fix in this PR** or **create a separate issue**
+**Skip this step if comment is invalid.**
 
-**Recommendation guidance** (assume all other comments in the PR will be addressed separately):
-- Fix in this PR: self-contained change, Low-Medium complexity, no external blockers, no scope creep risk
-- Separate issue: requires architectural decisions, missing infrastructure/data, High complexity, or orthogonal to PR scope
+Launch a **general-purpose subagent with the haiku model** to:
+- **If recommendation is "fix in this PR"**: Implement minimal changes to address the comment. Do not post responses or resolve threads.
+- **If recommendation is "create a separate issue"**: Create a GitHub issue with problem description, proposed solution, checklist, and PR reference. Return the issue URL.
 
-Present the full analysis (legitimacy + recommendation) to the user before acting.
+#### 2c. Reply (Haiku subagent)
 
-### Step 3: Act on the recommendation
+Launch a **general-purpose subagent with the haiku model** to:
+- **If invalid comment**: Generate a response explaining why the concern doesn't apply
+- **If fix was implemented**: Generate a response confirming the fix (brief summary)
+- **If issue was created**: Generate a response with the issue URL
+- Post the response using: `gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies -f body="<response>"`
+- **If fix was implemented**: Also resolve the thread using the GraphQL mutation
 
-**If comment is invalid (not legitimate):**
-- Leave a reply in the PR thread explaining why the concern does not apply, using:
-  ```bash
-  gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies \
-    -f body="<explanation>"
-  ```
-- Do NOT resolve the thread — leave that to the reviewer
-
-**If recommendation is "fix in this PR":**
-- Launch a **general-purpose subagent with the haiku model** to implement the fix
-- The subagent should make only the minimal changes needed to address the comment
-- Do not commit — user handles commits
-
-**If recommendation is "create a separate issue":**
-- Launch a **general-purpose subagent with the haiku model** to create a GitHub issue using `gh issue create`
-- The issue body should include: problem description, proposed solution, specific tasks as a checklist, and a reference to the PR comment (file#line)
-- After the issue is created, leave a reply in the PR thread with the issue URL:
-  ```bash
-  gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies \
-    -f body="Tracked as ISSUE_URL"
-  ```
-- Print the resulting issue URL
-
-### Step 4: Mark comment as resolved (only for fixes applied in this PR)
-
-After a fix is applied, resolve the corresponding GitHub review thread using:
-
-```bash
-gh api graphql -f query='
-mutation {
-  resolveReviewThread(input: {threadId: "THREAD_NODE_ID"}) {
-    thread { isResolved }
-  }
-}'
-```
-
-Do NOT resolve threads where a GitHub issue was created or where the comment was deemed invalid — those remain open for the reviewer to follow up.
-
-### Step 5: Continue to next comment
+### Step 3: Continue to next comment
 
 After each comment is handled, ask the user whether to continue to the next comment or stop.
 
 ## Notes
 
-- Process comments in order (top of list first)
-- Skip comments that are already resolved (`isResolved: true`)
-- Do not commit any changes — the user handles commits separately
-- Keep subagent prompts focused: each subagent addresses exactly one comment
-- The planning subagent does research only (no code changes)
-- The fixing subagent makes code changes only (no GitHub API calls)
-- The issue-creation subagent makes GitHub API calls only (no code changes)
-- Leave a thread reply for both invalid comments and separate-issue cases so the reviewer knows the outcome
+- **Main agent role**: Fetch comments, coordinate subagent handoff, present analysis to user before proceeding
+- **Sonnet subagent (Step 2a)**: Plans only — assesses legitimacy, analyzes code, recommends action
+- **Haiku subagent (Step 2b)**: Implements only — fixes code or creates issue, makes no API calls for posting
+- **Haiku subagent (Step 2c)**: Replies only — generates response and posts it (and resolves thread if applicable)
+- **Step 2b is skipped for invalid comments** — proceed directly to Step 2c
+- Do not commit changes — user handles commits separately
+- Invalid and separate-issue threads remain unresolved for reviewer follow-up
