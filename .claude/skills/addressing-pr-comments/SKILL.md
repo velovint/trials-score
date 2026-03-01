@@ -5,7 +5,11 @@ description: Work through unresolved GitHub PR review comments one by one. Fetch
 
 # Addressing PR Review Comments
 
-This skill processes unresolved GitHub PR review comments systematically. The main agent orchestrates a multi-subagent workflow: sonnet for planning, haiku for implementation, and haiku for generating responses. Each comment gets assessed, implemented (if needed), and replied to in sequence.
+This skill processes unresolved GitHub PR review comments systematically. 
+The main agent orchestrates a multi-subagent workflow consisting of: 
+- comment assessment
+- addressing comment
+- responding to comment
 
 ## Usage
 
@@ -60,39 +64,37 @@ Filter to only unresolved threads. Display the list to the user before proceedin
 #### 2a. Plan (Sonnet subagent)
 
 Launch a **general-purpose subagent with the sonnet model** to:
-- Read relevant code and assess legitimacy: Is the concern valid or should it be dismissed?
-- If legitimate, recommend action: "fix in this PR" (self-contained, Low-Medium complexity) or "create a separate issue" (architectural decisions, High complexity, orthogonal scope)
-- Return: legitimacy assessment + recommendation + analysis
+- Assess validity of the comment: Is the concern valid or should it be dismissed?
+- If the comment is invalid report back to main agent
+- If the comment is valid then plan the fix and report back to main agen
+
+#### 2b. Analyze complexity
+
+Analyze complexity of the change and make recommendation to either
+- "fix in this PR" for simple, self-contain, low-medium complexity changes 
+- "create a separate issue" for architectural or high complexity changes 
 
 Present the analysis to the user before proceeding to implementation.
 
-#### 2b. Implement (Haiku subagent)
+#### 2c. Implement (Haiku subagent)
 
-**Skip this step if comment is invalid.**
+If comment is invalid - skip this step
 
-Launch a **general-purpose subagent with the haiku model** to:
-- **If recommendation is "fix in this PR"**: Implement minimal changes to address the comment. Do not post responses or resolve threads.
-- **If recommendation is "create a separate issue"**: Create a GitHub issue with problem description, proposed solution, checklist, and PR reference. Return the issue URL.
+If recommendation is "fix in this PR":
+- Launch a general purpose subagent with haiku model and pass instructions to fix the code.
 
-#### 2c. Reply (Haiku subagent)
+If recommendation is "create a separate issue":
+- Launch a general purpose subagent with haiku model to Create a GitHub issue with problem description, proposed solution, checklist, and PR reference. Return the issue URL.
+
+#### 2d. Reply (Haiku subagent)
 
 Launch a **general-purpose subagent with the haiku model** to:
 - **If invalid comment**: Generate a response explaining why the concern doesn't apply
-- **If fix was implemented**: Generate a response confirming the fix (brief summary)
+- **If fix was implemented**: Generate a response confirming the fix (brief summary) and mark the thread as resolved
 - **If issue was created**: Generate a response with the issue URL
-- Post the response using: `gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies -f body="<response>"`
-- **If fix was implemented**: Also resolve the thread using the GraphQL mutation
+ 
+Post the response using: `gh api repos/OWNER/REPO/pulls/comments/COMMENT_DATABASE_ID/replies -f body="<response>"`
 
 ### Step 3: Continue to next comment
 
 After each comment is handled, ask the user whether to continue to the next comment or stop.
-
-## Notes
-
-- **Main agent role**: Fetch comments, coordinate subagent handoff, present analysis to user before proceeding
-- **Sonnet subagent (Step 2a)**: Plans only — assesses legitimacy, analyzes code, recommends action
-- **Haiku subagent (Step 2b)**: Implements only — fixes code or creates issue, makes no API calls for posting
-- **Haiku subagent (Step 2c)**: Replies only — generates response and posts it (and resolves thread if applicable)
-- **Step 2b is skipped for invalid comments** — proceed directly to Step 2c
-- Do not commit changes — user handles commits separately
-- Invalid and separate-issue threads remain unresolved for reviewer follow-up
