@@ -62,7 +62,7 @@ class CameraViewModelTest {
     }
 
     @Test
-    fun captureImage_initiallySetsCaptringState() = runTest {
+    fun captureImage_initiallySetsCapturingState() = runTest {
         // Setup
         val mockImageCapture = mock(ImageCapture::class.java)
         viewModel.imageCapture = mockImageCapture

@@ -11,7 +11,7 @@ import org.opencv.core.Size
 import org.opencv.imgproc.Imgproc
 
 class MorphologicalRowSegmenter(
-    val stripHeader: Boolean = true,
+    private val stripHeader: Boolean = true,
     private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
 ) : RowSegmenter {
     override fun segment(card: Mat): Result<List<RowRegion>> {

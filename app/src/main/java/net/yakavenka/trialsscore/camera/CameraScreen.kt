@@ -115,7 +115,7 @@ fun CameraScreen(
                             color = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.height(16.dp))
-                        Text("Processing image...", style = MaterialTheme.typography.bodyLarge)
+                        Text(stringResource(R.string.processing_image), style = MaterialTheme.typography.bodyLarge)
                     }
                 }
             }
@@ -212,8 +212,8 @@ private fun PermissionRequestScreen(
     modifier: Modifier = Modifier
 ) {
     CenteredMessageScreen(
-        heading = "Camera permission required",
-        message = "To capture score card images, please grant camera permission.",
+        heading = stringResource(R.string.camera_permission_required),
+        message = stringResource(R.string.camera_permission_message),
         buttonText = stringResource(R.string.grant_permission),
         onButtonClick = onRequestPermission,
         modifier = modifier

@@ -27,4 +27,7 @@
     <string name="error_title">Error</string>
     <string name="retry_action">Retry</string>
     <string name="capture_action">Capture</string>
+    <string name="processing_image">Processing image...</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="camera_permission_message">To capture score card images, please grant camera permission.</string>
 </resources>

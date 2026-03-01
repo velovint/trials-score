@@ -16,8 +16,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.camera.lifecycle.ProcessCameraProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import net.yakavenka.cardscanner.CardScannerService
@@ -54,8 +52,8 @@ class CameraViewModel @Inject constructor(
     private val _uiState = MutableLiveData<CameraUiState>(CameraUiState.Ready)
     val uiState: LiveData<CameraUiState> = _uiState
 
-    private val _surfaceRequest = MutableStateFlow<SurfaceRequest?>(null)
-    val surfaceRequest: StateFlow<SurfaceRequest?> = _surfaceRequest
+    private val _surfaceRequest = MutableLiveData<SurfaceRequest?>(null)
+    val surfaceRequest: LiveData<SurfaceRequest?> = _surfaceRequest
 
     // Camera components - initialized in bindCamera
     internal var imageCapture: ImageCapture? = null
