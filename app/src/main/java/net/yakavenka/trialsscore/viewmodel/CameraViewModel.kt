@@ -163,8 +163,7 @@ class CameraViewModel @Inject constructor(
     /**
      * Apply scan result scores directly to database.
      *
-     * Filters out invalid section numbers and applies each score.
-     * Uses the same logic as ScoreCardViewModel.applyScanResult().
+     * Filters out section numbers outside the configured range and writes each valid score.
      */
     private suspend fun applyScanResult(scanResult: ScanResult) {
         when (scanResult) {

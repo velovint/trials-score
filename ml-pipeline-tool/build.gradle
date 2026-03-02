@@ -42,12 +42,6 @@ android {
         }
     }
 
-    sourceSets {
-        androidTest {
-            // raw-pictures/ is populated by downloadRawImages; dependency is wired via afterEvaluate
-            assets.srcDirs += [layout.buildDirectory.dir('raw-pictures')]
-        }
-    }
 }
 
 dependencies {
@@ -108,7 +102,7 @@ tasks.register('downloadRawImages') {
     group = 'ml-pipeline'
     description = 'Download raw score card images from Kaggle (vitaliyakavenka/raw-card-pictures)'
 
-    def rawDir = layout.buildDirectory.dir('raw-pictures/raw')
+    def rawDir = layout.buildDirectory.dir('raw-pictures')
 
     inputs.file(tasks.named('checkRawImagesVersion').map { it.outputs.files.singleFile })
     dependsOn 'checkRawImagesVersion'
@@ -127,15 +121,19 @@ tasks.register('downloadRawImages') {
 
         // Kaggle extracts into a 'training-data/' subdirectory.
         // Copy to 'raw/' to match 'assets/raw/<filename>' path used by DataPrepRealTest.
-        def rawDirFile = rawDir.get().asFile
-        rawDirFile.mkdirs()
+        def rawSubDir = new File(downloadDir, 'raw')
+        rawSubDir.mkdirs()
         project.copy {
             from new File(downloadDir, 'training-data')
-            into rawDirFile
+            into rawSubDir
         }
-        logger.lifecycle("Downloaded ${rawDirFile.list()?.length ?: 0} raw images to ${rawDirFile}")
+        logger.lifecycle("Downloaded ${rawSubDir.list()?.length ?: 0} raw images to ${rawSubDir}")
     }
 }
+
+// Wire androidTest assets to downloadRawImages output so all consumers
+// (mergeDebugAndroidTestAssets, lintAnalyzeDebugAndroidTest, etc.) inherit the dependency.
+android.sourceSets.androidTest.assets.srcDirs += [tasks.named('downloadRawImages')]
 
 tasks.register('uploadTrainingData') {
     group = 'ml-pipeline'
@@ -338,8 +336,3 @@ artifacts {
     }
 }
 
-afterEvaluate {
-    tasks.named('mergeDebugAndroidTestAssets').configure {
-        dependsOn tasks.named('downloadRawImages')
-    }
-}

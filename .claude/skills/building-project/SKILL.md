@@ -7,6 +7,17 @@ description: Build, test, and validate the TrialsScore Android project. Use this
 
 This skill provides all build, test, and validation commands for the TrialsScore Android project.
 
+## Verifying the project builds
+
+When asked to "verify that the project builds" or "verify the build",
+this means compile the application using the existing production model and confirm all tests pass.
+
+```bash
+./gradlew check connectedCheck
+```
+
+**Retraining the model** (`./gradlew buildProductionModel`) is a separate workflow and is NOT part of verifying the build.
+
 ## Build Commands
 
 ### Build the app

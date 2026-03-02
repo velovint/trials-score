@@ -104,6 +104,6 @@ class ScoreCardViewModelTest {
         advanceUntilIdle()
 
         // Assert: Repository should be called to clear scores for this rider
-        verify(mockSectionScoreRepository).clearScores(testRiderId)
+        verify(mockSectionScoreRepository).deleteRiderScores(testRiderId)
     }
 }

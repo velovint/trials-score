@@ -3,10 +3,10 @@ package net.yakavenka.cardscanner
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import androidx.test.platform.app.InstrumentationRegistry
+import org.opencv.android.Utils
 import org.opencv.core.CvType
 import org.opencv.core.Mat
 import org.opencv.imgproc.Imgproc
-import org.opencv.utils.Utils
 import java.nio.ByteBuffer
 
 /**
