@@ -28,5 +28,5 @@ dependencyResolutionManagement {
 rootProject.name = "TrialsScore"
 include ':app'
 include ':shared-cv'        // renamed from :card-scanner
-include ':data-prep-tool'   // renamed from :training-tool
+include ':ml-pipeline-tool' // renamed from :data-prep-tool
 include ':ml-inference'     // new module

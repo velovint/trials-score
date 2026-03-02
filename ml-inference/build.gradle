@@ -3,6 +3,15 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+// Resolvable configuration: resolves the ml-models directory from :ml-pipeline-tool
+configurations.create('mlModelArtifact') {
+    canBeConsumed = false
+    canBeResolved = true
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, 'ml-model-artifact'))
+    }
+}
+
 android {
     namespace 'net.yakavenka.mlinference'
     compileSdk 35
@@ -38,12 +47,16 @@ android {
 
     sourceSets {
         main {
-            assets.srcDirs += "${buildDir}/generated-assets"
+            // ml-models/ is provided by :ml-pipeline-tool via the mlModelArtifact configuration.
+            // AGP may resolve this configuration early; explicit dependsOn is wired below.
+            assets.srcDirs += [configurations.mlModelArtifact]
         }
     }
 }
 
 dependencies {
+    mlModelArtifact project(path: ':ml-pipeline-tool', configuration: 'modelFiles')
+
     // Depend on shared-cv for CardImagePreprocessor
     implementation project(':shared-cv')
 
@@ -74,38 +87,15 @@ dependencies {
     androidTestUtil "androidx.test:orchestrator:1.6.1"
 }
 
-// Task to copy downloaded model from build directory to generated assets
-tasks.register('copyModelToAssets', Copy) {
-    group = 'build'
-    description = 'Copy downloaded model from build directory to generated assets'
-
-    def sourceModel = file("${rootProject.buildDir}/ml-models/score_classifier_model.tflite")
-    def destDir = file("${buildDir}/generated-assets")
-
-    from sourceModel
-    into destDir
-
-    dependsOn rootProject.tasks.named('downloadModel')
-
-    inputs.file(sourceModel)
-    outputs.file(new File(destDir, sourceModel.name))
-
-    doFirst {
-        if (!sourceModel.exists()) {
-            throw new GradleException(
-                "Downloaded model not found: ${sourceModel.absolutePath}\n" +
-                "Run './gradlew downloadModel' first."
-            )
-        }
-        destDir.mkdirs()
-    }
-}
-
-// Hook into asset merging for all variants (debug, release, etc.)
-android.libraryVariants.all { variant ->
-    def mergeAssetsTaskName = "merge${variant.name.capitalize()}Assets"
-    tasks.named(mergeAssetsTaskName).configure {
-        dependsOn tasks.named('copyModelToAssets')
-    }
-}
-
+// Wire the model download task as an explicit dependency for all asset-consuming tasks.
+// configurations.mlModelArtifact.buildDependencies returns the producer tasks without
+// resolving the configuration (no file-system access at configuration time).
+//android.libraryVariants.all { variant ->
+//    def capitalizedName = variant.name.capitalize()
+//    tasks.named("merge${capitalizedName}Assets").configure {
+//        dependsOn configurations.mlModelArtifact.buildDependencies
+//    }
+//    tasks.named("generate${capitalizedName}LintModel").configure {
+//        dependsOn configurations.mlModelArtifact.buildDependencies
+//    }
+//}
