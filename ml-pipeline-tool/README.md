@@ -1,45 +1,60 @@
-# Training Data Preparation Tool
+# ML Pipeline Tool
 
-## Usage
+Android library module that prepares training data and orchestrates the Kaggle ML pipeline.
 
-### Basic Usage
+## Responsibilities
 
-```bash
-./gradlew prepareTrainingData
-```
+1. **Training data preparation** — instrumented tests use `:shared-cv` to preprocess raw score card images into labeled row images for model training.
+2. **Kaggle pipeline tasks** — Gradle tasks manage the full model update lifecycle.
+3. **Model distribution** — exposes the downloaded model to `:ml-inference` via a consumable Gradle configuration (`modelFiles`), so asset merging automatically depends on the download.
 
-### Custom Training Data URL
-
-Specify a custom URL via command-line property:
+## Kaggle Pipeline Tasks
 
 ```bash
-./gradlew prepareTrainingData -PtrainingDataUrl=https://example.com/data.tgz
+./gradlew :ml-pipeline-tool:downloadRawImages      # Download raw card images from Kaggle
+./gradlew :ml-pipeline-tool:connectedAndroidTest   # Preprocess images into training data (requires device)
+./gradlew :ml-pipeline-tool:uploadTrainingData     # Upload processed data to Kaggle dataset
+./gradlew :ml-pipeline-tool:triggerKaggleTrain     # Push notebook and wait for training
+./gradlew :ml-pipeline-tool:downloadModel          # Download trained .tflite model
+./gradlew :ml-pipeline-tool:buildProductionModel   # Full pipeline in one command
 ```
 
-Or environment variable:
-
+Or via the root convenience wrapper:
 ```bash
-export TRAINING_DATA_URL=https://example.com/data.tgz
-./gradlew prepareTrainingData
+./gradlew buildProductionModel   # delegates to :ml-pipeline-tool + runs verifyPipeline
 ```
 
-Or in `gradle.properties`:
+## Version-Based Caching
 
-```properties
-trainingDataUrl=https://example.com/data.tgz
-```
+Downloads are cached by Kaggle dataset/kernel version:
+- `checkRawImagesVersion` → feeds `downloadRawImages` inputs (skips download if dataset unchanged)
+- `checkModelVersion` → feeds `downloadModel` inputs (skips download if kernel output unchanged)
 
-## Output
-
-Processed training data is organized by score in `build/training-data/`:
+## Output Layout
 
 ```
-build/training-data/
-├── 0/   # Clean sections (score 0)
-├── 1/   # Score 1
-├── 2/   # Score 2
-├── 3/   # Score 3
-└── 5/   # Score 5 (failure)
+build/
+├── raw-pictures/raw/          # Downloaded raw card images (androidTest assets)
+├── ml-models/                 # Downloaded .tflite model (published via modelFiles configuration)
+└── training-data-upload/      # Staged training data for Kaggle upload
 ```
 
-Each row image is grayscale, 640px wide, and saved as PNG.
+## Kaggle Files
+
+```
+kaggle/
+├── notebooks/                 # Training notebook pushed to Kaggle Kernels
+└── training-data/
+    └── dataset-metadata.json  # Kaggle dataset metadata for uploads
+```
+
+## Prerequisites
+
+- `~/.kaggle/kaggle.json` with valid API credentials
+- Android device or emulator for `connectedAndroidTest`
+
+## Related Documentation
+
+- `tech-docs/training-pipeline-with-kaggle.md` — full pipeline architecture
+- `ml-inference/README.md` — how the model is consumed
+- `shared-cv/README.md` — CV preprocessing used during data prep

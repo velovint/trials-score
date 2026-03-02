@@ -8,14 +8,15 @@ This document defines the architecture and testing gates for the card scanning p
 
 * **`:shared-cv`**: Android library module. Contains OpenCV grid extraction logic (`CardImagePreprocessor`).
 * **`:ml-inference`**: Android library module. Contains the **LiteRT (TFLite) Classifier** and model inference.
-* **`:data-prep-tool`**: Android "Worker" module. Uses `:shared-cv` within **instrumented tests** to create training datasets from raw images.
+* **`:ml-pipeline-tool`**: Android "Worker" module. Uses `:shared-cv` within **instrumented tests** to create training datasets from raw images. Hosts all Kaggle pipeline Gradle tasks and exposes the trained model to `:ml-inference` via a consumable Gradle configuration.
 * **`:app`**: Android Application. Coordinates CameraX, `:shared-cv`, and `:ml-inference`.
 
 **Module Dependencies:**
 ```
 :app → :ml-inference → :shared-cv
 :app → :shared-cv (direct)
-:data-prep-tool → :shared-cv
+:ml-pipeline-tool → :shared-cv
+:ml-inference ← :ml-pipeline-tool (modelFiles configuration)
 ```
 
 ---
@@ -52,7 +53,7 @@ The pipeline integrates with Kaggle via three datasets plus a training notebook:
 
 **Steps:**
 1. Download raw score card images from Kaggle (cached, checks dataset hash)
-2. Run `:data-prep-tool:connectedAndroidTest` to preprocess images into training data (requires device/emulator)
+2. Run `:ml-pipeline-tool:connectedAndroidTest` to preprocess images into training data (requires device/emulator)
 3. Upload processed training data to Kaggle Training Data Dataset
 4. Trigger Kaggle Notebook execution and wait for completion
 5. Download new model from Kaggle Model Dataset
@@ -139,21 +140,19 @@ All validation runs as Android instrumented tests on emulator/device. This elimi
 
 **Task Dependencies:**
 
-Pipeline tasks declare inputs/outputs, and Gradle automatically chains them:
-- `downloadRawImages` outputs → `build/raw-images/`
-- `:data-prep-tool:connectedAndroidTest` consumes raw images, outputs training data
+All pipeline tasks live in `:ml-pipeline-tool`. Gradle chains them via declared inputs/outputs and version-check tasks:
+- `checkRawImagesVersion` → `downloadRawImages` outputs → `ml-pipeline-tool/build/raw-pictures/`
+- `:ml-pipeline-tool:connectedAndroidTest` consumes raw images, outputs training data
 - `uploadTrainingData` consumes training data
-- `triggerKaggleNotebook` waits for upload, triggers training
-- `downloadModel` waits for training completion, outputs model file
-- `connectedCheck` consumes model file (via asset merging)
+- `triggerKaggleTrain` waits for upload, triggers training
+- `checkModelVersion` → `downloadModel` outputs → `ml-pipeline-tool/build/ml-models/`
+- `:ml-inference` asset merging consumes model via `modelFiles` configuration
 
+The root `buildProductionModel` is a thin wrapper:
 ```groovy
-task("buildProductionModel") {
-    description = "Full ML pipeline: prep → train → validate"
-    group = "ml-pipeline"
-
-    // Just depend on validation - Gradle chains the rest via inputs/outputs
-    dependsOn 'connectedCheck'
+tasks.register('buildProductionModel') {
+    dependsOn ':ml-pipeline-tool:buildProductionModel'
+    finalizedBy 'verifyPipeline'
 }
 ```
 

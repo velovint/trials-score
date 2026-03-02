@@ -12,7 +12,7 @@ TrialsScore is a motorcycle trials scoring application for Android. Riders compe
 - **`:app`** - Main Android application (MVVM, Jetpack Compose, Room).
 - **`:shared-cv`** - Computer vision components (OpenCV card scanning, row segmentation).
 - **`:ml-inference`** - Score classification (TensorFlow Lite inference).
-- **`:data-prep-tool`** - Training data preparation. 
+- **`:ml-pipeline-tool`** - Training data preparation and Kaggle ML pipeline tasks.
 
 Each module has a dedicated README.md with detailed architecture, dependencies, and implementation notes.
 

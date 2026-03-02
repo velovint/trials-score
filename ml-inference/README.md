@@ -28,14 +28,14 @@ Score Classification (0, 1, 2, 3, 5)
 
 ### Model Download
 
-The model is downloaded automatically during the build process:
-1. Root `build.gradle` defines `downloadModel` task
-2. `copyModelToAssets` task copies model to `generated-assets/`
-3. Asset merging includes generated assets in final APK
+The model is downloaded automatically during the build process via Gradle configuration:
+1. `:ml-pipeline-tool` defines the `downloadModel` task and publishes `build/ml-models/` via the `modelFiles` consumable configuration
+2. `:ml-inference` resolves the `mlModelArtifact` configuration and adds `ml-models/` as an asset source directory
+3. Asset merging automatically depends on `downloadModel` — no manual wiring needed
 
 To manually download the model:
 ```bash
-./gradlew downloadModel
+./gradlew :ml-pipeline-tool:downloadModel
 ```
 
 ## Dependencies
@@ -69,5 +69,5 @@ Check source code in `src/main/java/net/yakavenka/mlinference/` for:
 ## Related Documentation
 
 - `shared-cv/README.md` - Card scanning and preprocessing pipeline
-- `data-prep-tool/README.md` - Training data preparation
+- `ml-pipeline-tool/README.md` - Training data preparation and Kaggle pipeline tasks
 - `CLAUDE.md` - Project overview and guidelines
