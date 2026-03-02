@@ -399,22 +399,6 @@ class MorphologicalRowSegmenterTest {
         return gray
     }
 
-    private fun loadGrayscaleCardFromAssets(filename: String): Mat {
-        val context = InstrumentationRegistry.getInstrumentation().context
-        val inputStream = context.assets.open(filename)
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
-
-        val mat = Mat()
-        Utils.bitmapToMat(bitmap, mat)
-
-        val gray = Mat()
-        Imgproc.cvtColor(mat, gray, Imgproc.COLOR_BGR2GRAY)
-        mat.release()
-
-        return gray
-    }
-
     private fun resizeToTargetWidth(mat: Mat, targetWidth: Int): Mat {
         val aspectRatio = mat.height().toDouble() / mat.width().toDouble()
         val targetHeight = (targetWidth * aspectRatio).toInt()

@@ -70,7 +70,7 @@ Launch a **general-purpose subagent with the sonnet model** to:
 
 #### 2b. Analyze complexity
 
-Analyze complexity of the change and make recommendation to either
+Main agent analyze complexity of the change and make recommendation to either
 - "fix in this PR" for simple, self-contain, low-medium complexity changes 
 - "create a separate issue" for architectural or high complexity changes 
 
@@ -81,10 +81,10 @@ Present the analysis to the user before proceeding to implementation.
 If comment is invalid - skip this step
 
 If recommendation is "fix in this PR":
-- Launch a general purpose subagent with haiku model and pass instructions to fix the code.
+- Launch a **general-purpose subagent with the haike model** with innstructions to fix the code.
 
 If recommendation is "create a separate issue":
-- Launch a general purpose subagent with haiku model to Create a GitHub issue with problem description, proposed solution, checklist, and PR reference. Return the issue URL.
+- Launch a **general purpose subagent with haiku model** to with instructions to create a GitHub issue with problem description, proposed solution, checklist, and PR reference. Return the issue URL.
 
 #### 2d. Reply (Haiku subagent)
 

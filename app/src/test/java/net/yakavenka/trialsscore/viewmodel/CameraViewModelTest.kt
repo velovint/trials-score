@@ -123,10 +123,9 @@ class CameraViewModelTest {
     }
 
     @Test
-    fun captureImage_transitionsToProcessingThenSuccess() = runTest {
-        // This test validates the state machine: Ready -> Capturing -> Processing -> Success
-        // Note: Full integration testing with actual ImageCapture is in instrumented tests
-        // This unit test verifies the state management structure
+    fun captureImage_transitionsToErrorWhenCameraNotSetUp() = runTest {
+        // This test validates the state machine for uninitialized camera.
+        // Full integration testing with actual ImageCapture is in instrumented tests.
 
         // Setup
         viewModel.resetState()  // Ensure we start at Ready

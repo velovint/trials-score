@@ -85,29 +85,25 @@ class ScoreCardViewModelTest {
     }
 
     @Test
-    fun updateSectionScore_completes() = runTest {
+    fun updateSectionScore_callsRepository() = runTest {
         // Setup
         val score = SectionScore(testRiderId, testLoopNumber, 1, 0)
 
-        // Action: Method should complete without error
-        try {
-            viewModel.updateSectionScore(score)
-            advanceUntilIdle()
-            assertThat(true, `is`(true))
-        } catch (e: Exception) {
-            throw AssertionError("updateSectionScore failed: ${e.message}", e)
-        }
+        // Action
+        viewModel.updateSectionScore(score)
+        advanceUntilIdle()
+
+        // Assert: Repository should be called with the score
+        verify(mockSectionScoreRepository).updateSectionScore(score)
     }
 
     @Test
-    fun clearScores_completes() = runTest {
-        // Action: Method should complete without error
-        try {
-            viewModel.clearScores(testRiderId)
-            advanceUntilIdle()
-            assertThat(true, `is`(true))
-        } catch (e: Exception) {
-            throw AssertionError("clearScores failed: ${e.message}", e)
-        }
+    fun clearScores_callsRepository() = runTest {
+        // Action
+        viewModel.clearScores(testRiderId)
+        advanceUntilIdle()
+
+        // Assert: Repository should be called to clear scores for this rider
+        verify(mockSectionScoreRepository).clearScores(testRiderId)
     }
 }

@@ -71,29 +71,31 @@ class DataPrepRealTest {
         // Save isolated card image using TestStorage
         val testStorage = TestStorage()
 
-        // Save Mat to a temporary file, then copy to TestStorage
-        val tempFile = File(context.cacheDir, "preprocessed_test.png")
-        val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, card)
-        assertTrue("Mat should be written to temp file", writeSuccess)
+        try {
+            // Save Mat to a temporary file, then copy to TestStorage
+            val tempFile = File(context.cacheDir, "preprocessed_test.png")
+            val writeSuccess = Imgcodecs.imwrite(tempFile.absolutePath, card)
+            assertTrue("Mat should be written to temp file", writeSuccess)
 
-        Log.i("DataPrepRealTest", "Temp file created: ${tempFile.absolutePath}, exists: ${tempFile.exists()}")
+            Log.i("DataPrepRealTest", "Temp file created: ${tempFile.absolutePath}, exists: ${tempFile.exists()}")
 
-        // Use TestStorage to save the output file
-        testStorage.openOutputFile("preprocessed_output.png").use { outputStream ->
-            tempFile.inputStream().use { inputStream ->
-                inputStream.copyTo(outputStream)
+            // Use TestStorage to save the output file
+            testStorage.openOutputFile("preprocessed_output.png").use { outputStream ->
+                tempFile.inputStream().use { inputStream ->
+                    inputStream.copyTo(outputStream)
+                }
             }
+
+            Log.i("DataPrepRealTest", "File saved to TestStorage: preprocessed_output.png")
+
+            // Verify the isolated card image dimensions
+            assertThat("Isolated card width should be 640", card.width(), equalTo(640))
+            assertTrue("Isolated card height should be positive", card.height() > 0)
+
+            tempFile.delete()
+        } finally {
+            card.release()
         }
-
-        Log.i("DataPrepRealTest", "File saved to TestStorage: preprocessed_output.png")
-
-        // Verify the isolated card image dimensions
-        assertThat("Isolated card width should be 640", card.width(), equalTo(640))
-        assertTrue("Isolated card height should be positive", card.height() > 0)
-
-        // Cleanup
-        card.release()
-        tempFile.delete()
 
         Log.i("DataPrepRealTest", "Test completed - check build outputs for TestStorage files")
     }

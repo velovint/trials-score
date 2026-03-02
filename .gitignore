@@ -21,6 +21,3 @@ CLAUDE.local.md
 
 .env
 .mcp.json
-
-# ML Pipeline - Deployed models (source is in src/kaggle/)
-ml-inference/src/main/assets/score_classifier_model.tflite

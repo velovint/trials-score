@@ -14,6 +14,24 @@ class MorphologicalRowSegmenter(
     private val stripHeader: Boolean = true,
     private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
 ) : RowSegmenter {
+    private companion object {
+        // Area filtering thresholds: cells with area deviating from median by these ratios are filtered out
+        const val MIN_CELL_AREA_RATIO = 0.4
+        const val MAX_CELL_AREA_RATIO = 2.5
+
+        // Aspect ratio filtering: cells too elongated or too squat are filtered out
+        const val MIN_ASPECT_RATIO = 0.6
+        const val MAX_ASPECT_RATIO = 1.8
+
+        // Height filtering: cells significantly shorter than median are considered noise fragments
+        const val MIN_HEIGHT_RATIO = 0.6
+
+        // Orientation detection: grid position in upper portion of image indicates upside-down card
+        const val UPSIDE_DOWN_THRESHOLD = 0.45
+
+        // Clustering: gap threshold for determining row boundaries (relative to median cell height)
+        const val CLUSTER_GAP_RATIO = 0.5
+    }
     override fun segment(card: Mat): Result<List<RowRegion>> {
         val binary = binarize(card)
         val closed = enhanceGridLines(binary)
@@ -114,8 +132,8 @@ class MorphologicalRowSegmenter(
             .filter { rect ->
                 val area = rect.width.toDouble() * rect.height
                 val aspectRatio = rect.width.toDouble() / rect.height
-                area >= medianArea * 0.4 && area <= medianArea * 2.5 &&
-                aspectRatio >= 0.6 && aspectRatio <= 1.8
+                area >= medianArea * MIN_CELL_AREA_RATIO && area <= medianArea * MAX_CELL_AREA_RATIO &&
+                aspectRatio >= MIN_ASPECT_RATIO && aspectRatio <= MAX_ASPECT_RATIO
             }
         if (validCells.isEmpty()) {
             contours.forEach { it.release() }
@@ -127,7 +145,7 @@ class MorphologicalRowSegmenter(
         Log.i("MorphologicalRowSegmenter", "Cell heights - min: ${cellHeights.first()}, max: ${cellHeights.last()}, median: $medianCellHeight")
 
         // Remove anomalously short cells (e.g. noise fragments above the header row)
-        val normalCells = validCells.filter { it.height >= medianCellHeight * 0.6 }
+        val normalCells = validCells.filter { it.height >= medianCellHeight * MIN_HEIGHT_RATIO }
         Log.i("MorphologicalRowSegmenter", "After height filter: ${normalCells.size} cells (removed ${validCells.size - normalCells.size})")
 
         // Validate minimum cell count
@@ -154,7 +172,7 @@ class MorphologicalRowSegmenter(
         //  Fixing this requires a `RowSegmenter` interface change (e.g. return a data class
         //  that carries both the RowRegions and the (possibly rotated) card Mat).
         //  See: https://github.com/velovint/trials-score/issues/48
-        return if (relativePosition < 0.45) {
+        return if (relativePosition < UPSIDE_DOWN_THRESHOLD) {
             // Card is upside down — invert Y coordinates
             val invertedCells = normalCells.map { rect ->
                 Rect(rect.x, cardHeight - (rect.y + rect.height), rect.width, rect.height)
@@ -171,10 +189,10 @@ class MorphologicalRowSegmenter(
         // Sort cells by Y coordinate (top to bottom)
         val sortedCells = cells.sortedWith(compareBy<Rect> { it.y }.thenBy { it.x })
 
-        // Use median cell height * 0.5 as gap threshold.
+        // Use median cell height * CLUSTER_GAP_RATIO as gap threshold.
         // Cells in same row: tops may differ, but gap between last cell bottom and next cell top should be small
         // Cells in different rows: gap should be larger
-        val clusterGap = medianCellHeight * 0.5
+        val clusterGap = medianCellHeight * CLUSTER_GAP_RATIO
         Log.i("MorphologicalRowSegmenter", "Median cell height: $medianCellHeight, cluster gap threshold: $clusterGap")
 
         // Cluster cells into rows

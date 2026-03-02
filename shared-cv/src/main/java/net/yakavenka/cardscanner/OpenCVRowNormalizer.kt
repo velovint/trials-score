@@ -7,6 +7,11 @@ import org.opencv.imgproc.Imgproc
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
+/**
+ * Extracts, resizes, and normalizes individual rows from a score card image.
+ * Despite the name, this is not just a normalizer — it also crops each row region
+ * from the full card and resizes it to 640×66 pixels for ML inference.
+ */
 class OpenCVRowNormalizer(
     private val debugObserver: ScanDebugObserver = ScanDebugObserver.NO_OP
 ) : RowNormalizer {
