@@ -161,7 +161,7 @@ private fun CameraPreview(
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val surfaceRequest by viewModel.surfaceRequest.collectAsState()
+    val surfaceRequest by viewModel.surfaceRequest.observeAsState()
 
     LaunchedEffect(Unit) {
         viewModel.bindCamera(context, lifecycleOwner)

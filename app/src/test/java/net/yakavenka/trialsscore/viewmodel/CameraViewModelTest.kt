@@ -11,6 +11,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import net.yakavenka.cardscanner.CardScannerService
 import net.yakavenka.trialsscore.data.SectionScoreRepository
+import net.yakavenka.trialsscore.data.UserPreferencesRepository
 import org.hamcrest.CoreMatchers.`is`
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.MatcherAssert.assertThat
@@ -30,6 +31,7 @@ class CameraViewModelTest {
     private lateinit var viewModel: CameraViewModel
     private lateinit var mockScanner: CardScannerService
     private lateinit var mockSectionScoreRepository: SectionScoreRepository
+    private lateinit var mockUserPreferencesRepository: UserPreferencesRepository
     private lateinit var testExecutor: Executor
     private val testRiderId = 42
     private val testLoopNumber = 2
@@ -39,6 +41,7 @@ class CameraViewModelTest {
         Dispatchers.setMain(testDispatcher)
         mockScanner = mock(CardScannerService::class.java)
         mockSectionScoreRepository = mock(SectionScoreRepository::class.java)
+        mockUserPreferencesRepository = mock(UserPreferencesRepository::class.java)
         // Use a simple test executor that runs tasks immediately
         testExecutor = Executor { it.run() }
 
@@ -50,6 +53,7 @@ class CameraViewModelTest {
         viewModel = CameraViewModel(
             cardScanner = mockScanner,
             sectionScoreRepository = mockSectionScoreRepository,
+            userPreferencesRepository = mockUserPreferencesRepository,
             savedStateHandle = savedStateHandle
         )
         // Inject test executor to avoid needing context in tests
