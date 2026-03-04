@@ -6,6 +6,7 @@ import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.yakavenka.mlinference.TFLiteRowClassifier
+import org.opencv.android.OpenCVLoader
 
 private const val TAG = "OpenCVCardScannerService"
 
@@ -19,6 +20,12 @@ private const val TAG = "OpenCVCardScannerService"
 class OpenCVCardScannerService(
     private val context: Context
 ) : CardScannerService {
+
+    init {
+        if (!OpenCVLoader.initLocal()) {
+            Log.e(TAG, "OpenCV initialization failed")
+        }
+    }
 
     private val classifier = TFLiteRowClassifier(context)
     private val preprocessor = OpenCVCardPreprocessor()

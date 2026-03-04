@@ -130,6 +130,14 @@ tasks.configureEach { task ->
 
 Apply `com.android.library` to the Kaggle module and declare downloaded files as assets. AGP merges assets from all modules in the dependency graph automatically.
 
+```groovy
+sourceSets {
+    main {
+        assets.srcDirs += [tasks.named('downloadModel').map { it.outputDir }]
+    }
+}
+```
+
 | | |
 |---|---|
 | ✅ | Zero special wiring, fully idiomatic |

@@ -44,14 +44,6 @@ android {
     testOptions {
         execution = "ANDROIDX_TEST_ORCHESTRATOR"
     }
-
-    sourceSets {
-        main {
-            // ml-models/ is provided by :ml-pipeline-tool via the mlModelArtifact configuration.
-            // AGP may resolve this configuration early; explicit dependsOn is wired below.
-            assets.srcDirs += [configurations.mlModelArtifact]
-        }
-    }
 }
 
 dependencies {
@@ -87,15 +79,31 @@ dependencies {
     androidTestUtil "androidx.test:orchestrator:1.6.1"
 }
 
-// Wire the model download task as an explicit dependency for all asset-consuming tasks.
-// configurations.mlModelArtifact.buildDependencies returns the producer tasks without
-// resolving the configuration (no file-system access at configuration time).
-//android.libraryVariants.all { variant ->
-//    def capitalizedName = variant.name.capitalize()
-//    tasks.named("merge${capitalizedName}Assets").configure {
-//        dependsOn configurations.mlModelArtifact.buildDependencies
-//    }
-//    tasks.named("generate${capitalizedName}LintModel").configure {
-//        dependsOn configurations.mlModelArtifact.buildDependencies
-//    }
-//}
+// wrapper task to allow using onfigurations.mlModelArtifact with assets.addGeneratedSourceDirectory
+abstract class PrepareModelAssetsTask extends DefaultTask {
+    @InputFiles
+    abstract ConfigurableFileCollection getInputFiles()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void prepare() {
+        project.sync {
+            from inputFiles
+            into outputDir
+        }
+    }
+}
+
+def prepareModelAssets = tasks.register('prepareModelAssets', PrepareModelAssetsTask) {
+    inputFiles.from(configurations.mlModelArtifact)
+    outputDir.set(layout.buildDirectory.dir('generated/main/assets/ml-model'))
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets
+            ?.addGeneratedSourceDirectory(prepareModelAssets) { it.outputDir }
+    }
+}

@@ -191,12 +191,4 @@ class CameraViewModel @Inject constructor(
         _uiState.value = CameraUiState.Ready
     }
 
-    /**
-     * Cleanup resources when ViewModel is destroyed.
-     * Closes TFLite interpreter and any native resources held by CardScannerService.
-     */
-    override fun onCleared() {
-        super.onCleared()
-        cardScanner.cleanup()
-    }
 }

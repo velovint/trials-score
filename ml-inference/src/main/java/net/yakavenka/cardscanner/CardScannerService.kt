@@ -22,7 +22,7 @@ interface CardScannerService {
 
     /**
      * Release any native resources (e.g. TFLite interpreter, OpenCV allocations).
-     * Called when the owning ViewModel is destroyed. No-op by default.
+     * No-op by default.
      */
     fun cleanup() {}
 }
