@@ -1,0 +1,107 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+// Resolvable configuration: resolves the ml-models directory from :ml-pipeline-tool
+configurations.create('mlModelArtifact') {
+    canBeConsumed = false
+    canBeResolved = true
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, 'ml-model-artifact'))
+    }
+}
+
+android {
+    namespace 'net.yakavenka.mlinference'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 35
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: "true"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+}
+
+dependencies {
+    mlModelArtifact project(path: ':ml-pipeline-tool', configuration: 'modelFiles')
+
+    // Depend on shared-cv for CardImagePreprocessor
+    implementation project(':shared-cv')
+
+    // OpenCV provided by :shared-cv dependency
+    implementation libs.kotlinx.coroutines.core
+    implementation libs.opencv
+
+    // TensorFlow Lite (LiteRT) - Version 2.17.0 for FULLY_CONNECTED v12 support
+    implementation libs.tensorflow.lite
+    implementation(libs.tensorflow.lite.support) {
+        exclude group: "org.tensorflow", module: "tensorflow-lite-api"
+    }
+
+    // Testing
+    testImplementation libs.junit
+    testImplementation libs.hamcrest.library
+    testImplementation libs.kotlinx.coroutines.test
+
+    // Android instrumented tests
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.core
+    androidTestImplementation libs.kotlinx.coroutines.test
+    androidTestImplementation libs.hamcrest.library
+    androidTestUtil libs.androidx.test.orchestrator
+
+}
+
+// wrapper task to allow using onfigurations.mlModelArtifact with assets.addGeneratedSourceDirectory
+abstract class PrepareModelAssetsTask extends DefaultTask {
+    @InputFiles
+    abstract ConfigurableFileCollection getInputFiles()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void prepare() {
+        project.sync {
+            from inputFiles
+            into outputDir
+        }
+    }
+}
+
+def prepareModelAssets = tasks.register('prepareModelAssets', PrepareModelAssetsTask) {
+    inputFiles.from(configurations.mlModelArtifact)
+    outputDir.set(layout.buildDirectory.dir('generated/main/assets/ml-model'))
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets
+            ?.addGeneratedSourceDirectory(prepareModelAssets) { it.outputDir }
+    }
+}

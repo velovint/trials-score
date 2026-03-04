@@ -1,0 +1,58 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'net.yakavenka.cardscanner'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 35
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: "true"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+    }
+}
+
+dependencies {
+    // OpenCV for Android
+    implementation libs.opencv
+
+    // Testing
+    testImplementation libs.junit
+    testImplementation libs.hamcrest.library
+    testImplementation libs.kotlinx.coroutines.test
+
+    // Android instrumented tests
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.core
+    androidTestImplementation libs.kotlinx.coroutines.test
+    androidTestImplementation libs.hamcrest.library
+    androidTestImplementation libs.androidx.test.services
+    androidTestImplementation libs.test.parameter.injector
+    androidTestUtil libs.androidx.test.orchestrator
+}

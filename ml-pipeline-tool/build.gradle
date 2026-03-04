@@ -1,0 +1,334 @@
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
+}
+
+android {
+    namespace 'net.yakavenka.dataprep'
+    compileSdk 35
+
+    defaultConfig {
+        minSdk 26
+        targetSdk 35
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: "true"
+        // Enable TestStorage for automatic file retrieval
+        testInstrumentationRunnerArguments useTestStorageService: "true"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
+
+    testOptions {
+        execution = "ANDROIDX_TEST_ORCHESTRATOR"
+        // Enable automatic pulling of test output files
+        emulatorSnapshots {
+            enableForTestFailures = false
+        }
+    }
+
+}
+
+dependencies {
+    // Depend on shared-cv for CardImagePreprocessor
+    implementation project(':shared-cv')
+
+    // OpenCV provided by :shared-cv dependency
+    implementation libs.opencv
+
+    // CLI parsing (may be deprecated in Android library context)
+    implementation libs.kotlinx.cli
+    androidTestImplementation libs.androidx.test.rules
+
+    // Testing
+    testImplementation libs.junit
+    testImplementation libs.hamcrest.library
+    testImplementation libs.kotlinx.coroutines.test
+
+    // Android instrumented tests
+    androidTestImplementation libs.androidx.test.ext.junit
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.core
+    androidTestImplementation libs.androidx.test.espresso.core
+    androidTestImplementation libs.androidx.test.core.ktx
+    androidTestImplementation libs.androidx.test.services
+    androidTestImplementation libs.kotlinx.coroutines.test
+    androidTestImplementation libs.hamcrest.library
+    androidTestUtil libs.androidx.test.orchestrator
+}
+
+// ---------------------------------------------------------------------------
+// Kaggle ML pipeline tasks
+// ---------------------------------------------------------------------------
+
+tasks.register('checkRawImagesVersion') {
+    group = 'ml-pipeline'
+    description = 'Check current version of raw card pictures dataset on Kaggle'
+
+    def versionFile = layout.buildDirectory.file('raw-images-version.txt')
+    outputs.file(versionFile)
+
+    doLast {
+        def out = new ByteArrayOutputStream()
+        exec {
+            commandLine 'kaggle', 'datasets', 'status', 'vitaliyakavenka/raw-card-pictures'
+            standardOutput = out
+        }
+        versionFile.get().asFile.text = out.toString().trim()
+        logger.lifecycle("Raw images dataset version: ${versionFile.get().asFile.text}")
+    }
+}
+
+tasks.register('downloadRawImages') {
+    group = 'ml-pipeline'
+    description = 'Download raw score card images from Kaggle (vitaliyakavenka/raw-card-pictures)'
+
+    def rawDir = layout.buildDirectory.dir('raw-pictures')
+
+    inputs.file(tasks.named('checkRawImagesVersion').map { it.outputs.files.singleFile })
+    dependsOn 'checkRawImagesVersion'
+    outputs.dir(rawDir)
+    outputs.cacheIf { true }
+
+    doLast {
+        def downloadDir = layout.buildDirectory.dir('raw-pictures').get().asFile
+        downloadDir.mkdirs()
+
+        exec {
+            commandLine 'kaggle', 'datasets', 'download',
+                'vitaliyakavenka/raw-card-pictures',
+                '--unzip', '--path', downloadDir.absolutePath
+        }
+
+        // Kaggle extracts into a 'training-data/' subdirectory.
+        // Copy to 'raw/' to match 'assets/raw/<filename>' path used by DataPrepRealTest.
+        def rawSubDir = new File(downloadDir, 'raw')
+        rawSubDir.mkdirs()
+        project.copy {
+            from new File(downloadDir, 'training-data')
+            into rawSubDir
+        }
+        logger.lifecycle("Downloaded ${rawSubDir.list()?.length ?: 0} raw images to ${rawSubDir}")
+    }
+}
+
+// Wire androidTest assets to downloadRawImages output so all consumers
+// (mergeDebugAndroidTestAssets, lintAnalyzeDebugAndroidTest, etc.) inherit the dependency.
+android.sourceSets.androidTest.assets.srcDirs += [tasks.named('downloadRawImages')]
+
+tasks.register('uploadTrainingData') {
+    group = 'ml-pipeline'
+    description = 'Upload processed training data to Kaggle (vitaliyakavenka/trials-score-training-data)'
+
+    def connectedBase = file("build/outputs/connected_android_test_additional_output/debugAndroidTest/connected")
+    def stagingDir    = layout.buildDirectory.dir('training-data-upload')
+    def metadataFile  = file("kaggle/training-data/dataset-metadata.json")
+
+    inputs.dir(connectedBase)
+    inputs.file(metadataFile)
+    outputs.upToDateWhen { false }   // always re-upload when task runs
+
+    mustRunAfter 'connectedAndroidTest'
+
+    doLast {
+        // Find the device sub-directory (name varies by AVD/device)
+        def deviceDir = connectedBase.listFiles()?.find { it.isDirectory() }
+        if (!deviceDir) {
+            throw new GradleException(
+                "No device output found under ${connectedBase}.\n" +
+                "Run ':ml-pipeline-tool:connectedAndroidTest' first."
+            )
+        }
+        logger.lifecycle("Packaging training data from: ${deviceDir}")
+
+        // Stage: clear and recreate
+        def stagingDirFile = stagingDir.get().asFile
+        stagingDirFile.deleteDir()
+        stagingDirFile.mkdirs()
+
+        // Copy only valid label folders (TrainingDataExporter skips 9, but be explicit)
+        ['0', '1', '2', '3', '5'].each { label ->
+            def src = new File(deviceDir, label)
+            if (src.exists()) {
+                project.copy {
+                    from src
+                    into new File(stagingDirFile, label)
+                }
+                logger.lifecycle("  label ${label}: ${src.list()?.length ?: 0} files")
+            } else {
+                logger.warn("  label ${label}: directory not found in test output, skipping")
+            }
+        }
+
+        // Include Kaggle dataset metadata
+        project.copy {
+            from metadataFile
+            into stagingDirFile
+        }
+
+        // Upload new version to Kaggle
+        exec {
+            commandLine 'kaggle', 'datasets', 'version',
+                '--path', stagingDirFile.absolutePath,
+                '--dir-mode', 'tar',
+                '--message', "Pipeline update: ${new Date().format('yyyy-MM-dd')}"
+        }
+        logger.lifecycle("Training data uploaded to vitaliyakavenka/trials-score-training-data")
+
+        // Capture dataset version for downstream caching
+        def versionOutput = new ByteArrayOutputStream()
+        exec {
+            commandLine 'kaggle', 'datasets', 'status',
+                'vitaliyakavenka/trials-score-training-data'
+            standardOutput = versionOutput
+        }
+        def versionFile = layout.buildDirectory.file('training-data-version.txt').get().asFile
+        versionFile.text = versionOutput.toString().trim()
+        logger.lifecycle("Training data version recorded: ${versionFile.text}")
+    }
+}
+
+tasks.register('triggerKaggleTrain') {
+    group = 'ml-pipeline'
+    description = 'Push notebook to Kaggle and wait for training completion'
+    mustRunAfter 'uploadTrainingData'
+    inputs.file(layout.buildDirectory.file('training-data-version.txt'))
+
+    doLast {
+        def notebookDir = file("kaggle/notebooks")
+        def slug = 'vitaliyakavenka/trials-score-trainer'
+        def maxWaitMinutes = 60
+        def pollIntervalSeconds = 30
+
+        // Push notebook to Kaggle (creates or updates the kernel)
+        exec {
+            commandLine 'kaggle', 'kernels', 'push', '-p', notebookDir.absolutePath
+        }
+        logger.lifecycle("Notebook pushed. Waiting for training to complete (up to ${maxWaitMinutes} min)...")
+
+        def maxPolls = (maxWaitMinutes * 60) / pollIntervalSeconds
+        def polls = 0
+        def completed = false
+
+        while (!completed && polls < maxPolls) {
+            Thread.sleep(pollIntervalSeconds * 1000L)
+            polls++
+
+            def statusOutput = new ByteArrayOutputStream()
+            exec {
+                commandLine 'kaggle', 'kernels', 'status', slug
+                standardOutput = statusOutput
+            }
+            def statusText = statusOutput.toString().trim()
+            def statusLower = statusText.toLowerCase()
+            logger.lifecycle("  [${polls}] ${statusText}")
+
+            if (statusLower.contains('complete')) {
+                completed = true
+            } else if (statusLower.contains('error') || statusLower.contains('cancel')) {
+                throw new GradleException("Kaggle training failed:\n${statusText}")
+            }
+        }
+
+        if (!completed) {
+            throw new GradleException("Kaggle training timed out after ${maxWaitMinutes} minutes")
+        }
+        logger.lifecycle("Training complete.")
+    }
+}
+
+tasks.register('checkModelVersion') {
+    group = 'ml-pipeline'
+    description = 'Check current version of trained model on Kaggle kernels'
+
+    def versionFile = layout.buildDirectory.file('model-version.txt')
+    outputs.file(versionFile)
+
+    doLast {
+        def out = new ByteArrayOutputStream()
+        exec {
+            commandLine 'kaggle', 'kernels', 'status', 'vitaliyakavenka/trials-score-trainer'
+            standardOutput = out
+        }
+        versionFile.get().asFile.text = out.toString().trim()
+        logger.lifecycle("Model version: ${versionFile.get().asFile.text}")
+    }
+}
+
+tasks.register('downloadModel') {
+    group = 'ml-pipeline'
+    description = 'Download trained model from Kaggle kernel output'
+    mustRunAfter 'triggerKaggleTrain'
+
+    def destDir = layout.buildDirectory.dir('ml-models')
+
+    inputs.file(tasks.named('checkModelVersion').map { it.outputs.files.singleFile })
+    dependsOn 'checkModelVersion'
+    outputs.dir(destDir)
+    outputs.cacheIf { true }
+
+    doLast {
+        def destDirFile = destDir.get().asFile
+        destDirFile.mkdirs()
+
+        exec {
+            commandLine 'kaggle', 'kernels', 'output',
+                'vitaliyakavenka/trials-score-trainer',
+                '--path', destDirFile.absolutePath
+        }
+
+        def modelFile = new File(destDirFile, 'score_classifier_model.tflite')
+        if (!modelFile.exists()) {
+            throw new GradleException(
+                "Model not found at: ${modelFile}\n" +
+                "Ensure the notebook saves to /kaggle/working/score_classifier_model.tflite"
+            )
+        }
+        logger.lifecycle("Model downloaded: ${modelFile} (${modelFile.length() / 1024} KB)")
+    }
+}
+
+tasks.register('buildProductionModel') {
+    group = 'ml-pipeline'
+    description = 'Full ML pipeline: prep → train → validate → deploy'
+    dependsOn 'downloadRawImages'
+    dependsOn 'connectedAndroidTest'
+    dependsOn 'uploadTrainingData'
+    dependsOn 'triggerKaggleTrain'
+    dependsOn 'downloadModel'
+}
+
+// ---------------------------------------------------------------------------
+// Consumable configuration: exposes ml-models directory to :ml-inference
+// ---------------------------------------------------------------------------
+
+configurations.create('modelFiles') {
+    canBeConsumed = true
+    canBeResolved = false
+    attributes {
+        attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage, 'ml-model-artifact'))
+    }
+}
+
+def modelDir = layout.buildDirectory.dir('ml-models')
+artifacts {
+    modelFiles(modelDir) {
+        builtBy tasks.named('downloadModel')
+    }
+}
+

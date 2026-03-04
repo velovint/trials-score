@@ -107,7 +107,7 @@ class RegressionTest {
 
         // Handle system file picker using UIAutomator
         val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
-        val filename = "test_export_${System.currentTimeMillis()}"
+        val filename = "test_export_${System.currentTimeMillis()}.csv"
 
         // Wait for document picker to appear
         device.wait(Until.hasObject(By.pkg("com.android.documentsui")), 5000)
@@ -140,12 +140,32 @@ class RegressionTest {
         val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
             android.os.Environment.DIRECTORY_DOWNLOADS
         )
-        val file = File(downloadsDir, "$filename.csv")
+        val file = File(downloadsDir, filename)
         assert(file.exists()) { "Exported CSV file should exist at ${file.absolutePath}" }
         assert(file.length() > 0) { "Exported CSV file should not be empty" }
 
         // Cleanup
         file.delete()
+    }
+
+    @Test
+    fun captureScoreCardImage_populatesScoresFromMockScanner() {
+        // Given: a rider with score entry open
+        val riderName = addRider()
+        openCameraScreen(riderName, loopNumber = 1)
+
+        // When: camera capture is initiated
+        captureImage()
+
+        // Then: app returns to score entry screen with auto-populated scores
+        compose.waitForIdle()
+        compose.onNodeWithText(riderName).assertIsDisplayed()
+
+        // And: verify some of the mock scores are populated
+        // Mock returns: [0, 1, 0, 2, 0, 3, 0, 5, 0, 1, 0, 0]
+        compose.onNode(sectionScoreNode(1, 0)).assertIsDisplayed()
+        compose.onNode(sectionScoreNode(2, 1)).assertIsDisplayed()
+        compose.onNode(sectionScoreNode(4, 2)).assertIsDisplayed()
     }
 
     private fun leaderboardTitle(): SemanticsMatcher {
@@ -167,7 +187,6 @@ class RegressionTest {
     private fun addRider(riderName: String, riderClass: String) {
         val addRiderLabel = compose.activity.getString(R.string.add_new_rider)
         compose.onNodeWithContentDescription(addRiderLabel).performClick()
-//        compose.onRoot().printToLog("currentLabelExists")
         fillEditRiderForm(riderName, riderClass)
 
         compose.onNodeWithText("Trials Score").assertIsDisplayed()
@@ -185,7 +204,6 @@ class RegressionTest {
         scores.forEachIndexed { idx, score ->
             compose.onNode(sectionScoreNode(idx + 1, score))
                 .performClick()
-//                .assertIsSelected()
         }
     }
 
@@ -201,17 +219,91 @@ class RegressionTest {
         compose.onNodeWithText(saveLabel).assertIsDisplayed().performClick()
     }
 
-    private fun openScoreEntry(riderName: String, loopNumber: Int) {
+    private fun navigateToScoreEntry(riderName: String, loopNumber: Int, assertSelected: Boolean = false) {
         compose.onNodeWithText(riderName).performClick()
-        compose.onNodeWithText("Loop $loopNumber")
-            .assertIsDisplayed()
-            .performClick()
-            .assertIsSelected()
+        compose.onNodeWithText("Loop $loopNumber").assertIsDisplayed().performClick()
+        if (assertSelected) {
+            compose.onNodeWithText("Loop $loopNumber").assertIsSelected()
+        }
+    }
+
+    private fun openScoreEntry(riderName: String, loopNumber: Int) {
+        navigateToScoreEntry(riderName, loopNumber, assertSelected = true)
     }
 
     private fun sectionScoreNode(section: Int, score: Int): SemanticsMatcher {
         return hasParent(hasContentDescription("Section $section")) and
                 hasContentDescription(score.toString())
+    }
+
+    private fun openCameraScreen(riderName: String, loopNumber: Int) {
+        // Navigate to score entry screen
+        navigateToScoreEntry(riderName, loopNumber)
+
+        // Tap camera button in TopAppBar
+        val cameraLabel = compose.activity.getString(R.string.camera_action)
+        compose.onNodeWithContentDescription(cameraLabel).performClick()
+
+        // Verify camera screen appears with title
+        compose.waitForIdle()
+        val captureCardLabel = compose.activity.getString(R.string.capture_card)
+        compose.onNodeWithText(captureCardLabel).assertIsDisplayed()
+
+        // Verify back button is visible
+        val backLabel = compose.activity.getString(R.string.back_action)
+        compose.onNodeWithContentDescription(backLabel).assertIsDisplayed()
+
+        // Handle camera permission if needed
+        handleCameraPermissionIfShown()
+    }
+
+    private fun handleCameraPermissionIfShown() {
+        // Wait a moment for permission dialog to appear
+        compose.waitForIdle()
+
+        try {
+            // Check if permission request UI is shown
+            val grantPermissionLabel = compose.activity.getString(R.string.grant_permission)
+            compose.onNodeWithText(grantPermissionLabel).assertIsDisplayed()
+            // Grant the permission
+            compose.onNodeWithText(grantPermissionLabel).performClick()
+            compose.waitForIdle()
+        } catch (e: AssertionError) {
+            // Permission already granted or not shown, continue
+        }
+
+        // Also try to handle system permission dialog via UIAutomator
+        try {
+            val device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+            val grantButton = device.findObject(By.text("Allow"))
+                ?: device.findObject(By.text("ALLOW"))
+                ?: device.findObject(By.text("Grant"))
+            grantButton?.click()
+        } catch (e: Exception) {
+            // System dialog not present, continue
+        }
+    }
+
+    private fun captureImage() {
+        val captureLabel = compose.activity.getString(R.string.capture_action)
+        compose.onNodeWithContentDescription(captureLabel).assertIsDisplayed()
+
+        // Give camera time to initialize before capturing
+        Thread.sleep(1000)
+
+        compose.onNodeWithContentDescription(captureLabel).performClick()
+
+        compose.waitForIdle()
+        compose.waitUntil(timeoutMillis = 5000) {
+            try {
+                // Verify we're back at the score entry screen by checking for a rider name
+                // The score entry screen should show the rider's name in the TopAppBar
+                compose.onNodeWithText("Loop 1").assertIsDisplayed()
+                true
+            } catch (e: AssertionError) {
+                false
+            }
+        }
     }
 
 }

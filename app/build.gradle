@@ -71,6 +71,9 @@ android {
 }
 
 dependencies {
+    implementation project(':shared-cv')
+    implementation project(':ml-inference')
+
     implementation platform(libs.androidx.compose.bom)
     implementation libs.androidx.activity.compose
     implementation libs.androidx.lifecycle.viewmodel.compose
@@ -98,6 +101,18 @@ dependencies {
 
     // CSV
     implementation libs.opencsv
+
+    // OpenCV for Android (required for Bitmap→Mat conversion and native operations)
+    implementation libs.opencv
+
+    // CameraX
+    implementation libs.androidx.camera.core
+    implementation libs.androidx.camera.camera2
+    implementation libs.androidx.camera.lifecycle
+    implementation libs.androidx.camera.compose
+
+    // Permissions
+    implementation libs.accompanist.permissions
 
     // Android Studio Preview support
     implementation libs.androidx.ui.tooling.preview

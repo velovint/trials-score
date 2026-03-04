@@ -18,3 +18,18 @@ plugins {
 tasks.register('clean', Delete) {
     delete rootProject.layout.buildDirectory
 }
+
+tasks.register('verifyPipeline') {
+    group = 'verification'
+    description = 'Run all ML pipeline validation tests'
+    dependsOn ':shared-cv:connectedAndroidTest'
+    dependsOn ':ml-inference:connectedAndroidTest'
+    dependsOn ':app:connectedAndroidTest'
+}
+
+tasks.register('buildProductionModel') {
+    group = 'ml-pipeline'
+    description = 'Full ML pipeline: prep → train → validate → deploy'
+    dependsOn ':ml-pipeline-tool:buildProductionModel'
+    finalizedBy 'verifyPipeline'
+}

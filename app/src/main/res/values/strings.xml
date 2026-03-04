@@ -21,4 +21,13 @@
     <string name="more_actions">More actions</string>
     <string name="export_results">Export results</string>
     <string name="delete_confirm">Delete</string>
+    <string name="camera_action">Camera</string>
+    <string name="capture_card">Capture Score Card</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="error_title">Error</string>
+    <string name="retry_action">Retry</string>
+    <string name="capture_action">Capture</string>
+    <string name="processing_image">Processing image...</string>
+    <string name="camera_permission_required">Camera permission required</string>
+    <string name="camera_permission_message">To capture score card images, please grant camera permission.</string>
 </resources>
