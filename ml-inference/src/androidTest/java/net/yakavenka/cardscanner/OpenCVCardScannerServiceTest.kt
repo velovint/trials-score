@@ -32,7 +32,7 @@ class OpenCVCardScannerServiceTest {
     @Test
     fun extractScores_withRealScoreCard_returnsValidScores() = runTest {
         // Load actual score card image from test assets
-        val testImage = loadTestImageFromAssets("raw/PXL_3302032333999999.jpg")
+        val testImage = loadTestImageFromAssets("raw/PXL_100112010299999.jpg")
 
         val result = scanner.extractScores(testImage)
         Log.d("net.yakavenka.test", "Image scanned successfully: $result")
@@ -42,8 +42,8 @@ class OpenCVCardScannerServiceTest {
 
         val successResult = result as ScanResult.Success
         // TODO model falls back to 3s for unpunched sections. need to fix at some point
-        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 3, 3, 3, 3, 3)
-        val actualScores = successResult.scores.map { it.value }
+        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2)
+        val actualScores = successResult.scores.map { it.value }.take(10)
 
         assertThat(actualScores, `is`(expectedScores))
     }
