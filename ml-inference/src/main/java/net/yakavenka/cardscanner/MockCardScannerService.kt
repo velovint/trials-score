@@ -1,7 +1,6 @@
 package net.yakavenka.cardscanner
 
 import android.graphics.Bitmap
-import kotlinx.coroutines.delay
 
 /**
  * Mock implementation of CardScannerService for testing and development.
@@ -12,8 +11,6 @@ import kotlinx.coroutines.delay
 class MockCardScannerService : CardScannerService {
 
     override suspend fun extractScores(image: Bitmap): ScanResult {
-        // Simulate CV processing delay
-        delay(500)
 
         // Return hardcoded test scores
         // Pattern: [0, 1, 0, 2, 0, 3, 0, 5, 0, 1, 0, 0, 1, 2, 0]

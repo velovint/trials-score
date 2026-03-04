@@ -15,7 +15,7 @@ import java.nio.channels.FileChannel
  *
  * Score map: [0→0, 1→1, 2→2, 3→3, 4→5] (Trials scoring uses 0,1,2,3,5; no score of 4)
  */
-class TFLiteRowClassifier(context: Context) : RowClassifier, Closeable {
+class TFLiteRowClassifier(context: Context) : RowClassifier {
     private val interpreter: Interpreter
 
     init {

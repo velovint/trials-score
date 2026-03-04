@@ -37,11 +37,6 @@ class ModelAccuracyTest {
         classifier = TFLiteRowClassifier(context)
     }
 
-    @After
-    fun tearDown() {
-        classifier.close()
-    }
-
     @Test
     fun loadGoldenDataset_fromAssets_classifiesCorrectly() {
         // Load golden PNG from assets
