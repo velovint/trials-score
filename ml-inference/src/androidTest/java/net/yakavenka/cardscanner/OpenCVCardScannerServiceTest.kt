@@ -10,7 +10,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.test.runTest
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.*
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,11 +55,6 @@ class OpenCVCardScannerServiceTest {
         val result = scanner.extractScores(emptyBitmap)
 
         assertThat(result, instanceOf(ScanResult.Failure::class.java))
-    }
-
-    @After
-    fun teardown() {
-        scanner.cleanup()
     }
 
     /**

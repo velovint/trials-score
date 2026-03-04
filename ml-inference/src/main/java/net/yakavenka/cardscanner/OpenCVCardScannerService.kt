@@ -41,8 +41,4 @@ class OpenCVCardScannerService(
             ScanResult.Success(scores)
         }
     }
-
-    override fun cleanup() {
-        classifier.close()
-    }
 }

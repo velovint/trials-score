@@ -19,10 +19,4 @@ interface CardScannerService {
      * @return ScanResult.Success with scores map, or Failure with error message
      */
     suspend fun extractScores(image: Bitmap): ScanResult
-
-    /**
-     * Release any native resources (e.g. TFLite interpreter, OpenCV allocations).
-     * No-op by default.
-     */
-    fun cleanup() {}
 }

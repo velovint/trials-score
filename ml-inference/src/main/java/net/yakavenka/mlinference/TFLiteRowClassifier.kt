@@ -55,8 +55,4 @@ class TFLiteRowClassifier(context: Context) : RowClassifier, Closeable {
             }
         }
     }
-
-    override fun close() {
-        interpreter.close()
-    }
 }
