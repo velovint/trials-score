@@ -91,6 +91,97 @@ All validation runs as Android instrumented tests on emulator/device. This elimi
 
 ---
 
+## Packaging Cross-Module Generated Assets in Android
+
+### Problem
+
+In a multi-module Gradle project, ML model files downloaded via `kaggle kernel output` in a separate module need to be packaged as assets in the main APK. This presents three challenges:
+
+- **Cross-module artifact passing** — files are produced in one module and consumed as assets in another
+- **Lazy configuration resolution** — AGP's `sourceSets.assets.srcDirs +=` resolves configurations eagerly at configuration time, causing build warnings
+- **Full AGP integration** — assets must be wired into all AGP tasks that consume them (merge, lint, all variants), not just one
+
+---
+
+### Considered Approaches
+
+#### Option 1: `configureEach` + `task.from()`
+
+Manually wire the configuration into merge tasks:
+
+```groovy
+tasks.configureEach { task ->
+    if (task.name == 'mergeDebugAssets') {
+        task.dependsOn configurations.mlModelArtifact
+        task.from(configurations.mlModelArtifact)
+    }
+}
+```
+
+| | |
+|---|---|
+| ✅ | Simple, minimal boilerplate |
+| ❌ | Relies on `MergeSourceSetFolders` extending `Copy` — an internal AGP detail |
+| ❌ | Must manually enumerate all task names per variant |
+
+---
+
+#### Option 2: Producer as Android Library Module
+
+Apply `com.android.library` to the Kaggle module and declare downloaded files as assets. AGP merges assets from all modules in the dependency graph automatically.
+
+| | |
+|---|---|
+| ✅ | Zero special wiring, fully idiomatic |
+| ❌ | Forces Android module overhead on a data/tooling module |
+
+---
+
+#### Option 3: Bridge Task + `addGeneratedSourceDirectory` ✅ Selected
+
+A local bridge task copies from the resolved cross-module configuration into a local output directory, registered with AGP via the `androidComponents` API:
+
+```groovy
+abstract class PrepareModelAssetsTask extends DefaultTask {
+    @InputFiles
+    abstract ConfigurableFileCollection getInputFiles()
+
+    @OutputDirectory
+    abstract DirectoryProperty getOutputDir()
+
+    @TaskAction
+    void prepare() {
+        project.sync {
+            from inputFiles
+            into outputDir
+        }
+    }
+}
+
+def prepareModelAssets = tasks.register('prepareModelAssets', PrepareModelAssetsTask) {
+    inputFiles.from(configurations.mlModelArtifact)
+    outputDir = layout.buildDirectory.dir('generated/main/assets/ml-model')
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets
+            ?.addGeneratedSourceDirectory(prepareModelAssets) { it.outputDir }
+    }
+}
+```
+
+| | |
+|---|---|
+| ✅ | Officially supported AGP API, stable across versions |
+| ✅ | AGP automatically wires to all asset-consuming tasks across all variants |
+| ✅ | Proper up-to-date checks and build caching |
+| ✅ | Producer module stays a plain Gradle module |
+| ❌ | Requires a bridge task class — slightly more boilerplate |
+
+---
+
+
 ## ⚠️ Critical Gotchas
 
 1.  **OpenCV Initialization:**
@@ -155,11 +246,3 @@ tasks.register('buildProductionModel') {
     finalizedBy 'verifyPipeline'
 }
 ```
-
----
-
-## 📚 Related Documentation
-
-* **User Guide:** `docs/index.md` - End-user workflow documentation
-* **Implementation Plan:** `tech-docs/IMPLEMENTATION_PLAN.md` - POC implementation details
-* **Architecture:** `CLAUDE.md` - Overall project architecture and conventions
