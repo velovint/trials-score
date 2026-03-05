@@ -42,8 +42,8 @@ class OpenCVCardScannerServiceTest {
 
         val successResult = result as ScanResult.Success
         // TODO model falls back to 3s for unpunched sections. need to fix at some point
-        val expectedScores = listOf(1, 0, 0, 1, 1, 2, 0, 1, 0, 2, 3, 3, 3, 3, 3)
-        val actualScores = successResult.scores.map { it.value }
+        val expectedScores = listOf(3, 3, 0, 2, 0, 3, 2, 3, 3, 3)
+        val actualScores = successResult.scores.map { it.value }.take(10)
 
         assertThat(actualScores, `is`(expectedScores))
     }

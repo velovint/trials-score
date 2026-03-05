@@ -84,13 +84,18 @@ tasks.register('checkRawImagesVersion') {
     outputs.file(versionFile)
 
     doLast {
-        def out = new ByteArrayOutputStream()
+        def filesOut = new ByteArrayOutputStream()
         exec {
-            commandLine 'kaggle', 'datasets', 'status', 'vitaliyakavenka/raw-card-pictures'
-            standardOutput = out
+            commandLine 'kaggle', 'datasets', 'files', 'vitaliyakavenka/raw-card-pictures'
+            standardOutput = filesOut
         }
-        versionFile.get().asFile.text = out.toString().trim()
-        logger.lifecycle("Raw images dataset version: ${versionFile.get().asFile.text}")
+        def filesText = filesOut.toString().trim()
+
+        // MD5 hash of file listing to detect changes
+        def md5 = filesText.md5()
+        versionFile.get().asFile.text = md5
+
+        logger.lifecycle("Raw images dataset version: ${md5}")
     }
 }
 
@@ -191,15 +196,17 @@ tasks.register('uploadTrainingData') {
         logger.lifecycle("Training data uploaded to vitaliyakavenka/trials-score-training-data")
 
         // Capture dataset version for downstream caching
-        def versionOutput = new ByteArrayOutputStream()
+        def filesOutput = new ByteArrayOutputStream()
         exec {
-            commandLine 'kaggle', 'datasets', 'status',
+            commandLine 'kaggle', 'datasets', 'files',
                 'vitaliyakavenka/trials-score-training-data'
-            standardOutput = versionOutput
+            standardOutput = filesOutput
         }
+        def filesText = filesOutput.toString().trim()
+        def versionMd5 = filesText.md5()
         def versionFile = layout.buildDirectory.file('training-data-version.txt').get().asFile
-        versionFile.text = versionOutput.toString().trim()
-        logger.lifecycle("Training data version recorded: ${versionFile.text}")
+        versionFile.text = versionMd5
+        logger.lifecycle("Training data version recorded: ${versionMd5}")
     }
 }
 
@@ -260,13 +267,27 @@ tasks.register('checkModelVersion') {
     outputs.file(versionFile)
 
     doLast {
-        def out = new ByteArrayOutputStream()
+        // Get kernel output files with timestamps
+        def filesOut = new ByteArrayOutputStream()
         exec {
-            commandLine 'kaggle', 'kernels', 'status', 'vitaliyakavenka/trials-score-trainer'
-            standardOutput = out
+            commandLine 'kaggle', 'kernels', 'files', 'vitaliyakavenka/trials-score-trainer'
+            standardOutput = filesOut
         }
-        versionFile.get().asFile.text = out.toString().trim()
-        logger.lifecycle("Model version: ${versionFile.get().asFile.text}")
+        def filesText = filesOut.toString().trim()
+
+        // Extract the model file timestamp (used for cache invalidation)
+        def modelLine = filesText.split('\n').find { it.contains('score_classifier_model.tflite') }
+        if (!modelLine) {
+            throw new GradleException(
+                "Model file not found in kernel output. Output was:\n${filesText}"
+            )
+        }
+
+        // Parse: "score_classifier_model.tflite   901  5:09 am, Wednesday 4 March 2026 UTC"
+        def timestamp = modelLine.replaceAll(/.*\s{2,}(\d+\s+\S+.*UTC).*/, '$1').trim()
+        versionFile.get().asFile.text = timestamp
+
+        logger.lifecycle("Model version: ${timestamp}")
     }
 }
 

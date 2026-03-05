@@ -11,17 +11,24 @@ Android library module that prepares training data and orchestrates the Kaggle M
 ## Kaggle Pipeline Tasks
 
 ```bash
-./gradlew :ml-pipeline-tool:downloadRawImages      # Download raw card images from Kaggle
-./gradlew :ml-pipeline-tool:connectedAndroidTest   # Preprocess images into training data (requires device)
-./gradlew :ml-pipeline-tool:uploadTrainingData     # Upload processed data to Kaggle dataset
-./gradlew :ml-pipeline-tool:triggerKaggleTrain     # Push notebook and wait for training
-./gradlew :ml-pipeline-tool:downloadModel          # Download trained .tflite model
-./gradlew :ml-pipeline-tool:buildProductionModel   # Full pipeline in one command
+# Download raw card images from Kaggle
+./gradlew :ml-pipeline-tool:downloadRawImages
+# Preprocess images into training data (requires device)
+./gradlew :ml-pipeline-tool:connectedAndroidTest
+# Upload processed data to Kaggle dataset
+./gradlew :ml-pipeline-tool:uploadTrainingData
+# Push notebook and wait for training
+./gradlew :ml-pipeline-tool:triggerKaggleTrain
+# Download trained .tflite model
+./gradlew :ml-pipeline-tool:downloadModel
+# Full pipeline in one command
+./gradlew :ml-pipeline-tool:buildProductionModel
 ```
 
 Or via the root convenience wrapper:
 ```bash
-./gradlew buildProductionModel   # delegates to :ml-pipeline-tool + runs verifyPipeline
+# delegates to :ml-pipeline-tool + runs verifyPipeline
+./gradlew buildProductionModel
 ```
 
 ## Version-Based Caching

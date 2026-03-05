@@ -1,42 +1,43 @@
 package net.yakavenka.mlinference
 
 import android.content.Context
-import android.util.Log
+import com.google.ai.edge.litert.Accelerator
+import com.google.ai.edge.litert.CompiledModel
 import net.yakavenka.cardscanner.RowClassifier
 import net.yakavenka.cardscanner.RowImage
-import org.tensorflow.lite.Interpreter
 import java.io.Closeable
-import java.io.FileInputStream
-import java.nio.channels.FileChannel
 
 /**
- * TFLite-backed implementation of RowClassifier.
- * Loads a .tflite model and performs inference on preprocessed row images.
+ * LiteRT CompiledModel-backed implementation of RowClassifier.
+ * Loads a .tflite model and performs CPU inference on preprocessed row images.
  *
  * Score map: [0→0, 1→1, 2→2, 3→3, 4→5] (Trials scoring uses 0,1,2,3,5; no score of 4)
  */
-class TFLiteRowClassifier(context: Context) : RowClassifier {
-    private val interpreter: Interpreter
-
-    init {
-        val modelBuffer = loadModelFile(context, "score_classifier_model.tflite")
-        val options = Interpreter.Options().apply { setNumThreads(4) }
-        interpreter = Interpreter(modelBuffer, options)
-    }
+class TFLiteRowClassifier(context: Context) : RowClassifier, Closeable {
+    private val model = CompiledModel.create(
+        context.assets,
+        "score_classifier_model.tflite",
+        CompiledModel.Options(Accelerator.CPU),
+        null
+    )
+    private val inputBuffers = model.createInputBuffers()
+    private val outputBuffers = model.createOutputBuffers()
 
     companion object {
-        private const val TAG = "TFLiteRowClassifier"
+        private const val INPUT_SIZE = 640 * 66
     }
 
     override fun classify(row: RowImage): Int {
-        // Output buffer: 1×5 float array (5 class probabilities for scores 0,1,2,3,5)
-        val outputBuffer = Array(1) { FloatArray(5) }
+        // Extract float values from RowImage ByteBuffer (float32, normalized [0,1])
+        val inputFloats = FloatArray(INPUT_SIZE)
+        row.buffer.rewind()
+        row.buffer.asFloatBuffer().get(inputFloats)
 
-        // Run inference on the ByteBuffer directly (already float32, normalized [0,1])
-        interpreter.run(row.buffer, outputBuffer)
+        inputBuffers[0].writeFloat(inputFloats)
+        model.run(inputBuffers, outputBuffers)
 
-        // Find class with highest probability
-        val probabilities = outputBuffer[0]
+        // Read class probabilities (5 classes: scores 0, 1, 2, 3, 5)
+        val probabilities = outputBuffers[0].readFloat()
         val predictedIndex = probabilities.indices.maxByOrNull { probabilities[it] } ?: 0
 
         // Map model output index to actual score (0→0, 1→1, 2→2, 3→3, 4→5)
@@ -44,15 +45,9 @@ class TFLiteRowClassifier(context: Context) : RowClassifier {
         return if (predictedIndex == 4) 5 else predictedIndex
     }
 
-    private fun loadModelFile(context: Context, modelPath: String): java.nio.MappedByteBuffer {
-        return context.assets.openFd(modelPath).use { fileDescriptor ->
-            FileInputStream(fileDescriptor.fileDescriptor).use { inputStream ->
-                inputStream.channel.map(
-                    FileChannel.MapMode.READ_ONLY,
-                    fileDescriptor.startOffset,
-                    fileDescriptor.declaredLength
-                )
-            }
-        }
+    override fun close() {
+        inputBuffers.forEach { it.close() }
+        outputBuffers.forEach { it.close() }
+        model.close()
     }
 }
