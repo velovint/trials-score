@@ -56,11 +56,8 @@ dependencies {
     implementation libs.kotlinx.coroutines.core
     implementation libs.opencv
 
-    // TensorFlow Lite (LiteRT) - Version 2.17.0 for FULLY_CONNECTED v12 support
-    implementation libs.tensorflow.lite
-    implementation(libs.tensorflow.lite.support) {
-        exclude group: "org.tensorflow", module: "tensorflow-lite-api"
-    }
+    // LiteRT (formerly TensorFlow Lite) - Maven V1 drop-in replacement
+    implementation libs.litert
 
     // Testing
     testImplementation libs.junit
