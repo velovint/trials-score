@@ -69,6 +69,9 @@ class CameraViewModel @Inject constructor(
      *
      * Stores executor (not context) to avoid context leaks. Executor is safe to hold
      * in ViewModel and can be injected for testing.
+     *
+     * Note: In strict MVVM, the LifecycleOwner-aware binding (bindToLifecycle) should
+     * happen in the UI layer, however implementation looks terribly bad with current version of CameraX.
      */
     fun bindCamera(context: Context, lifecycleOwner: LifecycleOwner) {
         // Store executor instead of context to avoid memory leaks
