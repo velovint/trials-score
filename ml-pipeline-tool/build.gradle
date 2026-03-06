@@ -76,65 +76,33 @@ dependencies {
 // Kaggle ML pipeline tasks
 // ---------------------------------------------------------------------------
 
-tasks.register('checkRawImagesVersion') {
+def checkRawImagesVersion = tasks.register('checkRawImagesVersion', KaggleDatasetVersionTask) {
     group = 'ml-pipeline'
     description = 'Check current version of raw card pictures dataset on Kaggle'
-
-    def versionFile = layout.buildDirectory.file('raw-images-version.txt')
-    outputs.file(versionFile)
-
-    doLast {
-        def filesOut = new ByteArrayOutputStream()
-        exec {
-            commandLine 'kaggle', 'datasets', 'files', 'vitaliyakavenka/raw-card-pictures'
-            standardOutput = filesOut
-        }
-        def filesText = filesOut.toString().trim()
-
-        // MD5 hash of file listing to detect changes
-        def md5 = filesText.md5()
-        versionFile.get().asFile.text = md5
-
-        logger.lifecycle("Raw images dataset version: ${md5}")
-    }
+    datasetSlug = 'vitaliyakavenka/raw-card-pictures'
+    versionFile = layout.buildDirectory.file('raw-images-version.txt')
 }
 
-tasks.register('downloadRawImages') {
+def downloadRawImages = tasks.register('downloadRawImages', KaggleDatasetDownloadTask) {
     group = 'ml-pipeline'
     description = 'Download raw score card images from Kaggle (vitaliyakavenka/raw-card-pictures)'
-
-    def rawDir = layout.buildDirectory.dir('raw-pictures')
-
-    inputs.file(tasks.named('checkRawImagesVersion').map { it.outputs.files.singleFile })
-    dependsOn 'checkRawImagesVersion'
-    outputs.dir(rawDir)
-    outputs.cacheIf { true }
-
-    doLast {
-        def downloadDir = layout.buildDirectory.dir('raw-pictures').get().asFile
-        downloadDir.mkdirs()
-
-        exec {
-            commandLine 'kaggle', 'datasets', 'download',
-                'vitaliyakavenka/raw-card-pictures',
-                '--unzip', '--path', downloadDir.absolutePath
-        }
-
-        // Kaggle extracts into a 'training-data/' subdirectory.
-        // Copy to 'raw/' to match 'assets/raw/<filename>' path used by DataPrepRealTest.
-        def rawSubDir = new File(downloadDir, 'raw')
-        rawSubDir.mkdirs()
-        project.copy {
-            from new File(downloadDir, 'training-data')
-            into rawSubDir
-        }
-        logger.lifecycle("Downloaded ${rawSubDir.list()?.length ?: 0} raw images to ${rawSubDir}")
-    }
+    datasetSlug = 'vitaliyakavenka/raw-card-pictures'
+    versionFile = checkRawImagesVersion.flatMap { it.versionFile }
+    outputDir = layout.buildDirectory.dir('raw-pictures/raw')
 }
 
-// Wire androidTest assets to downloadRawImages output so all consumers
-// (mergeDebugAndroidTestAssets, lintAnalyzeDebugAndroidTest, etc.) inherit the dependency.
-android.sourceSets.androidTest.assets.srcDirs += [tasks.named('downloadRawImages')]
+def prepareRawImages = tasks.register('prepareRawImages', PrepareAssetsDirTask) {
+    dependsOn downloadRawImages
+    inputDir.set(layout.buildDirectory.dir('raw-pictures'))
+    outputDir.set(layout.buildDirectory.dir('generated/androidTest/assets/raw-pictures'))
+}
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.androidTest?.sources?.assets
+            ?.addGeneratedSourceDirectory(prepareRawImages) { it.outputDir }
+    }
+}
 
 tasks.register('uploadTrainingData') {
     group = 'ml-pipeline'

@@ -91,29 +91,12 @@ abstract class PrepareModelAssetsTask extends DefaultTask {
     }
 }
 
-// wrapper task to copy downloadGoldenData output into a typed OutputDirectory for addGeneratedSourceDirectory
-abstract class PrepareGoldenDataTask extends DefaultTask {
-    @InputDirectory
-    abstract DirectoryProperty getInputDir()
-
-    @OutputDirectory
-    abstract DirectoryProperty getOutputDir()
-
-    @TaskAction
-    void prepare() {
-        project.sync {
-            from inputDir
-            into outputDir
-        }
-    }
-}
-
 def prepareModelAssets = tasks.register('prepareModelAssets', PrepareModelAssetsTask) {
     inputFiles.from(configurations.mlModelArtifact)
     outputDir.set(layout.buildDirectory.dir('generated/main/assets/ml-model'))
 }
 
-def prepareGoldenData = tasks.register('prepareGoldenData', PrepareGoldenDataTask) {
+def prepareGoldenData = tasks.register('prepareGoldenData', PrepareAssetsDirTask) {
     dependsOn tasks.named('downloadGoldenData')
     inputDir.set(layout.buildDirectory.dir('golden-data'))
     outputDir.set(layout.buildDirectory.dir('generated/androidTest/assets/golden-data'))
@@ -128,58 +111,18 @@ androidComponents {
     }
 }
 
-tasks.register('checkGoldenDataVersion') {
+def checkGoldenDataVersion = tasks.register('checkGoldenDataVersion', KaggleDatasetVersionTask) {
     group = 'ml-pipeline'
     description = 'Check current version of golden row images on Kaggle'
-
-    def versionFile = layout.buildDirectory.file('golden-data-version.txt')
-    outputs.file(versionFile)
-
-    doLast {
-        def out = new ByteArrayOutputStream()
-        exec {
-            commandLine 'kaggle', 'datasets', 'files', 'vitaliyakavenka/rows-golden-data'
-            standardOutput = out
-        }
-        versionFile.get().asFile.text = out.toString().trim().md5()
-        logger.lifecycle("Golden data version: ${versionFile.get().asFile.text}")
-    }
+    datasetSlug = 'vitaliyakavenka/rows-golden-data'
+    versionFile = layout.buildDirectory.file('golden-data-version.txt')
 }
 
-tasks.register('downloadGoldenData') {
+tasks.register('downloadGoldenData', KaggleDatasetDownloadTask) {
     group = 'ml-pipeline'
     description = 'Download golden row images from Kaggle (vitaliyakavenka/rows-golden-data)'
-
-    def goldenDir = layout.buildDirectory.dir('golden-data')
-
-    inputs.file(tasks.named('checkGoldenDataVersion').map { it.outputs.files.singleFile })
-    dependsOn 'checkGoldenDataVersion'
-    outputs.dir(goldenDir)
-    outputs.cacheIf { true }
-
-    doLast {
-        def destDir = goldenDir.get().asFile
-        def tempDir = new File(destDir, 'temp')
-        tempDir.mkdirs()
-
-        exec {
-            commandLine 'kaggle', 'datasets', 'download',
-                'vitaliyakavenka/rows-golden-data',
-                '--unzip', '--path', tempDir.absolutePath
-        }
-
-        // Reorganize: temp/{0,1,2,3,5}/ → golden/{0,1,2,3,5}/
-        // so assets.open("golden/0/image.png") resolves correctly
-        def goldenSubDir = new File(destDir, 'golden')
-        goldenSubDir.deleteDir()
-        goldenSubDir.mkdirs()
-        project.copy {
-            from tempDir
-            into goldenSubDir
-            include '0/**', '1/**', '2/**', '3/**', '5/**'
-        }
-        tempDir.deleteDir()
-        logger.lifecycle("Golden data ready at ${goldenSubDir}")
-    }
+    datasetSlug = 'vitaliyakavenka/rows-golden-data'
+    versionFile = checkGoldenDataVersion.flatMap { it.versionFile }
+    outputDir = layout.buildDirectory.dir('golden-data/golden')
 }
 
