@@ -254,3 +254,11 @@ tasks.register('buildProductionModel') {
     finalizedBy 'verifyPipeline'
 }
 ```
+
+---
+
+## References
+
+CameraX Composable Demo - https://github.com/ioannisa/CameraX-Composable-Demo/blob/bbb54c38eb60ecc64ffb0d37c7472812bfa37283/app/src/main/java/eu/anifantakis/camerax_demo/ui/screens/realistic/CameraViewModel.kt#L59
+Jetpack Camera App Reference Implementation - https://github.com/google/jetpack-camera-app
+LiteRT Sample - https://github.com/google-ai-edge/litert-samples/blob/main/compiled_model_api/image_segmentation/kotlin_cpu_gpu/android/app/src/main/java/com/google/ai/edge/examples/image_segmentation/view/CameraScreen.kt
