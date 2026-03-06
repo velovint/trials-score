@@ -1,7 +1,9 @@
 package net.yakavenka.mlinference
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import net.yakavenka.cardscanner.RowImage
@@ -43,102 +45,59 @@ class ModelAccuracyTest {
     }
 
     @Test
-    fun loadGoldenDataset_fromAssets_classifiesCorrectly() {
-        // Load golden PNG from assets
-        val inputStream = context.assets.open("golden/0/image_0_row_1.png")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
+    fun classify_goldenDataset_accuracy95Percent() {
+        val labelClasses = listOf(0, 1, 2, 3, 5)
+        var correct = 0
+        var total = 0
 
-        // Convert to grayscale Mat
-        val colorMat = Mat()
-        Utils.bitmapToMat(bitmap, colorMat)
+        for (label in labelClasses) {
+            val folder = "golden/$label"
+            val files: List<String> = try { context.assets.list(folder)?.toList() ?: emptyList() }
+                        catch (e: Exception) { emptyList() }
 
-        val grayMat = Mat()
-        Imgproc.cvtColor(colorMat, grayMat, Imgproc.COLOR_BGR2GRAY)
+            for (filename in files) {
+                val bitmap = context.assets.open("$folder/$filename")
+                    .use { BitmapFactory.decodeStream(it) }
+                val prediction = classifier.classify(bitmapToRowImage(bitmap))
+                if (prediction == label) correct++
+                total++
+            }
+            Log.i(TAG, "label $label: ${files.size} images")
+        }
 
-        // Resize to expected dimensions (640x66)
-        val resizedMat = Mat()
-        val targetSize = Size(640.0, 66.0)
-        Imgproc.resize(grayMat, resizedMat, targetSize)
-
-        // Convert to RowImage (ByteBuffer, float32, normalized [0,1])
-        val rowImage = matToRowImage(resizedMat)
-
-        // Pass through real TFLite classifier
-        val prediction = classifier.classify(rowImage)
-
-        // Verify result is a valid score (0, 1, 2, 3, or 5)
-        assertThat("Golden image from folder '0' should be classified as valid score",
-            prediction, isIn(listOf(0, 1, 2, 3, 5)))
-
-        // Cleanup
-        colorMat.release()
-        grayMat.release()
-        resizedMat.release()
+        assertThat("Need at least 50 golden images", total, greaterThan(50))
+        val accuracy = correct.toDouble() / total
+        Log.i(TAG, "Accuracy: $correct/$total = ${"%.1f".format(accuracy * 100)}%")
+        assertThat("Model accuracy must be >= 95%", accuracy, greaterThanOrEqualTo(0.95))
     }
 
-    @Test
-    fun realTFLiteModel_withGoldenDataset_producesValidScores() {
-        // Load golden PNG from assets
-        val inputStream = context.assets.open("golden/0/image_0_row_1.png")
-        val bitmap = BitmapFactory.decodeStream(inputStream)
-        inputStream.close()
+    private fun bitmapToRowImage(bitmap: Bitmap): RowImage {
+        val bgra = Mat()
+        Utils.bitmapToMat(bitmap, bgra)          // bitmapToMat produces BGRA
 
-        // Convert to grayscale Mat
-        val colorMat = Mat()
-        Utils.bitmapToMat(bitmap, colorMat)
+        val gray = Mat()
+        Imgproc.cvtColor(bgra, gray, Imgproc.COLOR_BGRA2GRAY)
+        bgra.release()
 
-        val grayMat = Mat()
-        Imgproc.cvtColor(colorMat, grayMat, Imgproc.COLOR_BGR2GRAY)
+        val resized = Mat()
+        Imgproc.resize(gray, resized, Size(640.0, 66.0))
+        gray.release()
 
-        // Resize to expected dimensions (640x66)
-        val resizedMat = Mat()
-        val targetSize = Size(640.0, 66.0)
-        Imgproc.resize(grayMat, resizedMat, targetSize)
+        val float32 = Mat()
+        resized.convertTo(float32, CvType.CV_32F, 1.0 / 255.0)
+        resized.release()
 
-        // Convert to RowImage (ByteBuffer, float32, normalized [0,1])
-        val rowImage = matToRowImage(resizedMat)
+        val floats = FloatArray(66 * 640)
+        float32.get(0, 0, floats)
+        float32.release()
 
-        // Pass through real TFLite classifier
-        val prediction = classifier.classify(rowImage)
-
-        // Verify result is a valid score (0, 1, 2, 3, or 5)
-        assertThat("Real model should return valid score",
-            prediction, isIn(listOf(0, 1, 2, 3, 5)))
-
-        // Note: With an untrained or partially trained model, we may not get the correct label (0)
-        // The key validation is that the model runs and produces valid output without crashing
-
-        // Cleanup
-        colorMat.release()
-        grayMat.release()
-        resizedMat.release()
-    }
-
-    private fun matToRowImage(mat: Mat): RowImage {
-        require(mat.width() == 640 && mat.height() == 66) {
-            "Input Mat must be 640x66, got ${mat.width()}x${mat.height()}"
-        }
-        require(mat.channels() == 1) {
-            "Input Mat must be grayscale (1 channel), got ${mat.channels()} channels"
-        }
-
-        val width = 640
-        val height = 66
-        val channels = 1
-
-        val buffer = ByteBuffer.allocateDirect(width * height * channels * 4)
-        buffer.order(ByteOrder.nativeOrder())
-
-        val data = ByteArray(width * height)
-        mat.get(0, 0, data)
-
-        for (pixel in data) {
-            val normalizedValue = (pixel.toInt() and 0xFF) / 255.0f
-            buffer.putFloat(normalizedValue)
-        }
-
+        val buffer = ByteBuffer.allocateDirect(66 * 640 * 4).order(ByteOrder.nativeOrder())
+        buffer.asFloatBuffer().put(floats)
         buffer.rewind()
         return RowImage(buffer)
+    }
+
+    companion object {
+        private const val TAG = "ModelAccuracyTest"
     }
 }

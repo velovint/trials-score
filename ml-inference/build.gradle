@@ -74,7 +74,7 @@ dependencies {
 
 }
 
-// wrapper task to allow using onfigurations.mlModelArtifact with assets.addGeneratedSourceDirectory
+// wrapper task to allow using configurations.mlModelArtifact with assets.addGeneratedSourceDirectory
 abstract class PrepareModelAssetsTask extends DefaultTask {
     @InputFiles
     abstract ConfigurableFileCollection getInputFiles()
@@ -96,9 +96,33 @@ def prepareModelAssets = tasks.register('prepareModelAssets', PrepareModelAssets
     outputDir.set(layout.buildDirectory.dir('generated/main/assets/ml-model'))
 }
 
+def prepareGoldenData = tasks.register('prepareGoldenData', PrepareAssetsDirTask) {
+    dependsOn tasks.named('downloadGoldenData')
+    inputDir.set(layout.buildDirectory.dir('golden-data'))
+    outputDir.set(layout.buildDirectory.dir('generated/androidTest/assets/golden-data'))
+}
+
 androidComponents {
     onVariants(selector().all()) { variant ->
         variant.sources.assets
             ?.addGeneratedSourceDirectory(prepareModelAssets) { it.outputDir }
+        variant.androidTest?.sources?.assets
+            ?.addGeneratedSourceDirectory(prepareGoldenData) { it.outputDir }
     }
 }
+
+def checkGoldenDataVersion = tasks.register('checkGoldenDataVersion', KaggleDatasetVersionTask) {
+    group = 'ml-pipeline'
+    description = 'Check current version of golden row images on Kaggle'
+    datasetSlug = 'vitaliyakavenka/rows-golden-data'
+    versionFile = layout.buildDirectory.file('golden-data-version.txt')
+}
+
+tasks.register('downloadGoldenData', KaggleDatasetDownloadTask) {
+    group = 'ml-pipeline'
+    description = 'Download golden row images from Kaggle (vitaliyakavenka/rows-golden-data)'
+    datasetSlug = 'vitaliyakavenka/rows-golden-data'
+    versionFile = checkGoldenDataVersion.flatMap { it.versionFile }
+    outputDir = layout.buildDirectory.dir('golden-data/golden')
+}
+
